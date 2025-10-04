@@ -1,0 +1,41 @@
+diff -up chromium-140.0.7339.80/build/config/linux/libdrm/BUILD.gn.47~ chromium-140.0.7339.80/build/config/linux/libdrm/BUILD.gn
+--- chromium-140.0.7339.80/build/config/linux/libdrm/BUILD.gn.47~	2025-08-29 20:50:09.000000000 +0200
++++ chromium-140.0.7339.80/build/config/linux/libdrm/BUILD.gn	2025-09-06 20:11:59.174045567 +0200
+@@ -15,7 +15,7 @@ declare_args() {
+ }
+ 
+ if (use_system_libdrm) {
+-  assert(!is_linux, "System libdrm is not supported in linux")
++  #assert(!is_linux, "System libdrm is not supported in linux")
+   pkg_config("libdrm_config") {
+     packages = [ "libdrm" ]
+   }
+diff -up chromium-140.0.7339.80/chrome/browser/vr/BUILD.gn.47~ chromium-140.0.7339.80/chrome/browser/vr/BUILD.gn
+--- chromium-140.0.7339.80/chrome/browser/vr/BUILD.gn.47~	2025-08-29 20:50:09.000000000 +0200
++++ chromium-140.0.7339.80/chrome/browser/vr/BUILD.gn	2025-09-06 20:13:44.359632182 +0200
+@@ -3,7 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//build/buildflag_header.gni")
+-import("//chrome/android/modules/buildflags.gni")
++#import("//chrome/android/modules/buildflags.gni")
+ import("//chrome/common/features.gni")
+ import("//device/vr/buildflags/buildflags.gni")
+ import("//testing/libfuzzer/fuzzer_test.gni")
+@@ -144,11 +144,11 @@ if (enable_vr) {
+ 
+     defines = [ "VR_UI_IMPLEMENTATION" ]
+ 
+-    if (use_native_partitions) {
+-      # Mark symbols in this library as belonging to the VR partition. Only
+-      # exported symbols (module entrypoints) are affected.
+-      cflags = [ "-fsymbol-partition=vr_partition" ]
+-    }
++#    if (use_native_partitions) {
++#      # Mark symbols in this library as belonging to the VR partition. Only
++#      # exported symbols (module entrypoints) are affected.
++#      cflags = [ "-fsymbol-partition=vr_partition" ]
++#    }
+ 
+     if (is_android) {
+       sources += [ "jni_onload.cc" ]
