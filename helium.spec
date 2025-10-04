@@ -67,9 +67,9 @@
 # re2 (as of 124.x): //third_party/googletest:gtest_config(//build/toolchain/linux/unbundle:default) needs //third_party/re2:re2_config(//build/toolchain/linux/unbundle:default) (+ libc++/libstdc++ issue)
 # zlib: Breaks extracting extensions
 %if %{with libcxx}
-%global system_libs fontconfig harfbuzz-ng libjpeg libjxl libpng libdrm libxml libxslt opus libusb openh264 freetype zstd libwebp
+%global system_libs fontconfig harfbuzz-ng libjpeg libpng libdrm libxml libxslt opus libusb openh264 freetype zstd libwebp
 %else
-%global system_libs fontconfig harfbuzz-ng libjpeg libjxl libpng libdrm libxml libxslt opus libusb openh264 freetype zstd libwebp jsoncpp snappy
+%global system_libs fontconfig harfbuzz-ng libjpeg libpng libdrm libxml libxslt opus libusb openh264 freetype zstd libwebp jsoncpp snappy
 # System absl is not quite working yet
 # absl_algorithm absl_base absl_cleanup absl_container absl_crc absl_debugging absl_flags absl_functional absl_hash absl_log absl_log_internal absl_memory absl_meta absl_numeric absl_random absl_status absl_strings absl_synchronization absl_time absl_types absl_utility
 %endif
@@ -85,11 +85,10 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-# Working version numbers can be found at
+Version:	0.5.1
 # https://chromiumdash.appspot.com/releases?platform=Linux
-Version:	140.0.7339.213
-### Don't be evil!!! ###
-%define helium 0.4.13
+# Tested with helium: `cat chromium_version.txt`
+%define chromium 141.0.7390.54
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -109,7 +108,7 @@ Summary:	A fast webkit-based web browser
 Group:		Networking/WWW
 License:	BSD, LGPL
 # From : http://gsdview.appspot.com/chromium-browser-official/
-Source0:	https://commondatastorage.googleapis.com/chromium-browser-official/chromium-%{version}-lite.tar.xz
+Source0:	https://commondatastorage.googleapis.com/chromium-browser-official/chromium-%{chromium}-lite.tar.xz
 Source1:	chromium-wrapper
 Source2:	chromium-browser.desktop
 Source3:	master_preferences
@@ -122,13 +121,11 @@ Source10:	https://bitbucket.org/chromiumembedded/cef/get/%{cef}.tar.bz2
 Source11:	https://chromium-fonts.storage.googleapis.com/336e775eec536b2d785cc80eff6ac39051931286#/test_fonts.tar.gz
 %endif
 Source100:	%{name}.rpmlintrc
-%if 0%{?helium:1}
-Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium}.tar.gz
+Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{version}.tar.gz
 # See extras.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://gist.githubusercontent.com/wukko/2a591364dda346e10219e4adabd568b1/raw/e75ae3c4a1ce940ef7627916a48bc40882d24d40/nonfree-search-engines-data.tar.gz
 Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202509241653/helium-onboarding-202509241653.tar.gz
 Source1003:	https://github.com/imputnet/ublock-origin-crx/releases/download/1.66.4/uBlock0_1.66.4.crx
-%endif
 
 # ============================================================================
 # Patches 0 to 1999 are applied in the top level Chromium directory
@@ -163,51 +160,50 @@ Patch200:	https://gitweb.gentoo.org/repo/gentoo.git/plain/www-client/chromium/fi
 ### 300-399: Debian
 # https://sources.debian.org/patches/chromium/
 # Mostly fixes for libstdc++ related failures
-Patch300:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/ps-print.patch
-Patch301:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/widevine-locations.patch
+Patch300:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/ps-print.patch
+Patch301:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/widevine-locations.patch
 # Not needed for OM
-###		https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/rust-clanglib.patch
-Patch302:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/material-utils.patch
-Patch303:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/strlcpy.patch
+###		https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/rust-clanglib.patch
+Patch302:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/material-utils.patch
+Patch303:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/gentoo-stylesheet.patch
 # Not needed for OM
-###		https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/bindgen.patch
-Patch304:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/memory-allocator-dcheck-assert-fix.patch
-Patch305:	https://sources.debian.org/data/main/c/chromium/137.0.7151.55-3/debian/patches/fixes/clang-rust-target.patch
-Patch306:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/predictor-denial-of-service.patch
-Patch307:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/fix-assert-in-vnc-sessions.patch
-Patch308:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/armhf-timespec.patch
-Patch309:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/updater-test.patch
-Patch310:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/font-gc-asan.patch
-Patch312:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/libsync-rk3588-panthor.patch
-Patch314:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/headless-gn.patch
-#Patch315:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/stdatomic.patch
-Patch316:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/fixes/make-pair.patch
-Patch324:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/debianization/swiftshader-use-llvm-16.patch
+###		https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/bindgen.patch
+Patch304:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/memory-allocator-dcheck-assert-fix.patch
+Patch306:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/predictor-denial-of-service.patch
+Patch307:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/fix-assert-in-vnc-sessions.patch
+Patch308:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/armhf-timespec.patch
+Patch309:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/updater-test.patch
+# FIXME this is needed for libstdc++, but doesn't currently apply
+#Patch310:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/font-gc-asan.patch
+Patch314:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/headless-gn.patch
+#Patch315:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/stdatomic.patch
+Patch316:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/fixes/make-pair.patch
+Patch324:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/debianization/swiftshader-use-llvm-16.patch
 # (Mostly) duplicates from ungoogled patchset
-###		https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/tests.patch
-Patch325:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/tests-swiftshader.patch
+###		https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/tests.patch
+Patch325:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/tests-swiftshader.patch
 # Already disabled by ungoogled patchset
-###		https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/signin.patch
-Patch326:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/android.patch
-#FIXME#Patch327:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/catapult.patch
-Patch328:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/font-tests.patch
+###		https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/signin.patch
+Patch326:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/android.patch
+#FIXME#Patch327:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/catapult.patch
+Patch328:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/font-tests.patch
 # Clashes with ungoogled patchset, probably not needed
-###		https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/google-api-warning.patch
+###		https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/google-api-warning.patch
 # Already disabled in ungoogled patchset
-###		https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/third-party-cookies.patch
+###		https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/third-party-cookies.patch
 # MODIFIED by OM to apply on top of ungoogled tree
-Patch329:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/driver-chrome-path.patch
-Patch330:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/widevine-cdm-cu.patch
-Patch331:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/clang-version-check.patch
-Patch332:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/disable/screen-ai-blob.patch
-Patch333:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/system/icu-shim.patch
-Patch334:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/system/jpeg.patch
-Patch335:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/system/openjpeg.patch
-Patch336:	https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/system/opus.patch
+Patch329:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/driver-chrome-path.patch
+Patch330:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/widevine-cdm-cu.patch
+Patch331:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/clang-version-check.patch
+Patch332:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/disable/screen-ai-blob.patch
+Patch333:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/system/icu-shim.patch
+Patch334:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/system/jpeg.patch
+Patch335:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/system/openjpeg.patch
+Patch336:	https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/system/opus.patch
 # Duplicate - but not sure where the other version comes from. Ungoogled?
-###		https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/system/rapidjson.patch
+###		https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/system/rapidjson.patch
 # Incompatible with OM for now, since we don't have the system package
-###		https://sources.debian.org/data/main/c/chromium/140.0.7339.80-1/debian/patches/system/rollup.patch
+###		https://sources.debian.org/data/main/c/chromium/141.0.7390.54-1/debian/patches/system/rollup.patch
 
 ### 400-999: Patches from 3rd party projects that aren't distro packages
 Patch401:	https://codeberg.org/selfisekai/copium/raw/branch/main/cr137-no-exec_script_allowlist.patch
@@ -229,7 +225,8 @@ Patch1001:	chromium-64-system-curl.patch
 Patch1002:	chromium-69-no-static-libstdc++.patch
 Patch1003:	chromium-system-zlib.patch
 Patch1004:	chromium-107-system-libs.patch
-Patch1005:	chromium-restore-jpeg-xl-support.patch
+# FIXME needs porting
+#Patch1005:	chromium-restore-jpeg-xl-support.patch
 Patch1006:	chromium-extra-widevine-search-paths.patch
 Patch1007:	chromium-116-dont-override-thinlto-cache-policy.patch
 Patch1008:	chromium-116-system-brotli.patch
@@ -239,7 +236,6 @@ Patch1011:	perfetto-system-gn.patch
 Patch1012:	chromium-105-minizip-ng.patch
 %endif
 Patch1013:	chromium-132-compile.patch
-Patch1014:	chromium-126-fix-build-on-non-ChromeOS-linux.patch
 Patch1015:	chromium-113.0.5672.63-compile.patch
 Patch1016:	chroimum-119-workaround-crash-on-startup.patch
 # More and better search engines
@@ -255,11 +251,9 @@ Patch1021:	chromium-127-system-bindgen.patch
 Patch1022:	chromium-115-fix-generate_fontconfig_caches.patch
 # FIXME probably needs porting
 #Patch1023:	cef-115-minizip-ng.patch
-%if 0%{?helium:1}
 # FIXME needs porting
 Patch1024:	cef-126-rebase-to-ungoogled.patch
 Patch1025:	cef-125-ungoogling.patch
-%endif
 Patch1026:	cef-zlib-linkage.patch
 Patch1027:	ozone-dont-use-x11-on-wayland.patch
 Patch1028:	cef-126-zlib-ng.patch
@@ -275,7 +269,6 @@ Patch1041:	chromium-134-drop-workarounds-for-ancient-mesa-bugs-part2.patch
 Patch1042:	chromium-134-if-chromeos-can-do-it-so-can-linux.patch
 Patch1043:	chromium-139-workaround-clang-21.patch
 #Patch1044:	chromium-136-no-unknown-clang-flag.patch
-Patch1046:	chromium-136-fix-build-on-non-chromeos.patch
 Patch1047:	chromium-system-bindgen.patch
 Patch1048:	ublock-python-3.11.patch
 
@@ -513,10 +506,9 @@ members of the Chromium and WebDriver teams.
 %prep
 # Not using %%autosetup so we can apply patches after
 # ungoogled-chromium patches have been applied
-%setup -q -n chromium-%{version} %{?helium:-a 1000}
+%setup -q -n chromium-%{chromium} -a 1000
 
-%if 0%{?helium:1}
-HEDIR=$(pwd)/helium-%{helium}
+HEDIR=$(pwd)/helium-%{version}
 mkdir -p third_party/search_engines_data/resources_internal
 cd third_party/search_engines_data/resources_internal
 tar xf %{S:1001}
@@ -545,7 +537,6 @@ sed -i \
 python $HEDIR/utils/prune_binaries.py ./ $HEDIR/pruning.list --verbose || :
 python $HEDIR/utils/patches.py apply ./ $HEDIR/patches
 python $HEDIR/utils/domain_substitution.py apply -r $HEDIR/domain_regex.list -f $HEDIR/domain_substitution.list -c domainsubcache.tar.gz ./
-%endif
 
 %if 0%{?cef:1}
 tar xf %{S:10}
@@ -653,9 +644,7 @@ ln -sf %{_bindir}/bindgen third_party/rust-toolchain/bin/
 
 
 %build
-%if 0%{?helium:1}
-HEDIR=$(pwd)/helium-%{helium}
-%endif
+HEDIR=$(pwd)/helium-%{version}
 
 . %{_sysconfdir}/profile.d/90java.sh
 
@@ -695,7 +684,8 @@ export RUSTC_BOOTSTRAP=1
 # Something hardcodes ../../[...]/usr/lib as LIBCLANG_PATH
 # which of course doesn't catch lib64 and friends...
 #sed -i -e "s,args.libclang_path,'%{_libdir}',g" build/rust/run_bindgen.py
-sed -i -e 's,lib/clang,%{_lib}/clang,g' build/rust/rust_bindgen.gni
+sed -i -e 's,/lib,/%{_lib},g' build/rust/rust_bindgen.gni
+sed -i -e 's,/lib/clang/,/lib64/clang/,g' buildtools/third_party/libc++/modules.gni third_party/openscreen/src/buildtools/third_party/libc++/BUILD.gn
 %endif
 
 # We use our version of clang, regardless of what upstream wants
@@ -705,6 +695,12 @@ cat >openmandriva.gn_args <<EOF
 use_sysroot=false
 is_debug=false
 is_clang=true
+# FIXME at some point, instead of disabling modules, fix them.
+# The problem is that the C++ modules (see build/modules/linux-x64/module.modulemap)
+# hardcode references to Chromium's Debian sysroot instead of system headers.
+# see build/modules/modularize/README.md for instructions on rebuilding
+use_clang_modules=false
+#use_autogenerated_modules=true
 clang_base_path="%{_prefix}"
 clang_use_chrome_plugins=false
 node_version_check=false
@@ -776,7 +772,7 @@ target_cpu="arm64"
 # a prebuilt x86 binary in the source tree
 devtools_skip_typecheck=false
 %endif
-%if ! 0%{?helium:1}
+%if 0
 google_api_key="%{google_api_key}"
 google_default_client_id="%{google_default_client_id}"
 google_default_client_secret="%{google_default_client_secret}"
@@ -807,7 +803,8 @@ angle_link_glx=true
 angle_test_enable_system_egl=true
 enable_hevc_parser_and_hw_decoder=true
 enable_av1_decoder=true
-enable_jxl_decoder=true
+# FIXME bring back the jxl patch
+#enable_jxl_decoder=true
 enable_media_drm_storage=true
 %ifarch znver1
 # This really is znver1 only, as it enables SSE4.2, BMI2 and AVX2
@@ -815,7 +812,9 @@ enable_perfetto_x64_cpu_opt=true
 %endif
 enable_precompiled_headers=true
 is_official_build=true
-ozone_platform_drm=true
+# Errors out because it pretends to be ChromeOS only, but should actually work...
+# FIXME try removing the assert in ui/ozone/platform/drm/BUILD.gn
+#ozone_platform_drm=true
 perfetto_use_system_zlib=true
 rtc_link_pipewire=true
 rtc_use_pipewire=true
@@ -864,11 +863,7 @@ python tools/gn/bootstrap/bootstrap.py --skip-generate-buildfiles
 python third_party/libaddressinput/chromium/tools/update-strings.py
 
 %if %{with browser}
-%if 0%{?helium:1}
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args)" out/Release
-%else
-out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat openmandriva.gn_args)" out/Release
-%endif
 %ifarch %{x86_64}
 ninja -C out/Release chrome chrome_sandbox chromedriver
 %else
@@ -885,11 +880,7 @@ cd ..
 # Lastly, try to build it...
 # We have to use use_thin_lto=false because LTO in CEF causes
 # an OOM while linking libcef.so even on boxes with 64 GB RAM + 64 GB swap
-%if 0%{?helium:1}
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0" out/Release-CEF
-%else
-out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0" out/Release-CEF
-%endif
 ninja -C out/Release-CEF cef chrome_sandbox
 %endif
 
@@ -950,13 +941,8 @@ for i in 24 48 64 128 256; do
 done
 
 # Install the master_preferences file
-%if 0%{?helium:1}
-mkdir -p %{buildroot}%{_sysconfdir}/helium
-install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/helium
-%else
-mkdir -p %{buildroot}%{_sysconfdir}/chromium
-install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/chromium
-%endif
+mkdir -p %{buildroot}%{_sysconfdir}/%{name}
+install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/%{name}
 
 find %{buildroot} -name "*.nexe" -exec strip {} \;
 
@@ -964,10 +950,8 @@ find %{buildroot} -name "*.nexe" -exec strip {} \;
 mkdir -p %{buildroot}%{_datadir}/drirc.d/
 cp %{S:4} %{buildroot}%{_datadir}/drirc.d/10-%{name}.conf
 
-%if 0%{?helium:1}
 sed -e 's,chromium,helium,g;s,Chromium,Helium,g' %{buildroot}%{_datadir}/applications/chromium-browser.desktop >%{buildroot}%{_datadir}/applications/%{name}.desktop
 rm %{buildroot}%{_datadir}/applications/chromium-browser.desktop
-%endif
 %endif
 
 %if 0%{?cef:1}
@@ -1025,11 +1009,7 @@ cp -a cef/libcef_dll cef/tests %{buildroot}%{_libdir}/cef
 %if %{with browser}
 %files
 %doc LICENSE AUTHORS
-%if 0%{?helium:1}
-%config %{_sysconfdir}/helium
-%else
-%config %{_sysconfdir}/chromium
-%endif
+%config %{_sysconfdir}/%{name}
 %{_datadir}/drirc.d/10-%{name}.conf
 %{_bindir}/%{name}
 %{_libdir}/%{name}/*.bin

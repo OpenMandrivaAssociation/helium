@@ -1,7 +1,7 @@
 sources:
-  0.4.13.tar.gz: dee116901b2e71ebfa9e526acb25ca7793175d6d
-  chromium-140.0.7339.213-lite.tar.xz: b155b0e5bca0ee623525ab576d7a7ad866ac6557
   helium-onboarding-202509241653.tar.gz: 0409281b1c185bdaa77cb4d7d9ab89de7797aa2e
   nonfree-search-engines-data.tar.gz: eaf8cdec164492bd86904966afc73c5a66fa4cc5
   test_fonts.tar.gz: 336e775eec536b2d785cc80eff6ac39051931286
   uBlock0_1.66.4.crx: b046dc52babcbc40627d307e09cadf35b7c87535
+  0.5.1.tar.gz: f9cfc508eb77fee9370318f39ea65daab07ebbe3
+  chromium-141.0.7390.54-lite.tar.xz: 349085bd16a9b9bbf3ff4420195feda0a2d76d57

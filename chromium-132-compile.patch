@@ -1,6 +1,6 @@
-diff -up chromium-140.0.7339.80/build/config/linux/libdrm/BUILD.gn.47~ chromium-140.0.7339.80/build/config/linux/libdrm/BUILD.gn
---- chromium-140.0.7339.80/build/config/linux/libdrm/BUILD.gn.47~	2025-08-29 20:50:09.000000000 +0200
-+++ chromium-140.0.7339.80/build/config/linux/libdrm/BUILD.gn	2025-09-06 20:11:59.174045567 +0200
+diff -up chromium-141.0.7390.54/build/config/linux/libdrm/BUILD.gn.43~ chromium-141.0.7390.54/build/config/linux/libdrm/BUILD.gn
+--- chromium-141.0.7390.54/build/config/linux/libdrm/BUILD.gn.43~	2025-09-29 19:05:47.000000000 +0200
++++ chromium-141.0.7390.54/build/config/linux/libdrm/BUILD.gn	2025-10-04 04:12:44.700492530 +0200
 @@ -15,7 +15,7 @@ declare_args() {
  }
  
@@ -10,19 +10,10 @@ diff -up chromium-140.0.7339.80/build/config/linux/libdrm/BUILD.gn.47~ chromium-
    pkg_config("libdrm_config") {
      packages = [ "libdrm" ]
    }
-diff -up chromium-140.0.7339.80/chrome/browser/vr/BUILD.gn.47~ chromium-140.0.7339.80/chrome/browser/vr/BUILD.gn
---- chromium-140.0.7339.80/chrome/browser/vr/BUILD.gn.47~	2025-08-29 20:50:09.000000000 +0200
-+++ chromium-140.0.7339.80/chrome/browser/vr/BUILD.gn	2025-09-06 20:13:44.359632182 +0200
-@@ -3,7 +3,7 @@
- # found in the LICENSE file.
- 
- import("//build/buildflag_header.gni")
--import("//chrome/android/modules/buildflags.gni")
-+#import("//chrome/android/modules/buildflags.gni")
- import("//chrome/common/features.gni")
- import("//device/vr/buildflags/buildflags.gni")
- import("//testing/libfuzzer/fuzzer_test.gni")
-@@ -144,11 +144,11 @@ if (enable_vr) {
+diff -up chromium-141.0.7390.54/chrome/browser/vr/BUILD.gn.43~ chromium-141.0.7390.54/chrome/browser/vr/BUILD.gn
+--- chromium-141.0.7390.54/chrome/browser/vr/BUILD.gn.43~	2025-10-04 04:12:44.575523080 +0200
++++ chromium-141.0.7390.54/chrome/browser/vr/BUILD.gn	2025-10-04 04:14:24.786634259 +0200
+@@ -143,11 +143,11 @@ if (enable_vr) {
  
      defines = [ "VR_UI_IMPLEMENTATION" ]
  
