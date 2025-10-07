@@ -85,7 +85,7 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.5.1
+Version:	0.5.2
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 %define chromium 141.0.7390.54
