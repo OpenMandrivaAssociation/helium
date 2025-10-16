@@ -85,10 +85,10 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.5.5
+Version:	0.5.6
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
-%define chromium 141.0.7390.65
+%define chromium 141.0.7390.107
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -298,6 +298,7 @@ BuildRequires:	flex
 BuildRequires:	git
 BuildRequires:	rust
 BuildRequires:	rust-bindgen-cli
+BuildRequires:	imagemagick
 BuildRequires:	pkgconfig(alsa)
 BuildRequires:	pkgconfig(krb5)
 BuildRequires:	pkgconfig(libunwind)
@@ -440,6 +441,8 @@ BuildRequires:	ninja
 BuildRequires:	nodejs
 BuildRequires:	jdk-current
 
+Recommends: (%{name}-qt6 = %{EVRD} if %{_lib}Qt6Gui)
+
 %description
 Chromium is a browser that combines a minimal design with sophisticated
 technology to make the web faster, safer, and easier.
@@ -453,7 +456,6 @@ chromium-browser-dev package instead.
 Summary: Qt 6.x integration for Chromium
 Group: System/Libraries
 Requires: %{name} = %{EVRD}
-Supplements: %{name} = %{EVRD}
 Obsoletes: chromium-browser-stable-qt6
 Obsoletes: %{name}-qt5 < %{EVRD}
 
@@ -934,11 +936,22 @@ mkdir -p %{buildroot}%{_datadir}/applications
 install -m 644 %{SOURCE2} %{buildroot}%{_datadir}/applications/
 
 # icon
+%if "%{name}" == "helium"
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/scalable/apps
+install -m 644 helium-*/resources/branding/product_logo.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/helium.svg
+gzip -9 %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/helium.svg
+mv %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/helium.svg.gz %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/helium.svgz
+for i in 16 22 24 32 48 64 128 256; do
+        mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
+	magick helium-*/resources/branding/product_logo.svg -scale ${i}x${i} %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/helium.png
+done
+%else
 for i in 24 48 64 128 256; do
         mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
         install -m 644 chrome/app/theme/chromium/product_logo_$i.png \
                 %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/%{name}.png
 done
+%endif
 
 # Install the master_preferences file
 mkdir -p %{buildroot}%{_sysconfdir}/%{name}
@@ -1028,7 +1041,7 @@ cp -a cef/libcef_dll cef/tests %{buildroot}%{_libdir}/cef
 %{_libdir}/%{name}/themes
 %{_libdir}/%{name}/default_apps
 %{_datadir}/applications/*.desktop
-%{_datadir}/icons/hicolor/*/apps/%{name}.png
+%{_datadir}/icons/hicolor/*/apps/%{name}.*
 
 %files qt6
 %{_libdir}/%{name}/libqt6_shim.so
