@@ -85,7 +85,7 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.5.6
+Version:	0.5.7
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 %define chromium 141.0.7390.107
@@ -125,7 +125,7 @@ Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{version}.tar.
 # See extras.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://gist.githubusercontent.com/wukko/2a591364dda346e10219e4adabd568b1/raw/e75ae3c4a1ce940ef7627916a48bc40882d24d40/nonfree-search-engines-data.tar.gz
 Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202509241653/helium-onboarding-202509241653.tar.gz
-Source1003:	https://github.com/imputnet/ublock-origin-crx/releases/download/1.66.4/uBlock0_1.66.4.crx
+Source1003:	https://github.com/imputnet/ublock-origin-crx/releases/download/1.67.0/uBlock0_1.67.0.crx
 
 # ============================================================================
 # Patches 0 to 1999 are applied in the top level Chromium directory
@@ -298,7 +298,6 @@ BuildRequires:	flex
 BuildRequires:	git
 BuildRequires:	rust
 BuildRequires:	rust-bindgen-cli
-BuildRequires:	imagemagick
 BuildRequires:	pkgconfig(alsa)
 BuildRequires:	pkgconfig(krb5)
 BuildRequires:	pkgconfig(libunwind)
@@ -941,10 +940,6 @@ mkdir -p %{buildroot}%{_datadir}/icons/hicolor/scalable/apps
 install -m 644 helium-*/resources/branding/product_logo.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/helium.svg
 gzip -9 %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/helium.svg
 mv %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/helium.svg.gz %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/helium.svgz
-for i in 16 22 24 32 48 64 128 256; do
-        mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
-	magick helium-*/resources/branding/product_logo.svg -scale ${i}x${i} %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/helium.png
-done
 %else
 for i in 24 48 64 128 256; do
         mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
