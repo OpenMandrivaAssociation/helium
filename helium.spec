@@ -692,6 +692,9 @@ sed -i -e 's,/lib/clang/,/lib64/clang/,g' buildtools/third_party/libc++/modules.
 # We use our version of clang, regardless of what upstream wants
 sed -i -E 's,(clang_version.*= *)".*,\1"21",' build/toolchain/toolchain.gni
 
+# Fix reference to a header that doesn't exist
+sed -i -e "s,#include \"gpu/webgpu/dawn_commit_hash.h\",#define DAWN_COMMIT_HASH \"$(cat gpu/webgpu/DAWN_VERSION)\"," components/viz/host/gpu_host_impl.cc
+
 cat >openmandriva.gn_args <<EOF
 use_sysroot=false
 is_debug=false
