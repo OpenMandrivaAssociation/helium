@@ -1,10 +1,10 @@
-diff -up chromium-112.0.5615.49/third_party/breakpad/breakpad/src/common/linux/libcurl_wrapper.h.11~ chromium-112.0.5615.49/third_party/breakpad/breakpad/src/common/linux/libcurl_wrapper.h
---- chromium-112.0.5615.49/third_party/breakpad/breakpad/src/common/linux/libcurl_wrapper.h.11~	2023-04-10 23:42:50.746505840 +0200
-+++ chromium-112.0.5615.49/third_party/breakpad/breakpad/src/common/linux/libcurl_wrapper.h	2023-04-10 23:44:31.921353542 +0200
-@@ -36,7 +36,7 @@
+diff -up chromium-142.0.7444.59/third_party/breakpad/breakpad/src/common/linux/libcurl_wrapper.h.34~ chromium-142.0.7444.59/third_party/breakpad/breakpad/src/common/linux/libcurl_wrapper.h
+--- chromium-142.0.7444.59/third_party/breakpad/breakpad/src/common/linux/libcurl_wrapper.h.34~	2025-10-24 18:42:30.000000000 +0200
++++ chromium-142.0.7444.59/third_party/breakpad/breakpad/src/common/linux/libcurl_wrapper.h	2025-11-05 16:34:04.461133876 +0100
+@@ -35,7 +35,7 @@
+ #include <string>
  #include <map>
  
- #include "common/using_std_string.h"
 -#include "third_party/curl/curl.h"
 +#include <curl/curl.h>
  
