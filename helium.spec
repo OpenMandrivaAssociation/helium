@@ -103,7 +103,7 @@ Version:	0.6.3
 # system libxml with TLS disabled.
 %define cef 9a14dc9ff79d192b3ab810ad3736f235cd7c609a
 %endif
-Release:	1
+Release:	2
 Summary:	A fast webkit-based web browser
 Group:		Networking/WWW
 License:	BSD, LGPL
@@ -149,6 +149,7 @@ Patch4:		https://src.fedoraproject.org/rpms/chromium/raw/rawhide/f/chromium-77.0
 Patch6:		https://src.fedoraproject.org/rpms/chromium/raw/rawhide/f/chromium-107-proprietary-codecs.patch
 # Disable whitelist, allow everything
 #Patch7:		https://src.fedoraproject.org/rpms/chromium/raw/rawhide/f/chromium-122-disable-FFmpegAllowLists.patch
+Patch8:		helium-fix-default-browser-setting-and-icon.patch
 
 ### 100-199: Arch
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=chromium-dev
@@ -643,6 +644,9 @@ find third_party/ublock -name "*.*~" |xargs rm -f
 mkdir -p third_party/rust-toolchain/bin
 ln -sf %{_bindir}/bindgen third_party/rust-toolchain/bin/
 
+# Fix placeholders for version information
+sed -i -e 's,@HELIUM_MAJOR@.@HELIUM_MINOR@.@HELIUM_PATCH@,%{version},g' base/version_info/version_info_values.h.version
+sed -i -e 's,@HELIUM_PLATFORM@,OpenMandriva,g' base/version_info/version_info_values.h.version
 
 %build
 HEDIR=$(pwd)/helium-%{version}
