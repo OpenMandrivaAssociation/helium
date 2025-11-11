@@ -85,10 +85,10 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.6.3
+Version:	0.6.4
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
-%define chromium 142.0.7444.59
+%define chromium 142.0.7444.134
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -103,7 +103,7 @@ Version:	0.6.3
 # system libxml with TLS disabled.
 %define cef 9a14dc9ff79d192b3ab810ad3736f235cd7c609a
 %endif
-Release:	2
+Release:	1
 Summary:	A fast webkit-based web browser
 Group:		Networking/WWW
 License:	BSD, LGPL
@@ -124,7 +124,7 @@ Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{version}.tar.gz
 # See extras.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://gist.githubusercontent.com/wukko/2a591364dda346e10219e4adabd568b1/raw/e75ae3c4a1ce940ef7627916a48bc40882d24d40/nonfree-search-engines-data.tar.gz
-Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202509241653/helium-onboarding-202509241653.tar.gz
+Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202511061712/helium-onboarding-202511061712.tar.gz
 Source1003:	https://github.com/imputnet/ublock-origin-crx/releases/download/1.67.0/uBlock0_1.67.0.crx
 
 # ============================================================================
