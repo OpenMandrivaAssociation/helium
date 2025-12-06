@@ -402,9 +402,12 @@ BuildRequires:	pkgconfig(opus)
 %if %{system openh264}
 BuildRequires:	pkgconfig(openh264)
 %endif
-%if %{system re2}
+# FIXME as of 0.7.1, re2 headers seem to be required even when
+# not using system re2. This is clearly a build system bug, but
+# as long as the 2 versions are in sync, won't break things badly
+#if %{system re2}
 BuildRequires:	pkgconfig(re2)
-%endif
+#endif
 %if %{system zlib}
 BuildRequires:	pkgconfig(zlib)
 BuildRequires:	pkgconfig(minizip)
