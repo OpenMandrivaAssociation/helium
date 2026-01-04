@@ -85,10 +85,11 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.7.5
+Version:	0.7.9
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
-%define chromium 143.0.7499.109
+# https://github.com/imputnet/helium/blob/main/chromium_version.txt
+%define chromium 143.0.7499.169
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -104,7 +105,7 @@ Version:	0.7.5
 %define cef 9a14dc9ff79d192b3ab810ad3736f235cd7c609a
 %endif
 Release:	1
-Summary:	A fast webkit-based web browser
+Summary:	A fast, privacy friendly, web browser based on Ungoogled Chromium
 Group:		Networking/WWW
 License:	BSD, LGPL
 # From : http://gsdview.appspot.com/chromium-browser-official/
@@ -124,7 +125,7 @@ Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{version}.tar.gz
 # See extras.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://gist.githubusercontent.com/wukko/2a591364dda346e10219e4adabd568b1/raw/e75ae3c4a1ce940ef7627916a48bc40882d24d40/nonfree-search-engines-data.tar.gz
-Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202512121537/helium-onboarding-202512121537.tar.gz
+Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202601021937/helium-onboarding-202601021937.tar.gz
 Source1003:	https://github.com/imputnet/ublock-origin-crx/releases/download/1.67.0/uBlock0_1.67.0.crx
 
 # ============================================================================
@@ -457,23 +458,23 @@ BuildRequires:	jdk-current
 Recommends: (%{name}-qt6 = %{EVRD} if %{_lib}Qt6Gui)
 
 %description
-Chromium is a browser that combines a minimal design with sophisticated
-technology to make the web faster, safer, and easier.
+Helium is a browser that combines a focus on privacy
+with a minimal design and sophisticated technology to
+make the web faster, safer, and easier.
 
-This is the stable channel Chromium browser. It offers a rock solid
-browser which is updated with features and fixes once they have been
-thoroughly tested. If you want the latest features, install the
-chromium-browser-dev package instead.
+Based on Ungoogled Chromium, it is highly compatible
+with the latest versions of Chrome, but without feeding
+your data to Google.
 
 %package qt6
-Summary: Qt 6.x integration for Chromium
+Summary: Qt 6.x integration for Helium
 Group: System/Libraries
 Requires: %{name} = %{EVRD}
 Obsoletes: chromium-browser-stable-qt6
 Obsoletes: %{name}-qt5 < %{EVRD}
 
 %description qt6
-Qt 6.x integration for Chromium
+Qt 6.x integration for Helium
 
 %package -n cef-qt6
 Summary: Qt 6.x integration for CEF
