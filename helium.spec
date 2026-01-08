@@ -85,11 +85,11 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.7.9
+Version:	0.7.10
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 143.0.7499.169
+%define chromium 143.0.7499.192
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
