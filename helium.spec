@@ -85,11 +85,11 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.7.10
+Version:	0.8.3
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 143.0.7499.192
+%define chromium 144.0.7559.96
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -123,7 +123,7 @@ Source11:	https://chromium-fonts.storage.googleapis.com/336e775eec536b2d785cc80e
 %endif
 Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{version}.tar.gz
-# See extras.ini inside the helium tarball (Source1000) and keep in sync
+# See deps.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://gist.githubusercontent.com/wukko/2a591364dda346e10219e4adabd568b1/raw/e75ae3c4a1ce940ef7627916a48bc40882d24d40/nonfree-search-engines-data.tar.gz
 Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202601021937/helium-onboarding-202601021937.tar.gz
 Source1003:	https://github.com/imputnet/ublock-origin-crx/releases/download/1.67.0/uBlock0_1.67.0.crx
