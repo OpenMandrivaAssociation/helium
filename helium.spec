@@ -603,10 +603,8 @@ sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
 rm -rf third_party/libc++ third_party/libc++abi
 %endif
 
-# Hard code extra version
-FILE=chrome/common/channel_info_posix.cc
-sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"%{product_vendor} %{product_version}"/' $FILE
-cmp $FILE $FILE.orig && exit 1
+# Extra version info is copied from the environment
+export CHROME_VERSION_EXTRA="%{product_vendor} %{product_version}"
 
 # use the system nodejs
 mkdir -p third_party/node/linux/node-linux-x64/bin
