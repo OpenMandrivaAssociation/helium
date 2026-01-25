@@ -309,6 +309,7 @@ BuildRequires:	re2c
 BuildRequires:	flex
 BuildRequires:	git
 BuildRequires:	rust
+BuildRequires:	rustfmt
 BuildRequires:	rust-bindgen-cli
 BuildRequires:	pkgconfig(alsa)
 BuildRequires:	pkgconfig(krb5)
