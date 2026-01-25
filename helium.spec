@@ -283,6 +283,7 @@ Patch1047:	chromium-system-bindgen.patch
 # Having it actually working is more important than hiding network
 # infrastructure.
 Patch1049:	helium-webrtc-default-to-publicandprivateinterfaces.patch
+Patch1050:	dont-assume-system-rust-is-prehistoric.patch
 
 # ============================================================================
 # Patches 2000 to 2999 are applied inside the CEF tree.

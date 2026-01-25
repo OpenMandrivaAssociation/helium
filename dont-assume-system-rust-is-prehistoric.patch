@@ -1,0 +1,12 @@
+diff -up chromium-144.0.7559.96/build/config/rust.gni.omv~ chromium-144.0.7559.96/build/config/rust.gni
+--- chromium-144.0.7559.96/build/config/rust.gni.omv~	2026-01-25 18:31:14.795304417 +0100
++++ chromium-144.0.7559.96/build/config/rust.gni	2026-01-25 18:31:41.788489138 +0100
+@@ -112,7 +112,7 @@ use_chromium_rust_toolchain = rust_sysro
+ # `rustc_nightly_capability = false` will make the build avoid the use of
+ # Rust nightly features. There are no bots that test this and there is no
+ # guarantee it will work, but we accept patches for this configuration.
+-rustc_nightly_capability = use_chromium_rust_toolchain
++rustc_nightly_capability = true
+ 
+ # Platform support for the Rust toolchain.
+ chromium_toolchain_supports_platform = !is_wasm
