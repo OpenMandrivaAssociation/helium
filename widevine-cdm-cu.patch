@@ -1,10 +1,8 @@
-description: Disable Widevine CDM component updater
-author: Michel Le Bihan <michel@lebihan.pl>
-
---- a/chrome/browser/component_updater/registration.cc
-+++ b/chrome/browser/component_updater/registration.cc
-@@ -130,7 +130,7 @@ void RegisterComponentsForUpdate() {
- #endif  // BUILDFLAG(IS_MAC)
+diff -up chromium-145.0.7632.116/chrome/browser/component_updater/registration.cc.25~ chromium-145.0.7632.116/chrome/browser/component_updater/registration.cc
+--- chromium-145.0.7632.116/chrome/browser/component_updater/registration.cc.25~	2026-02-27 17:59:30.836442596 +0100
++++ chromium-145.0.7632.116/chrome/browser/component_updater/registration.cc	2026-02-27 18:00:51.408671463 +0100
+@@ -119,7 +119,7 @@ void RegisterComponentsForUpdate() {
+ #endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC)
  
  #if BUILDFLAG(ENABLE_MEDIA_FOUNDATION_WIDEVINE_CDM)
 -  RegisterMediaFoundationWidevineCdmComponent(cus);

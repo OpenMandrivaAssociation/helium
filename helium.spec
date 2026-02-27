@@ -85,11 +85,11 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.8.5
+Version:	0.9.4
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 144.0.7559.132
+%define chromium 145.0.7632.116
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -271,7 +271,6 @@ Patch1030:	chromium-133-workaround-bug-381407882.patch
 Patch1040:	chromium-134-drop-workarounds-for-ancient-mesa-bugs.patch
 Patch1041:	chromium-134-drop-workarounds-for-ancient-mesa-bugs-part2.patch
 Patch1042:	chromium-134-if-chromeos-can-do-it-so-can-linux.patch
-Patch1043:	chromium-139-workaround-clang-21.patch
 #Patch1044:	chromium-136-no-unknown-clang-flag.patch
 Patch1047:	chromium-system-bindgen.patch
 # Keeping the source here for now, just in case we need to backport
