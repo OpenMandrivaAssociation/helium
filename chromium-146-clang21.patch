@@ -1,0 +1,12 @@
+diff -up chromium-146.0.7680.80/build/config/compiler/BUILD.gn.omv~ chromium-146.0.7680.80/build/config/compiler/BUILD.gn
+--- chromium-146.0.7680.80/build/config/compiler/BUILD.gn.omv~	2026-03-14 20:28:51.264243896 +0100
++++ chromium-146.0.7680.80/build/config/compiler/BUILD.gn	2026-03-14 20:29:10.891448204 +0100
+@@ -1861,7 +1861,7 @@ config("sanitize_c_array_bounds") {
+       # sanitizer) is enabled, they then do expensive debug like operations. We
+       # want to suppress this behaviour since we want to keep performance costs
+       # as low as possible while having these checks.
+-      "-fsanitize-ignore-for-ubsan-feature=array-bounds",
++      #"-fsanitize-ignore-for-ubsan-feature=array-bounds",
+ 
+       # Because we've enabled array-bounds sanitizing we also want to suppress
+       # the related warning about "unsafe-buffer-usage-in-static-sized-array",
