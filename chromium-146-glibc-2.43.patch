@@ -1,0 +1,12 @@
+diff -up chromium-146.0.7680.80/sandbox/linux/system_headers/linux_seccomp.h.omv~ chromium-146.0.7680.80/sandbox/linux/system_headers/linux_seccomp.h
+--- chromium-146.0.7680.80/sandbox/linux/system_headers/linux_seccomp.h.omv~	2026-03-16 18:53:16.540081367 +0100
++++ chromium-146.0.7680.80/sandbox/linux/system_headers/linux_seccomp.h	2026-03-16 18:53:55.602957306 +0100
+@@ -214,8 +214,4 @@ struct seccomp_notif_addfd {
+ #define SECCOMP_RET_INVALID 0x00010000U  // Illegal return value
+ #endif
+ 
+-#ifndef SYS_SECCOMP
+-#define SYS_SECCOMP                   1
+-#endif
+-
+ #endif  // SANDBOX_LINUX_SYSTEM_HEADERS_LINUX_SECCOMP_H_

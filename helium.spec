@@ -244,6 +244,7 @@ Patch1011:	perfetto-system-gn.patch
 Patch1012:	chromium-105-minizip-ng.patch
 %endif
 Patch1013:	chromium-132-compile.patch
+Patch1014:	chromium-146-glibc-2.43.patch
 Patch1015:	chromium-113.0.5672.63-compile.patch
 Patch1016:	chroimum-119-workaround-crash-on-startup.patch
 # More and better search engines
