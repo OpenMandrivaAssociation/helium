@@ -106,7 +106,7 @@ Version:	0.10.6
 %define cef 4db0d8872402fb88a08cb1c145001095ffa387dd
 %define cefversion %(echo %{chromium} |cut -d. -f3)
 %endif
-Release:	1
+Release:	2
 Summary:	A fast, privacy friendly, web browser based on Ungoogled Chromium
 Group:		Networking/WWW
 License:	BSD, LGPL
