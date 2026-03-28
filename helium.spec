@@ -85,11 +85,11 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.10.6
+Version:	0.10.7
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 146.0.7680.153
+%define chromium 146.0.7680.164
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -103,7 +103,7 @@ Version:	0.10.6
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-%define cef 4db0d8872402fb88a08cb1c145001095ffa387dd
+%define cef 3ca6a87d10927bb1cccab7c9eabcabba316decbc
 %define cefversion %(echo %{chromium} |cut -d. -f3)
 %endif
 Release:	2
@@ -261,10 +261,10 @@ Patch1022:	chromium-115-fix-generate_fontconfig_caches.patch
 # FIXME probably needs porting
 #Patch1023:	cef-115-minizip-ng.patch
 # FIXME needs porting
-Patch1024:	cef-126-rebase-to-ungoogled.patch
-Patch1025:	cef-125-ungoogling.patch
+#Patch1024:	cef-126-rebase-to-ungoogled.patch
+#Patch1025:	cef-125-ungoogling.patch
 Patch1026:	cef-zlib-linkage.patch
-Patch1027:	ozone-dont-use-x11-on-wayland.patch
+#Patch1027:	ozone-dont-use-x11-on-wayland.patch
 Patch1028:	cef-126-zlib-ng.patch
 %endif
 %if %{system zlib}
@@ -562,7 +562,7 @@ python $HEDIR/utils/domain_substitution.py apply -r $HEDIR/domain_regex.list -f 
 
 %if 0%{?cef:1}
 tar xf %{S:10}
-mv chromiumembedded-cef-* cef
+mv cef-* cef
 # CEF's scripts refuse to work outside of git repositories, so
 # we have to fake it
 git init
@@ -761,6 +761,10 @@ use_system_wayland_scanner=true
 use_system_wayland_server=true
 use_xkbcommon=true
 enable_vulkan=true
+use_vulkan=true
+angle_enable_vulkan=true
+angle_enable_swiftshader=true
+skia_use_dawn=true
 use_gtk=true
 gtk_version=4
 use_qt=true
@@ -820,6 +824,7 @@ is_component_ffmpeg=true
 enable_hangout_services_extension=true
 enable_widevine=true
 use_vaapi=true
+use_ozone=true
 angle_link_glx=true
 angle_test_enable_system_egl=true
 enable_hevc_parser_and_hw_decoder=true
@@ -885,11 +890,7 @@ python third_party/libaddressinput/chromium/tools/update-strings.py
 
 %if %{with browser}
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args)" out/Release
-%ifarch %{x86_64}
 ninja -C out/Release chrome chrome_sandbox chromedriver
-%else
-ninja -C out/Release chrome chrome_sandbox
-%endif
 %endif
 
 %if 0%{?cef:1}
@@ -915,6 +916,7 @@ mkdir -p %{buildroot}%{_mandir}/man1
 install -m 755 %{SOURCE1} %{buildroot}%{_libdir}/%{name}/
 install -m 755 out/Release/chrome %{buildroot}%{_libdir}/%{name}/
 install -m 4755 out/Release/chrome_sandbox %{buildroot}%{_libdir}/%{name}/chrome-sandbox
+install -m 755 out/Release/chrome_crashpad_handler %{buildroot}%{_libdir}/%{name}/
 install -m 644 out/Release/locales/*.pak %{buildroot}%{_libdir}/%{name}/locales/
 install -m 644 out/Release/chrome_100_percent.pak %{buildroot}%{_libdir}/%{name}/
 install -m 644 out/Release/resources.pak %{buildroot}%{_libdir}/%{name}/
@@ -942,10 +944,8 @@ install -m 755 out/Release/libvk_swiftshader.so %{buildroot}%{_libdir}/%{name}/
 install -m 644 out/Release/*.bin %{buildroot}%{_libdir}/%{name}/
 install -m 644 chrome/browser/resources/default_apps/* %{buildroot}%{_libdir}/%{name}/default_apps/
 ln -s %{_libdir}/%{name}/chromium-wrapper %{buildroot}%{_bindir}/%{name}
-%ifarch %{x86_64}
 cp -a out/Release/chromedriver %{buildroot}%{_libdir}/%{name}/chromedriver
 ln -s %{_libdir}/%{name}/chromedriver %{buildroot}%{_bindir}/chromedriver
-%endif
 
 find out/Release/resources/ -name "*.d" -exec rm {} \;
 cp -r out/Release/resources %{buildroot}%{_libdir}/%{name}
@@ -1048,6 +1048,7 @@ cp -a cef/libcef_dll cef/tests %{buildroot}%{_libdir}/cef
 %{_libdir}/%{name}/chromium-wrapper
 %{_libdir}/%{name}/chrome
 %{_libdir}/%{name}/chrome-sandbox
+%{_libdir}/%{name}/chrome_crashpad_handler
 %optional %{_libdir}/%{name}/icudtl.dat
 %{_libdir}/%{name}/locales
 %{_libdir}/%{name}/chrome_100_percent.pak
@@ -1061,12 +1062,10 @@ cp -a cef/libcef_dll cef/tests %{buildroot}%{_libdir}/cef
 %files qt6
 %{_libdir}/%{name}/libqt6_shim.so
 
-%ifarch %{x86_64}
 %files chromedriver
 %doc LICENSE AUTHORS
 %{_bindir}/chromedriver
 %{_libdir}/%{name}/chromedriver
-%endif
 %endif
 
 %clean
