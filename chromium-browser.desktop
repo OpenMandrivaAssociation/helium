@@ -181,7 +181,7 @@ Comment[vi]=Duyệt web
 Comment[wa]=Naivyî so les pådjes waibe
 Comment[zh_CN]=浏览 Web
 Comment[zh_TW]=瀏覽網頁
-Exec=chromium --use-gl=angle --use-angle=vulkan --enable-features=Vulkan,DefaultANGLEVulkan,VulkanFromANGLE --ozone-platform-hint=auto %U
+Exec=chromium --ignore-gpu-blocklist --enable-skia-graphite --enable-features=Vulkan,DefaultANGLEVulkan,VulkanFromANGLE,SkiaGraphite --ozone-platform-hint=auto %U
 Icon=chromium
 Terminal=false
 Type=Application
