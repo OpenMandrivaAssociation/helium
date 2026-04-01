@@ -765,6 +765,7 @@ use_vulkan=true
 angle_enable_vulkan=true
 angle_enable_swiftshader=true
 skia_use_dawn=true
+use_dawn=true
 use_gtk=true
 gtk_version=4
 use_qt=true
