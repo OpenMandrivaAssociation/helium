@@ -85,11 +85,11 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.10.7
+Version:	0.10.9
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 146.0.7680.164
+%define chromium 146.0.7680.177
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -434,6 +434,7 @@ BuildRequires:	pkgconfig(glu)
 BuildRequires:	pkgconfig(gl)
 BuildRequires:	cups-devel
 BuildRequires:	pkgconfig(dbus-glib-1)
+BuildRequires:	pkgconfig(libsystemd)
 BuildRequires:	pkgconfig(gnome-keyring-1)
 BuildRequires:	pam-devel
 BuildRequires:	pkgconfig(xtst)
