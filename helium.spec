@@ -85,11 +85,11 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.12.3
+Version:	0.12.4
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 148.0.7778.167
+%define chromium 148.0.7778.178
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -272,7 +272,7 @@ Patch1029:	chromium-127-minizip-ng.patch
 %endif
 # https://issues.chromium.org/issues/381407882
 Patch1030:	chromium-133-workaround-bug-381407882.patch
-#Patch1031:	chromium-137-no-unknown-compiler-flags.patch
+Patch1031:	chromium-148-qt-printing.patch
 Patch1040:	chromium-134-drop-workarounds-for-ancient-mesa-bugs.patch
 Patch1041:	chromium-134-drop-workarounds-for-ancient-mesa-bugs-part2.patch
 Patch1042:	chromium-134-if-chromeos-can-do-it-so-can-linux.patch
@@ -341,6 +341,7 @@ BuildRequires:	pkgconfig(Qt6DBus)
 BuildRequires:	pkgconfig(Qt6Gui)
 BuildRequires:	pkgconfig(Qt6Widgets)
 BuildRequires:	pkgconfig(Qt6OpenGL)
+BuildRequires:	pkgconfig(Qt6PrintSupport)
 BuildRequires:	pkgconfig(RapidJSON)
 BuildRequires:	pkgconfig(xkbcommon)
 BuildRequires:	pkgconfig(atspi-2)
