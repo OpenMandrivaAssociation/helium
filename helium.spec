@@ -85,11 +85,11 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.12.4
+Version:	0.13.2
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 148.0.7778.178
+%define chromium 149.0.7827.102
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -127,8 +127,8 @@ Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{version}.tar.gz
 # See deps.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://gist.githubusercontent.com/wukko/2a591364dda346e10219e4adabd568b1/raw/e75ae3c4a1ce940ef7627916a48bc40882d24d40/nonfree-search-engines-data.tar.gz
-Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202605050730/helium-onboarding-202605050730.tar.gz
-Source1003:	https://github.com/imputnet/uBlock/releases/download/1.70.0/uBlock0_1.70.0.chromium.zip
+Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202606092023/helium-onboarding-202606092023.tar.gz
+Source1003:	https://github.com/imputnet/uBlock/releases/download/1.71.0/uBlock0_1.71.0.chromium.zip
 
 # ============================================================================
 # Patches 0 to 1999 are applied in the top level Chromium directory
@@ -174,7 +174,7 @@ Patch303:	https://sources.debian.org/data/main/c/chromium/148.0.7778.96-1/debian
 # Not needed for OM
 ###		https://sources.debian.org/data/main/c/chromium/148.0.7778.96-1/debian/patches/fixes/bindgen.patch
 Patch304:	https://sources.debian.org/data/main/c/chromium/148.0.7778.96-1/debian/patches/fixes/memory-allocator-dcheck-assert-fix.patch
-Patch305:	https://sources.debian.org/data/main/c/chromium/148.0.7778.96-1/debian/patches/fixes/armhf-icf.patch
+Patch305:	https://sources.debian.org/data/main/c/chromium/149.0.7827.102-1/debian/patches/fixes/armhf-icf.patch
 Patch306:	https://sources.debian.org/data/main/c/chromium/148.0.7778.96-1/debian/patches/fixes/predictor-denial-of-service.patch
 Patch307:	https://sources.debian.org/data/main/c/chromium/148.0.7778.96-1/debian/patches/fixes/fix-assert-in-vnc-sessions.patch
 Patch308:	https://sources.debian.org/data/main/c/chromium/148.0.7778.96-1/debian/patches/fixes/armhf-timespec.patch
@@ -237,14 +237,12 @@ Patch1004:	chromium-107-system-libs.patch
 Patch1006:	chromium-extra-widevine-search-paths.patch
 Patch1007:	chromium-116-dont-override-thinlto-cache-policy.patch
 Patch1008:	chromium-116-system-brotli.patch
-Patch1009:	chromium-146-clang21.patch
 Patch1010:	chromium-132-system-toolchain.patch
 Patch1011:	perfetto-system-gn.patch
 %if %{system zlib}
 Patch1012:	chromium-105-minizip-ng.patch
 %endif
 Patch1013:	chromium-132-compile.patch
-Patch1014:	chromium-146-glibc-2.43.patch
 Patch1015:	chromium-147-clang22-no-no-lifetime-dse.patch
 Patch1016:	chroimum-119-workaround-crash-on-startup.patch
 # More and better search engines
@@ -288,7 +286,7 @@ Patch1047:	chromium-system-bindgen.patch
 # infrastructure.
 Patch1049:	helium-webrtc-default-to-publicandprivateinterfaces.patch
 Patch1050:	dont-assume-system-rust-is-prehistoric.patch
-Patch1051:	chromium-148-system-clang.patch
+Patch1051:	chromium-149-no-flags-for-unreleased-clang.patch
 Patch1052:	chromium-148-fix-build-without-ubsan.patch
 
 # ============================================================================
