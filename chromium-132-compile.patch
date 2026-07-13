@@ -1,6 +1,6 @@
-diff -up chromium-141.0.7390.54/build/config/linux/libdrm/BUILD.gn.43~ chromium-141.0.7390.54/build/config/linux/libdrm/BUILD.gn
---- chromium-141.0.7390.54/build/config/linux/libdrm/BUILD.gn.43~	2025-09-29 19:05:47.000000000 +0200
-+++ chromium-141.0.7390.54/build/config/linux/libdrm/BUILD.gn	2025-10-04 04:12:44.700492530 +0200
+diff -up chromium-150.0.7871.114/build/config/linux/libdrm/BUILD.gn.43~ chromium-150.0.7871.114/build/config/linux/libdrm/BUILD.gn
+--- chromium-150.0.7871.114/build/config/linux/libdrm/BUILD.gn.43~	2025-09-29 19:05:47.000000000 +0200
++++ chromium-150.0.7871.114/build/config/linux/libdrm/BUILD.gn	2025-10-04 04:12:44.700492530 +0200
 @@ -15,7 +15,7 @@ declare_args() {
  }
  
@@ -10,23 +10,3 @@ diff -up chromium-141.0.7390.54/build/config/linux/libdrm/BUILD.gn.43~ chromium-
    pkg_config("libdrm_config") {
      packages = [ "libdrm" ]
    }
-diff -up chromium-141.0.7390.54/chrome/browser/vr/BUILD.gn.43~ chromium-141.0.7390.54/chrome/browser/vr/BUILD.gn
---- chromium-141.0.7390.54/chrome/browser/vr/BUILD.gn.43~	2025-10-04 04:12:44.575523080 +0200
-+++ chromium-141.0.7390.54/chrome/browser/vr/BUILD.gn	2025-10-04 04:14:24.786634259 +0200
-@@ -143,11 +143,11 @@ if (enable_vr) {
- 
-     defines = [ "VR_UI_IMPLEMENTATION" ]
- 
--    if (use_native_partitions) {
--      # Mark symbols in this library as belonging to the VR partition. Only
--      # exported symbols (module entrypoints) are affected.
--      cflags = [ "-fsymbol-partition=vr_partition" ]
--    }
-+#    if (use_native_partitions) {
-+#      # Mark symbols in this library as belonging to the VR partition. Only
-+#      # exported symbols (module entrypoints) are affected.
-+#      cflags = [ "-fsymbol-partition=vr_partition" ]
-+#    }
- 
-     if (is_android) {
-       sources += [ "jni_onload.cc" ]
