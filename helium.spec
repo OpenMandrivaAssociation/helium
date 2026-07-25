@@ -85,11 +85,11 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.14.7
+Version:	0.14.9
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 150.0.7871.128
+%define chromium 150.0.7871.186
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -103,7 +103,7 @@ Version:	0.14.7
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-%define cef 3ca6a87d10927bb1cccab7c9eabcabba316decbc
+%define cef 8df757d5c354d5ec33e24efcfb26aab92c132f61
 %define cefversion %(echo %{chromium} |cut -d. -f3)
 %endif
 Release:	1
@@ -126,9 +126,9 @@ Source11:	https://chromium-fonts.storage.googleapis.com/336e775eec536b2d785cc80e
 Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{version}.tar.gz
 # See deps.ini inside the helium tarball (Source1000) and keep in sync
-Source1001:	https://gist.githubusercontent.com/wukko/2a591364dda346e10219e4adabd568b1/raw/e75ae3c4a1ce940ef7627916a48bc40882d24d40/nonfree-search-engines-data.tar.gz
-Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202606171625/helium-onboarding-202606171625.tar.gz
-Source1003:	https://github.com/imputnet/uBlock/releases/download/1.71.0/uBlock0_1.71.0.chromium.zip
+Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202607242007/nonfree-search-engines-data-202607242007.tar.gz
+Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202607241958/helium-onboarding-202607241958.tar.gz
+Source1003:	https://github.com/imputnet/uBlock/releases/download/1.72.2/uBlock0_1.72.2.chromium.zip
 
 # ============================================================================
 # Patches 0 to 1999 are applied in the top level Chromium directory
@@ -710,7 +710,7 @@ sed -i -e 's,/lib/clang/,/lib64/clang/,g' buildtools/third_party/libc++/modules.
 %endif
 
 # We use our version of clang, regardless of what upstream wants
-sed -i -E 's,(clang_version.*= *)".*,\1"22",' build/toolchain/toolchain.gni
+sed -i -E 's,(clang_version.*= *)".*,\1"23",' build/toolchain/toolchain.gni
 
 # Fix reference to a header that doesn't exist
 sed -i -e "s,#include \"gpu/webgpu/dawn_commit_hash.h\",#define DAWN_COMMIT_HASH \"$(cat gpu/webgpu/DAWN_VERSION)\"," components/viz/host/gpu_host_impl.cc
