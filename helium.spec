@@ -122,6 +122,8 @@ Source4:	chromium-drirc-disable-10bpc-color-configs.conf
 %if 0%{?cef:1}
 Source10:	https://github.com/chromiumembedded/cef/archive/refs/heads/%{cefversion}.tar.gz#/cef-%{cefversion}.tar.gz
 Source11:	https://chromium-fonts.storage.googleapis.com/336e775eec536b2d785cc80eff6ac39051931286#/test_fonts.tar.gz
+# pkg-config template for the system-library view of CEF (OnlyOffice tree stays under %{_libdir}/cef).
+Source12:	cef.pc.in
 %endif
 Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{version}.tar.gz
@@ -521,7 +523,11 @@ Group: Development/Libraries
 Requires: cef = %{EVRD}
 
 %description -n cef-devel
-Chromium Embedded Framework - library for embeddind Chromium in custom applications
+Chromium Embedded Framework - library for embedding Chromium in custom
+applications. Provides both the OnlyOffice/OBS-style tree under
+%{_libdir}/cef and a normal system layout (headers in %{_includedir}/cef,
+libcef.so / libcef_dll_wrapper.a symlinks in %{_libdir}, and pkg-config
+files cef.pc / libcef.pc) for ordinary build systems.
 
 # Prebuilt sample apps (GTK + Qt). Optional demos / smoke tests; not required
 # for embedding. Sources remain in cef-devel under tests/.
@@ -1106,6 +1112,29 @@ mkdir -p %{buildroot}%{_libdir}/cef/include/base/internal/net/base
 cp -a net/base/net_error_list.h %{buildroot}%{_libdir}/cef/include/base/internal/net/base/
 cp -a cef/libcef_dll cef/tests %{buildroot}%{_libdir}/cef
 
+# --- FHS / system-library convenience (in addition to the OnlyOffice tree) ---
+# Real payload stays under %{_libdir}/cef so resource/sandbox discovery that
+# follows libcef.so's real path continues to work. Symlinks make -lcef and
+# pkg-config work like any other system library.
+mkdir -p %{buildroot}%{_libdir} %{buildroot}%{_includedir} \
+	%{buildroot}%{_libdir}/pkgconfig
+# libcef.so and companion shims live in Release/; expose the main DSO at
+# the standard linker search path (relative so multiarch libdirs work).
+ln -sfn cef/Release/libcef.so %{buildroot}%{_libdir}/libcef.so
+# Static C++ wrapper (libstdc++ ABI) for apps using the CEF C++ API.
+ln -sfn cef/libcef_dll_wrapper/libcef_dll_wrapper.a \
+	%{buildroot}%{_libdir}/libcef_dll_wrapper.a
+# Headers as %{_includedir}/cef → same tree OnlyOffice sees under cef/include.
+# Absolute path avoids guessing lib vs lib64 from include/.
+ln -sfn %{_libdir}/cef/include %{buildroot}%{_includedir}/cef
+# pkg-config
+sed -e 's|@PREFIX@|%{_prefix}|g' \
+	-e 's|@LIBDIR@|%{_libdir}|g' \
+	-e 's|@INCLUDEDIR@|%{_includedir}|g' \
+	-e 's|@VERSION@|%{chromium}|g' \
+	%{SOURCE12} > %{buildroot}%{_libdir}/pkgconfig/cef.pc
+# Alias used by some build systems that look for "libcef" rather than "cef".
+ln -sfn cef.pc %{buildroot}%{_libdir}/pkgconfig/libcef.pc
 # Sample apps: live next to libcef.so so $ORIGIN rpath finds the library, and
 # so GetResourceDir() resolves ./cefclient_files beside the executable.
 install -m 755 out/Release-CEF/cefclient out/Release-CEF/cefclient_qt \
@@ -1132,6 +1161,8 @@ chmod 755 %{buildroot}%{_bindir}/cefclient %{buildroot}%{_bindir}/cefclient_qt
 %exclude %{_libdir}/cef/Release/cefclient_qt
 %exclude %{_libdir}/cef/Release/cefclient_files
 %{_libdir}/cef/Resources
+# FHS symlink: linker finds -lcef without special -L paths.
+%{_libdir}/libcef.so
 
 %files -n cef-qt6
 %{_libdir}/cef/Release/libqt6_shim.so
@@ -1141,6 +1172,11 @@ chmod 755 %{buildroot}%{_bindir}/cefclient %{buildroot}%{_bindir}/cefclient_qt
 %{_libdir}/cef/libcef_dll
 %{_libdir}/cef/tests
 %{_libdir}/cef/libcef_dll_wrapper
+# FHS / pkg-config view of the same files.
+%{_includedir}/cef
+%{_libdir}/libcef_dll_wrapper.a
+%{_libdir}/pkgconfig/cef.pc
+%{_libdir}/pkgconfig/libcef.pc
 
 %files -n cef-examples
 %{_bindir}/cefclient
