@@ -22,10 +22,8 @@
 %endif
 
 %bcond_without browser
-# Disabled for now because we need libc++ anyway (therefore
-# can't use it in most other applications) and rust linkage
-# fails in 126.x
-%bcond_with cef
+# CEF embedding library (libcef + samples). Built in addition to the browser.
+%bcond_without cef
 # Use the internal libc++ instead of libstdc++
 # This should usually be avoided because of potential symbol
 # clashes when using e.g. Qt and Chromium at the same time
@@ -103,6 +101,8 @@ Version:	0.14.9
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
+# CEF tip lists chromium_checkout refs/tags/150.0.7871.187; we build against
+# 186 (available lite tarball) with the rebased patchset below.
 %define cef 8df757d5c354d5ec33e24efcfb26aab92c132f61
 %define cefversion %(echo %{chromium} |cut -d. -f3)
 %endif
@@ -259,12 +259,18 @@ Patch1021:	chromium-127-system-bindgen.patch
 Patch1022:	chromium-115-fix-generate_fontconfig_caches.patch
 # FIXME probably needs porting
 #Patch1023:	cef-115-minizip-ng.patch
-# FIXME needs porting
-#Patch1024:	cef-126-rebase-to-ungoogled.patch
+# Rebase CEF's chromium patchset so it applies on top of Helium/ungoogled
+# (domain substitution + Helium chrome/browser/ui changes).
+Patch1024:	cef-7871-helium-patch-rebase.patch
 #Patch1025:	cef-125-ungoogling.patch
 Patch1026:	cef-zlib-linkage.patch
-#Patch1027:	ozone-dont-use-x11-on-wayland.patch
+# Incomplete type content::WebContents after Chromium include cleanup
+# (CEF 7871 file_dialog_manager.cc needs the full web_contents.h).
+Patch1027:	cef-7871-web_contents-include.patch
+#Patch1029:	ozone-dont-use-x11-on-wayland.patch
 Patch1028:	cef-126-zlib-ng.patch
+# Qt cefclient sample (applied inside cef/ via 2000-2999 range).
+Patch2001:	cef-7871-qt-cefclient.patch
 %endif
 %if %{system zlib}
 Patch1029:	chromium-127-minizip-ng.patch
@@ -272,6 +278,8 @@ Patch1029:	chromium-127-minizip-ng.patch
 # https://issues.chromium.org/issues/381407882
 Patch1030:	chromium-133-workaround-bug-381407882.patch
 Patch1031:	chromium-148-qt-printing.patch
+# Qt native file dialogs when XDG portals are unavailable (no GTK fallback).
+Patch1032:	chromium-150-qt-file-dialog.patch
 Patch1040:	chromium-134-drop-workarounds-for-ancient-mesa-bugs.patch
 Patch1041:	chromium-134-drop-workarounds-for-ancient-mesa-bugs-part2.patch
 Patch1042:	chromium-134-if-chromeos-can-do-it-so-can-linux.patch
@@ -514,6 +522,22 @@ Requires: cef = %{EVRD}
 
 %description -n cef-devel
 Chromium Embedded Framework - library for embeddind Chromium in custom applications
+
+# Prebuilt sample apps (GTK + Qt). Optional demos / smoke tests; not required
+# for embedding. Sources remain in cef-devel under tests/.
+%package -n cef-examples
+Summary: Sample applications for the Chromium Embedded Framework (GTK and Qt)
+Group: Development/Other
+Requires: cef = %{EVRD}
+# Qt sample needs the CEF Qt shim; GTK sample is fine with it installed too.
+Requires: cef-qt6 = %{EVRD}
+# GTK/Qt library deps are picked up automatically from the ELF binaries.
+
+%description -n cef-examples
+Prebuilt cefclient (GTK) and cefclient_qt sample browsers that embed libcef.
+Useful for testing the CEF stack and as a reference for embedding into GTK or
+Qt applications. Library headers, the C++ wrapper, and sample sources live in
+cef-devel.
 %endif
 
 %package chromedriver
@@ -940,15 +964,30 @@ ninja -C out/Release chrome chrome_sandbox chromedriver
 %endif
 
 %if 0%{?cef:1}
-# Apply CEF specific patches and build CEF...
+# Generate CEF translated sources (libcef_dll wrappers, cef_paths.gypi, …)
+# before applying CEF's Chromium patchset. version_manager needs a working
+# clang for API hashes; point it at the system toolchain when Chromium's
+# bundled llvm-build is absent (lite tarball / unbundle builds).
 cd cef
+if [ ! -x ../third_party/llvm-build/Release+Asserts/bin/clang ]; then
+	mkdir -p ../third_party/llvm-build/Release+Asserts/bin
+	ln -sfn %{_bindir}/clang ../third_party/llvm-build/Release+Asserts/bin/clang
+	ln -sfn %{_bindir}/clang++ ../third_party/llvm-build/Release+Asserts/bin/clang++
+fi
+python tools/version_manager.py -u --fast-check || :
+# Apply CEF specific patches and build CEF...
 ./tools/patch.sh
 cd ..
 
 # Lastly, try to build it...
 # We have to use use_thin_lto=false because LTO in CEF causes
 # an OOM while linking libcef.so even on boxes with 64 GB RAM + 64 GB swap
-out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0" out/Release-CEF
+# blink_heap_inside_shared_library=true is required for libcef.so (shared
+# library); without it Blink uses local-exec TLS and ld.lld fails with
+# R_X86_64_TPOFF32 cannot be used with -shared. CEF's gn_args.py sets this
+# automatically; we must pass it ourselves with custom args.
+out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0 blink_heap_inside_shared_library=true" out/Release-CEF
+# `cef` pulls in cefclient (GTK) and cefclient_qt samples on Linux.
 ninja -C out/Release-CEF cef chrome_sandbox
 %endif
 
@@ -1048,7 +1087,10 @@ cp -a chrome_100_percent.pak chrome_200_percent.pak icudtl.dat locales resources
 mkdir -p %{buildroot}%{_libdir}/cef/libcef_dll_wrapper
 cd obj/cef
 # libcef_dll_wrapper.a is a thin archive, containing references to the object
-# files rather than the object files themselves
+# files rather than the object files themselves.
+# Built with system libstdc++ (not Chromium's private libc++) so host apps
+# (Qt, boost, etc.) can link it without mixing C++ standard libraries.
+# libcef.so itself still uses Chromium's libc++ behind the C API.
 llvm-ar -t libcef_dll_wrapper.a |xargs llvm-ar cru libcef_dll_wrapper_full.a
 mv -f libcef_dll_wrapper_full.a libcef_dll_wrapper.a
 llvm-ranlib libcef_dll_wrapper.a
@@ -1064,10 +1106,31 @@ mkdir -p %{buildroot}%{_libdir}/cef/include/base/internal/net/base
 cp -a net/base/net_error_list.h %{buildroot}%{_libdir}/cef/include/base/internal/net/base/
 cp -a cef/libcef_dll cef/tests %{buildroot}%{_libdir}/cef
 
+# Sample apps: live next to libcef.so so $ORIGIN rpath finds the library, and
+# so GetResourceDir() resolves ./cefclient_files beside the executable.
+install -m 755 out/Release-CEF/cefclient out/Release-CEF/cefclient_qt \
+	%{buildroot}%{_libdir}/cef/Release/
+cp -a out/Release-CEF/cefclient_files %{buildroot}%{_libdir}/cef/Release/
+# Convenience launchers (exec the real binary so $ORIGIN stays Release/).
+# Unquoted heredoc so rpm expands %{_libdir}; escape $ so the shell keeps "$@".
+mkdir -p %{buildroot}%{_bindir}
+cat > %{buildroot}%{_bindir}/cefclient << EOF
+#!/bin/sh
+exec %{_libdir}/cef/Release/cefclient "\$@"
+EOF
+cat > %{buildroot}%{_bindir}/cefclient_qt << EOF
+#!/bin/sh
+exec %{_libdir}/cef/Release/cefclient_qt "\$@"
+EOF
+chmod 755 %{buildroot}%{_bindir}/cefclient %{buildroot}%{_bindir}/cefclient_qt
+
 %files -n cef
 %dir %{_libdir}/cef
 %{_libdir}/cef/Release
 %exclude %{_libdir}/cef/Release/libqt6_shim.so
+%exclude %{_libdir}/cef/Release/cefclient
+%exclude %{_libdir}/cef/Release/cefclient_qt
+%exclude %{_libdir}/cef/Release/cefclient_files
 %{_libdir}/cef/Resources
 
 %files -n cef-qt6
@@ -1078,6 +1141,13 @@ cp -a cef/libcef_dll cef/tests %{buildroot}%{_libdir}/cef
 %{_libdir}/cef/libcef_dll
 %{_libdir}/cef/tests
 %{_libdir}/cef/libcef_dll_wrapper
+
+%files -n cef-examples
+%{_bindir}/cefclient
+%{_bindir}/cefclient_qt
+%{_libdir}/cef/Release/cefclient
+%{_libdir}/cef/Release/cefclient_qt
+%{_libdir}/cef/Release/cefclient_files
 %endif
 
 %if %{with browser}
