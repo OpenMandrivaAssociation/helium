@@ -1,6 +1,6 @@
-diff -up chromium-126.0.6478.36/cef/libcef/browser/zip_reader_impl.cc.omv~ chromium-126.0.6478.36/cef/libcef/browser/zip_reader_impl.cc
---- chromium-126.0.6478.36/cef/libcef/browser/zip_reader_impl.cc.omv~	2024-06-09 15:11:54.322730788 +0200
-+++ chromium-126.0.6478.36/cef/libcef/browser/zip_reader_impl.cc	2024-06-09 15:16:23.229593140 +0200
+diff -up chromium-126.0.6478.36/libcef/browser/zip_reader_impl.cc.omv~ chromium-126.0.6478.36/libcef/browser/zip_reader_impl.cc
+--- chromium-126.0.6478.36/libcef/browser/zip_reader_impl.cc.omv~	2024-06-09 15:11:54.322730788 +0200
++++ chromium-126.0.6478.36/libcef/browser/zip_reader_impl.cc	2024-06-09 15:16:23.229593140 +0200
 @@ -11,6 +11,10 @@
  #include "base/time/time.h"
  #include "cef/include/cef_stream.h"

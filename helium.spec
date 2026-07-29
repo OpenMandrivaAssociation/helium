@@ -257,25 +257,10 @@ Patch1019:	chromium-121-rust-clang_lib.patch
 # https://issues.chromium.org/issues/403871216
 Patch1020:	chromium-135-bug-403871216.patch
 Patch1021:	chromium-127-system-bindgen.patch
-%if 0%{?cef:1}
 Patch1022:	chromium-115-fix-generate_fontconfig_caches.patch
-# FIXME probably needs porting
-#Patch1023:	cef-115-minizip-ng.patch
-# Rebase CEF's chromium patchset so it applies on top of Helium/ungoogled
-# (domain substitution + Helium chrome/browser/ui changes).
-Patch1024:	cef-7871-helium-patch-rebase.patch
-#Patch1025:	cef-125-ungoogling.patch
-Patch1026:	cef-zlib-linkage.patch
-# Incomplete type content::WebContents after Chromium include cleanup
-# (CEF 7871 file_dialog_manager.cc needs the full web_contents.h).
-Patch1027:	cef-7871-web_contents-include.patch
-#Patch1029:	ozone-dont-use-x11-on-wayland.patch
-Patch1028:	cef-126-zlib-ng.patch
-# Qt cefclient sample (applied inside cef/ via 2000-2999 range).
-Patch2001:	cef-7871-qt-cefclient.patch
-%endif
+#Patch1023:	ozone-dont-use-x11-on-wayland.patch
 %if %{system zlib}
-Patch1029:	chromium-127-minizip-ng.patch
+Patch1024:	chromium-127-minizip-ng.patch
 %endif
 # https://issues.chromium.org/issues/381407882
 Patch1030:	chromium-133-workaround-bug-381407882.patch
@@ -303,7 +288,15 @@ Patch1052:	chromium-148-fix-build-without-ubsan.patch
 # ============================================================================
 # Patches 2000 to 2999 are applied inside the CEF tree.
 # ============================================================================
-# (we currently don't have any such patches)
+# Rebase CEF's chromium patchset so it applies on top of Helium/ungoogled
+# (domain substitution + Helium chrome/browser/ui changes).
+Patch2000:	cef-7871-helium-patch-rebase.patch
+# Incomplete type content::WebContents after Chromium include cleanup
+# (CEF 7871 file_dialog_manager.cc needs the full web_contents.h).
+Patch2001:	cef-7871-web_contents-include.patch
+Patch2002:	cef-126-zlib-ng.patch
+# Qt cefclient sample (applied inside cef/ via 2000-2999 range).
+Patch2003:	cef-7871-qt-cefclient.patch
 
 # ============================================================================
 # Patches 3000+ are from the various chromium upstream repositories

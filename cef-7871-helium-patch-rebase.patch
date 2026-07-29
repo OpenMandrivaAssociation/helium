@@ -1,6 +1,6 @@
-diff -urN a/cef/patch/patch.cfg b/cef/patch/patch.cfg
---- a/cef/patch/patch.cfg	2026-07-24 17:46:13.000000000 +0200
-+++ b/cef/patch/patch.cfg	2026-07-26 14:45:01.768071602 +0200
+diff -urN a/patch/patch.cfg b/patch/patch.cfg
+--- a/patch/patch.cfg	2026-07-24 17:46:13.000000000 +0200
++++ b/patch/patch.cfg	2026-07-26 14:45:01.768071602 +0200
 @@ -561,11 +561,6 @@
      'name': 'osr_fling_2745',
    },
@@ -13,9 +13,9 @@ diff -urN a/cef/patch/patch.cfg b/cef/patch/patch.cfg
      # Fix unbound AssociatedRemote error in SetBackgroundOpaque.
      # https://bugs.chromium.org/p/chromium/issues/detail?id=1070713
      'name': 'renderer_host_1070713',
-diff -urN a/cef/patch/patches/chrome_browser_browser.patch b/cef/patch/patches/chrome_browser_browser.patch
---- a/cef/patch/patches/chrome_browser_browser.patch	2026-07-24 17:46:13.000000000 +0200
-+++ b/cef/patch/patches/chrome_browser_browser.patch	2026-07-26 14:45:01.701586676 +0200
+diff -urN a/patch/patches/chrome_browser_browser.patch b/patch/patches/chrome_browser_browser.patch
+--- a/patch/patches/chrome_browser_browser.patch	2026-07-24 17:46:13.000000000 +0200
++++ b/patch/patches/chrome_browser_browser.patch	2026-07-26 14:45:01.701586676 +0200
 @@ -1,5 +1,4 @@
  diff --git chrome/browser/browser_about_handler.cc chrome/browser/browser_about_handler.cc
 -index 08949a69415dfa9f836e00929a34330a34546ce2..e417f50fa68e274b80c0d45bdaa45c7b22fd6dcd 100644
@@ -671,9 +671,9 @@ diff -urN a/cef/patch/patches/chrome_browser_browser.patch b/cef/patch/patches/c
     // Add and configure the TabSearchButton and TabStripComboButton.
     std::unique_ptr<TabSearchButton> tab_search_button;
     std::unique_ptr<TabStripActionContainer> tab_strip_action_container;
-diff -urN a/cef/patch/patches/chrome_browser_frame_mac.patch b/cef/patch/patches/chrome_browser_frame_mac.patch
---- a/cef/patch/patches/chrome_browser_frame_mac.patch	2026-07-24 17:46:13.000000000 +0200
-+++ b/cef/patch/patches/chrome_browser_frame_mac.patch	2026-07-26 14:45:01.711488616 +0200
+diff -urN a/patch/patches/chrome_browser_frame_mac.patch b/patch/patches/chrome_browser_frame_mac.patch
+--- a/patch/patches/chrome_browser_frame_mac.patch	2026-07-24 17:46:13.000000000 +0200
++++ b/patch/patches/chrome_browser_frame_mac.patch	2026-07-26 14:45:01.711488616 +0200
 @@ -1,16 +1,15 @@
  diff --git chrome/browser/ui/views/frame/browser_native_widget_mac.h chrome/browser/ui/views/frame/browser_native_widget_mac.h
 -index e5a6aaa3e11cc3a60eef9eb8ace0af6fca30a53a..7a6752e46cb0e01f0d0d8623511c1afac828f4e8 100644
@@ -733,9 +733,9 @@ diff -urN a/cef/patch/patches/chrome_browser_frame_mac.patch b/cef/patch/patches
             is_vertical, tabs::VerticalTabStripEntryPoint::kMacViewMenu);
       }
     } else if (command == IDC_CLEAR_BROWSING_DATA) {
-diff -urN a/cef/patch/patches/chrome_browser_webui_version.patch b/cef/patch/patches/chrome_browser_webui_version.patch
---- a/cef/patch/patches/chrome_browser_webui_version.patch	2026-07-24 17:46:13.000000000 +0200
-+++ b/cef/patch/patches/chrome_browser_webui_version.patch	2026-07-26 14:45:01.715606146 +0200
+diff -urN a/patch/patches/chrome_browser_webui_version.patch b/patch/patches/chrome_browser_webui_version.patch
+--- a/patch/patches/chrome_browser_webui_version.patch	2026-07-24 17:46:13.000000000 +0200
++++ b/patch/patches/chrome_browser_webui_version.patch	2026-07-26 14:45:01.715606146 +0200
 @@ -1,5 +1,4 @@
  diff --git chrome/browser/ui/webui/version/version_handler.cc chrome/browser/ui/webui/version/version_handler.cc
 -index 410556c4bdeadc18c7f057e2ed08e8daba21d2a0..68613ed1b25745e226887a1c8457777519d660b9 100644
@@ -936,9 +936,9 @@ diff -urN a/cef/patch/patches/chrome_browser_webui_version.patch b/cef/patch/pat
   extern const char kVersionModifier[];
   extern const char kVersionProcessorVariation[];
   
-diff -urN a/cef/patch/patches/chrome_runtime_views.patch b/cef/patch/patches/chrome_runtime_views.patch
---- a/cef/patch/patches/chrome_runtime_views.patch	2026-07-24 17:46:13.000000000 +0200
-+++ b/cef/patch/patches/chrome_runtime_views.patch	2026-07-26 14:45:01.699375929 +0200
+diff -urN a/patch/patches/chrome_runtime_views.patch b/patch/patches/chrome_runtime_views.patch
+--- a/patch/patches/chrome_runtime_views.patch	2026-07-24 17:46:13.000000000 +0200
++++ b/patch/patches/chrome_runtime_views.patch	2026-07-26 14:45:01.699375929 +0200
 @@ -1,8 +1,7 @@
  diff --git chrome/browser/ui/browser_command_controller.cc chrome/browser/ui/browser_command_controller.cc
 -index f5831f33b9fd1c7d1c4338d9a096b7141d7bc95e..a02fa279c73a9c0e32ab49c95138803c218266ca 100644
@@ -1584,9 +1584,9 @@ diff -urN a/cef/patch/patches/chrome_runtime_views.patch b/cef/patch/patches/chr
   
     DECLARE_CLASS_ELEMENT_IDENTIFIER_VALUE(kToolbarElementId);
   
-diff -urN a/cef/patch/patches/components_gcm_disable.patch b/cef/patch/patches/components_gcm_disable.patch
---- a/cef/patch/patches/components_gcm_disable.patch	2026-07-24 17:46:13.000000000 +0200
-+++ b/cef/patch/patches/components_gcm_disable.patch	2026-07-26 14:45:01.731166345 +0200
+diff -urN a/patch/patches/components_gcm_disable.patch b/patch/patches/components_gcm_disable.patch
+--- a/patch/patches/components_gcm_disable.patch	2026-07-24 17:46:13.000000000 +0200
++++ b/patch/patches/components_gcm_disable.patch	2026-07-26 14:45:01.731166345 +0200
 @@ -1,18 +1,17 @@
  diff --git components/gcm_driver/gcm_client_impl.cc components/gcm_driver/gcm_client_impl.cc
 -index d3fb7da1069716355f8de888067f93e1115ac369..a7e4ec602da2c26d24ceccf06e64c3904896722d 100644
@@ -1610,9 +1610,9 @@ diff -urN a/cef/patch/patches/components_gcm_disable.patch b/cef/patch/patches/c
   
   void GCMClientImpl::Register(
       scoped_refptr<RegistrationInfo> registration_info) {
-diff -urN a/cef/patch/patches/content_2015.patch b/cef/patch/patches/content_2015.patch
---- a/cef/patch/patches/content_2015.patch	2026-07-24 17:46:13.000000000 +0200
-+++ b/cef/patch/patches/content_2015.patch	2026-07-26 14:45:01.723067817 +0200
+diff -urN a/patch/patches/content_2015.patch b/patch/patches/content_2015.patch
+--- a/patch/patches/content_2015.patch	2026-07-24 17:46:13.000000000 +0200
++++ b/patch/patches/content_2015.patch	2026-07-26 14:45:01.723067817 +0200
 @@ -1,8 +1,7 @@
  diff --git content/browser/devtools/devtools_http_handler.cc content/browser/devtools/devtools_http_handler.cc
 -index fbfe1abebb19119387d55a1296aba5fd1ca7d99b..ea7f1ed74250198d4be2a16474e167b74763c089 100644
@@ -1819,9 +1819,9 @@ diff -urN a/cef/patch/patches/content_2015.patch b/cef/patch/patches/content_201
         const url::Origin& accessing_origin,
         std::string* out_debug_message,
         bool* out_block_is_site_setting_specific) override;
-diff -urN a/cef/patch/patches/crashpad_1995.patch b/cef/patch/patches/crashpad_1995.patch
---- a/cef/patch/patches/crashpad_1995.patch	2026-07-24 17:46:13.000000000 +0200
-+++ b/cef/patch/patches/crashpad_1995.patch	2026-07-26 14:45:01.718836176 +0200
+diff -urN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patch
+--- a/patch/patches/crashpad_1995.patch	2026-07-24 17:46:13.000000000 +0200
++++ b/patch/patches/crashpad_1995.patch	2026-07-26 14:45:01.718836176 +0200
 @@ -1,5 +1,4 @@
  diff --git chrome/chrome_elf/BUILD.gn chrome/chrome_elf/BUILD.gn
 -index 0e3bd558bad561f617f28de7ff4335a1e09a758e..ae27f9bb5c5a7ac6a8fb21323fc542c821fd5ed5 100644
@@ -2135,9 +2135,9 @@ diff -urN a/cef/patch/patches/crashpad_1995.patch b/cef/patch/patches/crashpad_1
                 app_launch_prefetch::SubprocessType::kCrashpad)));
       } else {
         base::FilePath exe_dir = exe_file.DirName();
-diff -urN a/cef/patch/patches/gn_config.patch b/cef/patch/patches/gn_config.patch
---- a/cef/patch/patches/gn_config.patch	2026-07-24 17:46:13.000000000 +0200
-+++ b/cef/patch/patches/gn_config.patch	2026-07-26 14:45:01.690913997 +0200
+diff -urN a/patch/patches/gn_config.patch b/patch/patches/gn_config.patch
+--- a/patch/patches/gn_config.patch	2026-07-24 17:46:13.000000000 +0200
++++ b/patch/patches/gn_config.patch	2026-07-26 14:45:01.690913997 +0200
 @@ -1,8 +1,7 @@
  diff --git .gn .gn
 -index 8859ecde27105c5256dcbc687e3d8eeacbd8cde6..51eab7fa6fd991c57aea653c348da96effd8d64f 100644
@@ -2241,9 +2241,9 @@ diff -urN a/cef/patch/patches/gn_config.patch b/cef/patch/patches/gn_config.patc
     "use_titlecase=${is_mac}",
   
     "is_desktop_android=${is_desktop_android}",
-diff -urN a/cef/patch/patches/linux_gtk_theme_3610.patch b/cef/patch/patches/linux_gtk_theme_3610.patch
---- a/cef/patch/patches/linux_gtk_theme_3610.patch	2026-07-24 17:46:13.000000000 +0200
-+++ b/cef/patch/patches/linux_gtk_theme_3610.patch	2026-07-26 14:45:01.734787299 +0200
+diff -urN a/patch/patches/linux_gtk_theme_3610.patch b/patch/patches/linux_gtk_theme_3610.patch
+--- a/patch/patches/linux_gtk_theme_3610.patch	2026-07-24 17:46:13.000000000 +0200
++++ b/patch/patches/linux_gtk_theme_3610.patch	2026-07-26 14:45:01.734787299 +0200
 @@ -27,10 +27,9 @@
             &GtkUi::OnCursorThemeNameChanged);
     connect(settings, "notify::gtk-cursor-theme-size",
@@ -2291,9 +2291,9 @@ diff -urN a/cef/patch/patches/linux_gtk_theme_3610.patch b/cef/patch/patches/lin
   // Constructor hook for use in ozone_platform_list.cc
   OzonePlatform* CreateOzonePlatformX11();
   
-diff -urN a/cef/patch/patches/webkit_move_pip.patch b/cef/patch/patches/webkit_move_pip.patch
---- a/cef/patch/patches/webkit_move_pip.patch	2026-07-24 17:46:13.000000000 +0200
-+++ b/cef/patch/patches/webkit_move_pip.patch	2026-07-26 14:45:01.694917226 +0200
+diff -urN a/patch/patches/webkit_move_pip.patch b/patch/patches/webkit_move_pip.patch
+--- a/patch/patches/webkit_move_pip.patch	2026-07-24 17:46:13.000000000 +0200
++++ b/patch/patches/webkit_move_pip.patch	2026-07-26 14:45:01.694917226 +0200
 @@ -1,8 +1,7 @@
  diff --git chrome/browser/picture_in_picture/picture_in_picture_window_manager.cc chrome/browser/picture_in_picture/picture_in_picture_window_manager.cc
 -index 857f9f9f2184ba5de003c35d4a736cc7da8d4ecc..884a3af7d480457404b752d342e0a70071b3f18e 100644
