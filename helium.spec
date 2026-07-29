@@ -258,7 +258,6 @@ Patch1019:	chromium-121-rust-clang_lib.patch
 Patch1020:	chromium-135-bug-403871216.patch
 Patch1021:	chromium-127-system-bindgen.patch
 Patch1022:	chromium-115-fix-generate_fontconfig_caches.patch
-#Patch1023:	ozone-dont-use-x11-on-wayland.patch
 %if %{system zlib}
 Patch1024:	chromium-127-minizip-ng.patch
 %endif
