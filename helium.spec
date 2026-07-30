@@ -697,6 +697,27 @@ sed -i -e 's,@HELIUM_PLATFORM@,OpenMandriva,g' base/version_info/version_info_va
 %build
 HEDIR=$(pwd)/helium-%{version}
 
+# Dual browser+CEF needs tens of GB for out/*/obj. ABF znver1 builders have hit
+# ENOSPC mid-link (build_list 632620: code_cache_generator / v8_context_snapshot
+# linker exit -2, then OSError errno 28). Drop already-extracted archives and
+# other throwaways before ninja so the out tree has room.
+df -h . %{_sourcedir} 2>/dev/null || df -h .
+rm -f \
+	%{_sourcedir}/chromium-*-lite.tar.xz \
+	%{_sourcedir}/cef-*.tar.gz \
+	%{_sourcedir}/0.*.tar.gz \
+	%{_sourcedir}/helium-onboarding-*.tar.gz \
+	%{_sourcedir}/uBlock*.zip \
+	%{_sourcedir}/uBlock*.crx \
+	%{_sourcedir}/nonfree-search-engines-data*.tar.gz \
+	%{_sourcedir}/test_fonts.tar.gz \
+	%{_sourcedir}/qtprinting.tar.xz \
+	domainsubcache.tar.gz \
+	2>/dev/null || :
+# Docs are not compiled; drop to free a bit more space before ninja.
+rm -rf docs 2>/dev/null || :
+df -h . 2>/dev/null || :
+
 . %{_sysconfdir}/profile.d/90java.sh
 
 %ifarch %{arm}
@@ -855,6 +876,10 @@ is_cfi=false
 thin_lto_enable_optimizations=true
 use_thin_lto=true
 %endif
+# Cap concurrent links: default is memory-based and can open many multi-GB
+# link jobs at once, which blew disk on znver1 (ENOSPC during LINK of
+# code_cache_generator / v8_context_snapshot_generator).
+concurrent_links=2
 custom_toolchain="//build/toolchain/linux/unbundle:default"
 host_toolchain="//build/toolchain/linux/unbundle:default"
 v8_snapshot_toolchain="//build/toolchain/linux/unbundle:default"
@@ -964,9 +989,23 @@ done
 mkdir -p third_party/gperf/cipd/bin
 ln -s %{_bindir}/gperf third_party/gperf/cipd/bin/
 
+# Choose ninja -j from free disk so parallel .o/.tmp files do not ENOSPC.
+# Rough budget: ~1.5 GiB free headroom per compile job, cap at min(nproc, 32).
+_ninja_jobs=$(df -Pk . | awk -v nproc="$(getconf _NPROCESSORS_ONLN)" '
+	NR==2 {
+		free_gb = $4 / 1024 / 1024
+		j = int(free_gb / 1.5)
+		if (j < 4) j = 4
+		if (j > nproc) j = nproc
+		if (j > 32) j = 32
+		print j
+	}')
+echo "Using ninja -j${_ninja_jobs} (nproc=$(getconf _NPROCESSORS_ONLN))"
+df -h . || :
+
 %if %{with browser}
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args)" out/Release
-ninja -C out/Release chrome chrome_sandbox chromedriver
+ninja -j${_ninja_jobs} -C out/Release chrome chrome_sandbox chromedriver
 %if 0%{?cef:1}
 # Dual browser+CEF builds two nearly-full Chromium trees. ABF builders hit
 # ENOSPC during %install (see build_lists 630578) if we keep obj/gen from the
@@ -1002,7 +1041,7 @@ cd ..
 # automatically; we must pass it ourselves with custom args.
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0 blink_heap_inside_shared_library=true" out/Release-CEF
 # `cef` pulls in cefclient (GTK) and cefclient_qt samples on Linux.
-ninja -C out/Release-CEF cef chrome_sandbox
+ninja -j${_ninja_jobs} -C out/Release-CEF cef chrome_sandbox
 # libcef_dll_wrapper.a is a thin archive (object paths, not contents). Expand
 # it while obj/ still exists, then drop CEF intermediates so %install has room
 # for BUILDROOT copies of libcef.so + Resources (ENOSPC at that step on ABF).
