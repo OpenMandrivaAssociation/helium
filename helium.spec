@@ -699,21 +699,11 @@ HEDIR=$(pwd)/helium-%{version}
 
 # Dual browser+CEF needs tens of GB for out/*/obj. ABF znver1 builders have hit
 # ENOSPC mid-link (build_list 632620: code_cache_generator / v8_context_snapshot
-# linker exit -2, then OSError errno 28). Drop already-extracted archives and
-# other throwaways before ninja so the out tree has room.
-df -h . %{_sourcedir} 2>/dev/null || df -h .
-rm -f \
-	%{_sourcedir}/chromium-*-lite.tar.xz \
-	%{_sourcedir}/cef-*.tar.gz \
-	%{_sourcedir}/0.*.tar.gz \
-	%{_sourcedir}/helium-onboarding-*.tar.gz \
-	%{_sourcedir}/uBlock*.zip \
-	%{_sourcedir}/uBlock*.crx \
-	%{_sourcedir}/nonfree-search-engines-data*.tar.gz \
-	%{_sourcedir}/test_fonts.tar.gz \
-	%{_sourcedir}/qtprinting.tar.xz \
-	domainsubcache.tar.gz \
-	2>/dev/null || :
+# linker exit -2, then OSError errno 28). Free only build-tree throwaways —
+# never %{_sourcedir} (needed for .src.rpm / rpmbuild -ba).
+df -h . 2>/dev/null || :
+# domainsubcache is created in %prep and not needed after domain substitution.
+rm -f domainsubcache.tar.gz 2>/dev/null || :
 # Docs are not compiled; drop to free a bit more space before ninja.
 rm -rf docs 2>/dev/null || :
 df -h . 2>/dev/null || :
