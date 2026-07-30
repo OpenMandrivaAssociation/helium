@@ -628,6 +628,14 @@ sed -i 's!ffmpeg_buildflags!ffmpeg_features!g' build/linux/unbundle/ffmpeg.gn
 sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
 	tools/generate_shim_headers/generate_shim_headers.py
 
+# Blink generate_bindings.py fans out to multiprocessing.cpu_count() workers.
+# On high-core ABF builders that collides with ninja -j and OOM-kills the pool
+# (aarch64 build_list 630579: FAILED generate_bindings_interface code=267).
+# Cap workers by RAM (~1.5 GiB headroom each) and by 16.
+_blink_bind_workers=$(awk '/MemTotal:/ { w=int($2/1024/1536); if (w<1) w=1; if (w>16) w=16; print w }' /proc/meminfo)
+sed -i "s/self\._pool_size = multiprocessing\.cpu_count()/self._pool_size = min(multiprocessing.cpu_count(), ${_blink_bind_workers})/" \
+	third_party/blink/renderer/bindings/scripts/bind_gen/task_queue.py
+
 %if ! %{with libcxx}
 # Get rid of internal libc++ headers to make sure they aren't accidentally
 # used instead of their libstdc++ counterparts
@@ -959,6 +967,14 @@ ln -s %{_bindir}/gperf third_party/gperf/cipd/bin/
 %if %{with browser}
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args)" out/Release
 ninja -C out/Release chrome chrome_sandbox chromedriver
+%if 0%{?cef:1}
+# Dual browser+CEF builds two nearly-full Chromium trees. ABF builders hit
+# ENOSPC during %install (see build_lists 630578) if we keep obj/gen from the
+# browser tree while compiling CEF. Drop compiler intermediates; keep final
+# binaries, pak/dat/bin payloads, and out/Release/gn for the CEF gn gen below.
+rm -rf out/Release/obj out/Release/gen out/Release/thinlto-cache
+df -h . || :
+%endif
 %endif
 
 %if 0%{?cef:1}
@@ -987,6 +1003,21 @@ cd ..
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0 blink_heap_inside_shared_library=true" out/Release-CEF
 # `cef` pulls in cefclient (GTK) and cefclient_qt samples on Linux.
 ninja -C out/Release-CEF cef chrome_sandbox
+# libcef_dll_wrapper.a is a thin archive (object paths, not contents). Expand
+# it while obj/ still exists, then drop CEF intermediates so %install has room
+# for BUILDROOT copies of libcef.so + Resources (ENOSPC at that step on ABF).
+mkdir -p out/Release-CEF/libcef_dll_wrapper
+(
+	cd out/Release-CEF/obj/cef
+	# Built with system libstdc++ (not Chromium's private libc++) so host apps
+	# (Qt, boost, etc.) can link it without mixing C++ standard libraries.
+	# libcef.so itself still uses Chromium's libc++ behind the C API.
+	llvm-ar -t libcef_dll_wrapper.a | xargs llvm-ar cru libcef_dll_wrapper_full.a
+	mv -f libcef_dll_wrapper_full.a ../../libcef_dll_wrapper/libcef_dll_wrapper.a
+	llvm-ranlib ../../libcef_dll_wrapper/libcef_dll_wrapper.a
+)
+rm -rf out/Release-CEF/obj out/Release-CEF/gen out/Release-CEF/thinlto-cache
+df -h . || :
 %endif
 
 %install
@@ -1063,6 +1094,11 @@ cp %{S:4} %{buildroot}%{_datadir}/drirc.d/10-%{name}.conf
 
 sed -e 's,chromium,helium,g;s,Chromium,Helium,g' %{buildroot}%{_datadir}/applications/chromium-browser.desktop >%{buildroot}%{_datadir}/applications/%{name}.desktop
 rm %{buildroot}%{_datadir}/applications/chromium-browser.desktop
+%if 0%{?cef:1}
+# Browser payloads are already in BUILDROOT; drop the browser out tree before
+# copying CEF (libcef.so alone is multi-GB) so dual-build installs fit on ABF.
+rm -rf out/Release
+%endif
 %endif
 
 %if 0%{?cef:1}
@@ -1081,19 +1117,10 @@ cp -a chrome_sandbox libcef.so libEGL.so libGLESv2.so libvk_swiftshader.so libvu
 # It's the same thing, so let's provide both names to be on the safe side
 ln -s chrome_sandbox %{buildroot}%{_libdir}/cef/Release/chrome-sandbox
 cp -a chrome_100_percent.pak chrome_200_percent.pak icudtl.dat locales resources.pak %{buildroot}%{_libdir}/cef/Resources
-# This is expected by the OBS browser plugin
+# Fat archive produced in %build (thin .a was expanded before obj/ was purged).
 mkdir -p %{buildroot}%{_libdir}/cef/libcef_dll_wrapper
-cd obj/cef
-# libcef_dll_wrapper.a is a thin archive, containing references to the object
-# files rather than the object files themselves.
-# Built with system libstdc++ (not Chromium's private libc++) so host apps
-# (Qt, boost, etc.) can link it without mixing C++ standard libraries.
-# libcef.so itself still uses Chromium's libc++ behind the C API.
-llvm-ar -t libcef_dll_wrapper.a |xargs llvm-ar cru libcef_dll_wrapper_full.a
-mv -f libcef_dll_wrapper_full.a libcef_dll_wrapper.a
-llvm-ranlib libcef_dll_wrapper.a
-cp libcef_dll_wrapper.a %{buildroot}%{_libdir}/cef/libcef_dll_wrapper
-cd ../../../..
+cp libcef_dll_wrapper/libcef_dll_wrapper.a %{buildroot}%{_libdir}/cef/libcef_dll_wrapper
+cd ../..
 
 # -devel package layout is based on what we see in OnlyOffice's
 # desktop-sdk/ChromiumBasedEditors/lib/src/cef/linux
