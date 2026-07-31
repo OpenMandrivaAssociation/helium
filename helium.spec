@@ -1153,8 +1153,13 @@ cd ../..
 
 # -devel package layout is based on what we see in OnlyOffice's
 # desktop-sdk/ChromiumBasedEditors/lib/src/cef/linux
+# Headers: translator/version_manager write into cef/include/ during %build.
+# out/Release-CEF/includes/... only exists in make_distrib binary trees, not
+# our ninja build (ABF 633789: cp cannot stat that path).
 cp -a cef/include %{buildroot}%{_libdir}/cef/
-cp -a out/Release-CEF/includes/cef/include/* %{buildroot}%{_libdir}/cef/include/
+if [ -d out/Release-CEF/includes/cef/include ]; then
+	cp -a out/Release-CEF/includes/cef/include/* %{buildroot}%{_libdir}/cef/include/
+fi
 # Header referenced by cef but not included there
 mkdir -p %{buildroot}%{_libdir}/cef/include/base/internal/net/base
 cp -a net/base/net_error_list.h %{buildroot}%{_libdir}/cef/include/base/internal/net/base/
