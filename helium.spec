@@ -862,14 +862,15 @@ thin_lto_enable_optimizations=false
 use_lld=true
 use_thin_lto=false
 is_cfi=false
+# Cap concurrent links: default is memory-based and can open many multi-GB
+# link jobs at once, which blew disk on znver1 (ENOSPC during LINK of
+# code_cache_generator / v8_context_snapshot_generator). Chromium asserts
+# if concurrent_links is set together with use_thin_lto (aarch64 638819).
+concurrent_links=2
 %else
 thin_lto_enable_optimizations=true
 use_thin_lto=true
 %endif
-# Cap concurrent links: default is memory-based and can open many multi-GB
-# link jobs at once, which blew disk on znver1 (ENOSPC during LINK of
-# code_cache_generator / v8_context_snapshot_generator).
-concurrent_links=2
 custom_toolchain="//build/toolchain/linux/unbundle:default"
 host_toolchain="//build/toolchain/linux/unbundle:default"
 v8_snapshot_toolchain="//build/toolchain/linux/unbundle:default"
