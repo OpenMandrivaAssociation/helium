@@ -83,11 +83,15 @@
 %global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
 
 Name:		helium
-Version:	0.14.9
+# CEF subpackages set Version: %{chromium} below. On this rpm, the last
+# Version: tag becomes %{version} in scriptlets, so keep the Helium version
+# in a separate macro and use it everywhere the browser (not CEF) version is meant.
+%global helium_version 0.15.1
+Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 150.0.7871.186
+%define chromium 151.0.7922.71
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -101,10 +105,27 @@ Version:	0.14.9
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-# CEF tip lists chromium_checkout refs/tags/150.0.7871.187; we build against
-# 186 (available lite tarball) with the rebased patchset below.
-%define cef 8df757d5c354d5ec33e24efcfb26aab92c132f61
+# CEF 7922 branch tip matching Chromium 151.0.7922.x.
+%define cef 5d67476b12f718c8388918d1740aeec27f6b2b80
 %define cefversion %(echo %{chromium} |cut -d. -f3)
+# make_distrib expects out/Release_GN_<arch>; we build in out/Release-CEF.
+%ifarch %{x86_64}
+%define cef_gn_dir Release_GN_x64
+%define cef_md_arch --x64-build
+%else
+%ifarch %{aarch64}
+%define cef_gn_dir Release_GN_arm64
+%define cef_md_arch --arm64-build
+%else
+%ifarch %{arm}
+%define cef_gn_dir Release_GN_arm
+%define cef_md_arch --arm-build
+%else
+%define cef_gn_dir Release_GN_x86
+%define cef_md_arch %{nil}
+%endif
+%endif
+%endif
 %endif
 Release:	1
 Summary:	A fast, privacy friendly, web browser based on Ungoogled Chromium
@@ -126,10 +147,10 @@ Source11:	https://chromium-fonts.storage.googleapis.com/336e775eec536b2d785cc80e
 Source12:	cef.pc.in
 %endif
 Source100:	%{name}.rpmlintrc
-Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{version}.tar.gz
+Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_version}.tar.gz
 # See deps.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202607242007/nonfree-search-engines-data-202607242007.tar.gz
-Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202607241958/helium-onboarding-202607241958.tar.gz
+Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202607301504/helium-onboarding-202607301504.tar.gz
 Source1003:	https://github.com/imputnet/uBlock/releases/download/1.72.2/uBlock0_1.72.2.chromium.zip
 
 # ============================================================================
@@ -233,8 +254,10 @@ Patch1001:	chromium-64-system-curl.patch
 Patch1002:	chromium-69-no-static-libstdc++.patch
 Patch1003:	chromium-system-zlib.patch
 Patch1004:	chromium-107-system-libs.patch
-# FIXME needs porting
-#Patch1005:	chromium-restore-jpeg-xl-support.patch
+# JPEG XL: Chromium 151+ decodes via the Rust jxl crate (third_party/rust/jxl),
+# not C libjxl. enable_jxl_decoder defaults to true; we set it explicitly in
+# openmandriva.gn_args. The old chromium-restore-jpeg-xl-support.patch (C API +
+# vendored libjxl) is obsolete and must not be reintroduced.
 Patch1006:	chromium-extra-widevine-search-paths.patch
 Patch1007:	chromium-116-dont-override-thinlto-cache-policy.patch
 Patch1008:	chromium-116-system-brotli.patch
@@ -288,14 +311,18 @@ Patch1052:	chromium-148-fix-build-without-ubsan.patch
 # Patches 2000 to 2999 are applied inside the CEF tree.
 # ============================================================================
 # Rebase CEF's chromium patchset so it applies on top of Helium/ungoogled
-# (domain substitution + Helium chrome/browser/ui changes).
-Patch2000:	cef-7871-helium-patch-rebase.patch
+# (domain substitution in nested CEF patches + drop libxml_visibility for
+# system libxml). Helium UI API renames may still need further rebases if
+# CEF patch.sh fails against the Helium tree.
+Patch2000:	cef-7922-helium-patch-rebase.patch
 # Incomplete type content::WebContents after Chromium include cleanup
-# (CEF 7871 file_dialog_manager.cc needs the full web_contents.h).
+# (CEF file_dialog_manager.cc needs the full web_contents.h).
 Patch2001:	cef-7871-web_contents-include.patch
 Patch2002:	cef-126-zlib-ng.patch
-# Qt cefclient sample (applied inside cef/ via 2000-2999 range).
-Patch2003:	cef-7871-qt-cefclient.patch
+# Qt cefclient sample + host libstdc++ wrapper (applied inside cef/).
+Patch2003:	cef-7922-qt-cefclient.patch
+# Soften CEF nested-patch apply for Helium tree (patch --fuzz=3; no git apply).
+Patch2004:	cef-patcher-fuzz.patch
 
 # ============================================================================
 # Patches 3000+ are from the various chromium upstream repositories
@@ -488,6 +515,7 @@ Obsoletes: %{name}-qt5 < %{EVRD}
 Qt 6.x integration for Helium
 
 %package -n cef-qt6
+Version: %{chromium}
 Summary: Qt 6.x integration for CEF
 Group: System/Libraries
 Requires: cef = %{EVRD}
@@ -499,6 +527,7 @@ Qt 6.x integration for CEF
 
 %if 0%{?cef:1}
 %package -n cef
+Version: %{chromium}
 Summary: Chromium Embedded Framework - library for embeddind Chromium in custom applications
 # FIXME cef hardcodes a gtk dependency somewhere. It should
 # really be dropped in favor of Qt
@@ -510,6 +539,7 @@ Group: System/Libraries
 Chromium Embedded Framework - library for embeddind Chromium in custom applications
 
 %package -n cef-devel
+Version: %{chromium}
 Summary: Chromium Embedded Framework - library for embeddind Chromium in custom applications
 Group: Development/Libraries
 Requires: cef = %{EVRD}
@@ -524,6 +554,7 @@ files cef.pc / libcef.pc) for ordinary build systems.
 # Prebuilt sample apps (GTK + Qt). Optional demos / smoke tests; not required
 # for embedding. Sources remain in cef-devel under tests/.
 %package -n cef-examples
+Version: %{chromium}
 Summary: Sample applications for the Chromium Embedded Framework (GTK and Qt)
 Group: Development/Other
 Requires: cef = %{EVRD}
@@ -541,7 +572,7 @@ cef-devel.
 %package chromedriver
 Summary:	WebDriver for Google Chrome/Chromium
 Group:		Development/Other
-Requires:	%{name} = %{version}-%{release}
+Requires:	%{name} = %{helium_version}-%{release}
 
 %description chromedriver
 WebDriver is an open source tool for automated testing of webapps across many
@@ -555,7 +586,7 @@ members of the Chromium and WebDriver teams.
 # ungoogled-chromium patches have been applied
 %setup -q -n chromium-%{chromium} -a 1000
 
-HEDIR=$(pwd)/helium-%{version}
+HEDIR=$(pwd)/helium-%{helium_version}
 mkdir -p third_party/search_engines_data/resources_internal
 cd third_party/search_engines_data/resources_internal
 tar xf %{S:1001}
@@ -571,7 +602,7 @@ cd ../..
 cd $HEDIR
 %autopatch -p1 -m 4000
 cd ..
-echo %{version} >$HEDIR/chromium_version.txt
+echo %{helium_version} >$HEDIR/chromium_version.txt
 # Disable a few patches: We don't want to allow Google to spy on our
 # users, but we don't want to prevent users from voluntarily using
 # Google services.
@@ -588,14 +619,15 @@ python $HEDIR/utils/domain_substitution.py apply -r $HEDIR/domain_regex.list -f 
 %if 0%{?cef:1}
 tar xf %{S:10}
 mv cef-* cef
-# CEF's scripts refuse to work outside of git repositories, so
-# we have to fake it
-git init
+# CEF tools (make_distrib, version_manager) expect a git checkout of CEF.
+# Do not git-init the Chromium tree: a bare init makes CEF's patcher use
+# strict `git apply`, which fails against Helium/ungoogled context shifts.
+# Without Chromium .git the patcher falls back to patch(1) (see cef-patcher-fuzz).
 cd third_party/pdfium ; git init; cd ../..
 cd cef; git init; cd ..
 cd cef
 %autopatch -p1 -m 2000 -M 2999
-COMMIT_NUMBER=%(echo %{version} |cut -d. -f3) COMMIT_HASH=%{cef} python tools/make_version_header.py include/cef_version.h --cef_version VERSION.in --chrome_version ../chrome/VERSION --cpp_header_dir include
+COMMIT_NUMBER=%(echo %{helium_version} |cut -d. -f3) COMMIT_HASH=%{cef} python tools/make_version_header.py include/cef_version.h --cef_version VERSION.in --chrome_version ../chrome/VERSION --cpp_header_dir include
 cd ..
 
 cd third_party/test_fonts
@@ -691,11 +723,11 @@ mkdir -p third_party/rust-toolchain/bin
 ln -sf %{_bindir}/bindgen third_party/rust-toolchain/bin/
 
 # Fix placeholders for version information
-sed -i -e 's,@HELIUM_MAJOR@.@HELIUM_MINOR@.@HELIUM_PATCH@,%{version},g' base/version_info/version_info_values.h.version
+sed -i -e 's,@HELIUM_MAJOR@.@HELIUM_MINOR@.@HELIUM_PATCH@,%{helium_version},g' base/version_info/version_info_values.h.version
 sed -i -e 's,@HELIUM_PLATFORM@,OpenMandriva,g' base/version_info/version_info_values.h.version
 
 %build
-HEDIR=$(pwd)/helium-%{version}
+HEDIR=$(pwd)/helium-%{helium_version}
 
 # Dual browser+CEF needs tens of GB for out/*/obj. ABF znver1 builders have hit
 # ENOSPC mid-link (build_list 632620: code_cache_generator / v8_context_snapshot
@@ -887,8 +919,9 @@ angle_link_glx=true
 angle_test_enable_system_egl=true
 enable_hevc_parser_and_hw_decoder=true
 enable_av1_decoder=true
-# FIXME bring back the jxl patch
-#enable_jxl_decoder=true
+# JPEG XL image decoding (Blink). Uses Chromium's Rust jxl crate, not system
+# libjxl. Default is true since Chromium 151; set explicitly for clarity.
+enable_jxl_decoder=true
 enable_media_drm_storage=true
 %ifarch znver1
 # This really is znver1 only, as it enables SSE4.2, BMI2 and AVX2
@@ -1046,6 +1079,49 @@ mkdir -p out/Release-CEF/libcef_dll_wrapper
 	mv -f libcef_dll_wrapper_full.a ../../libcef_dll_wrapper/libcef_dll_wrapper.a
 	llvm-ranlib ../../libcef_dll_wrapper/libcef_dll_wrapper.a
 )
+# Official binary trees are assembled by tools/make_distrib.py (generates
+# cef_config.h and other public headers under gen/cef/include, cmake files,
+# README/CREDITS, etc.). Point it at our ninja output dir and run before
+# purging intermediates for disk space.
+ln -sfn Release-CEF out/%{cef_gn_dir}
+# about_credits.html is required by make_distrib; browser build usually has it.
+if [ ! -f out/Release-CEF/gen/components/resources/about_credits.html ]; then
+	mkdir -p out/Release-CEF/gen/components/resources
+	if [ -f out/Release/gen/components/resources/about_credits.html ]; then
+		cp -a out/Release/gen/components/resources/about_credits.html \
+			out/Release-CEF/gen/components/resources/
+	else
+		printf '%s\n' '<html><body>credits unavailable</body></html>' \
+			> out/Release-CEF/gen/components/resources/about_credits.html
+	fi
+fi
+# Fixed subdir name so %install does not have to glob versioned paths.
+# --minimal: Release + Resources + include + libcef_dll + cmake (no Debug/tests).
+# --allow-partial: Debug tree is not built. --no-archive: we package via rpm.
+# --no-format: skip clang-format on transferred autogen sources.
+( cd cef && PYTHONPATH=tools python tools/make_distrib.py \
+	--ninja-build %{?cef_md_arch} --allow-partial --minimal \
+	--no-symbols --no-docs --no-archive --no-format \
+	--distrib-subdir=cef_dist \
+	--output-dir ../cef_binary_distrib )
+# OM extras not shipped by upstream make_distrib (and fat wrapper for linkers).
+_cef_dist=cef_binary_distrib/cef_dist
+cp -a out/Release-CEF/libcef_dll_wrapper "$_cef_dist"/
+# snapshot_blob.bin is still used by some embedders; not always in make_distrib.
+if [ -f out/Release-CEF/snapshot_blob.bin ]; then
+	cp -a out/Release-CEF/snapshot_blob.bin "$_cef_dist"/Release/
+fi
+if [ -f out/Release-CEF/libqt6_shim.so ]; then
+	cp -a out/Release-CEF/libqt6_shim.so "$_cef_dist"/Release/
+fi
+# Keep both sandbox names (ninja: chrome_sandbox; official: chrome-sandbox).
+if [ -e "$_cef_dist"/Release/chrome-sandbox ] && [ ! -e "$_cef_dist"/Release/chrome_sandbox ]; then
+	ln -s chrome-sandbox "$_cef_dist"/Release/chrome_sandbox
+elif [ -e "$_cef_dist"/Release/chrome_sandbox ] && [ ! -e "$_cef_dist"/Release/chrome-sandbox ]; then
+	ln -s chrome_sandbox "$_cef_dist"/Release/chrome-sandbox
+fi
+# Drop CEF intermediates so %install has room for BUILDROOT copies
+# (ENOSPC at that step on ABF).
 rm -rf out/Release-CEF/obj out/Release-CEF/gen out/Release-CEF/thinlto-cache
 df -h . || :
 %endif
@@ -1132,39 +1208,33 @@ rm -rf out/Release
 %endif
 
 %if 0%{?cef:1}
-# FIXME the packaging here is based on the filesystem layout in
-# the binaries referenced in OnlyOffice's
-# https://github.com/ONLYOFFICE/build_tools/blob/master/scripts/core_common/modules/cef.py
-# such as
-# http://d2ettrnqo7v976.cloudfront.net/cef/5414/linux_64/cef_binary.7z
-# Is there a better option?
-# Adding qt5_shim/qt6_shim stuff is OM specific, hoping to get Qt integration
-cd out/Release-CEF
-mkdir -p %{buildroot}%{_libdir}/cef/Release \
-	%{buildroot}%{_libdir}/cef/Resources
-cp -a chrome_sandbox libcef.so libEGL.so libGLESv2.so libvk_swiftshader.so libvulkan.so.1 snapshot_blob.bin v8_context_snapshot.bin vk_swiftshader_icd.json libqt6_shim.so %{buildroot}%{_libdir}/cef/Release
-# The build process generates chrome_sandbox, but cef binary builds ship chrome-sandbox
-# It's the same thing, so let's provide both names to be on the safe side
-ln -s chrome_sandbox %{buildroot}%{_libdir}/cef/Release/chrome-sandbox
-cp -a chrome_100_percent.pak chrome_200_percent.pak icudtl.dat locales resources.pak %{buildroot}%{_libdir}/cef/Resources
-# Fat archive produced in %build (thin .a was expanded before obj/ was purged).
-mkdir -p %{buildroot}%{_libdir}/cef/libcef_dll_wrapper
-cp libcef_dll_wrapper/libcef_dll_wrapper.a %{buildroot}%{_libdir}/cef/libcef_dll_wrapper
-cd ../..
-
-# -devel package layout is based on what we see in OnlyOffice's
-# desktop-sdk/ChromiumBasedEditors/lib/src/cef/linux
-# Headers: translator/version_manager write into cef/include/ during %build.
-# out/Release-CEF/includes/... only exists in make_distrib binary trees, not
-# our ninja build (ABF 633789: cp cannot stat that path).
-cp -a cef/include %{buildroot}%{_libdir}/cef/
-if [ -d out/Release-CEF/includes/cef/include ]; then
-	cp -a out/Release-CEF/includes/cef/include/* %{buildroot}%{_libdir}/cef/include/
+# Layout matches official CEF binary distributions (OnlyOffice/OBS CEF_ROOT):
+# Release/, Resources/, include/ (incl. generated cef_config.h etc.),
+# libcef_dll/, cmake/, plus our fat libcef_dll_wrapper/ and OM Qt shim.
+# Assembled in %build via tools/make_distrib.py --minimal.
+_cef_dist=cef_binary_distrib/cef_dist
+if [ ! -d "$_cef_dist" ]; then
+	echo "FATAL: missing $_cef_dist (make_distrib failed in %%build)" >&2
+	exit 1
 fi
-# Header referenced by cef but not included there
+mkdir -p %{buildroot}%{_libdir}/cef
+cp -a "$_cef_dist"/Release "$_cef_dist"/Resources "$_cef_dist"/include \
+	"$_cef_dist"/libcef_dll "$_cef_dist"/libcef_dll_wrapper \
+	%{buildroot}%{_libdir}/cef/
+if [ -d "$_cef_dist"/cmake ]; then
+	cp -a "$_cef_dist"/cmake %{buildroot}%{_libdir}/cef/
+fi
+# Sample sources for cef-devel (not part of --minimal).
+cp -a cef/tests %{buildroot}%{_libdir}/cef/
+# Header referenced by CEF wrappers but not always in the transfer list.
 mkdir -p %{buildroot}%{_libdir}/cef/include/base/internal/net/base
-cp -a net/base/net_error_list.h %{buildroot}%{_libdir}/cef/include/base/internal/net/base/
-cp -a cef/libcef_dll cef/tests %{buildroot}%{_libdir}/cef
+cp -a net/base/net_error_list.h \
+	%{buildroot}%{_libdir}/cef/include/base/internal/net/base/
+# Required for OBS/OnlyOffice; fail early if make_distrib missed it.
+if [ ! -f %{buildroot}%{_libdir}/cef/include/cef_config.h ]; then
+	echo "FATAL: cef_config.h missing from make_distrib output" >&2
+	exit 1
+fi
 
 # --- FHS / system-library convenience (in addition to the OnlyOffice tree) ---
 # Real payload stays under %{_libdir}/cef so resource/sandbox discovery that
@@ -1226,6 +1296,8 @@ chmod 755 %{buildroot}%{_bindir}/cefclient %{buildroot}%{_bindir}/cefclient_qt
 %{_libdir}/cef/libcef_dll
 %{_libdir}/cef/tests
 %{_libdir}/cef/libcef_dll_wrapper
+# CMake helpers from make_distrib (wrapper rebuild / sample projects).
+%{_libdir}/cef/cmake
 # FHS / pkg-config view of the same files.
 %{_includedir}/cef
 %{_libdir}/libcef_dll_wrapper.a
