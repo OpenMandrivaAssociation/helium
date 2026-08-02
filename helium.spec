@@ -346,6 +346,9 @@ BuildRequires:	git
 BuildRequires:	rust
 BuildRequires:	rustfmt
 BuildRequires:	rust-bindgen-cli
+# Dawn/tint generate-sources-gn.py runs tools/golang/<cipd-plat>/bin/go; the
+# lite tarball omits the CIPD golang package (Absent: third_party/dawn/tools/golang/).
+BuildRequires:	golang
 BuildRequires:	pkgconfig(alsa)
 BuildRequires:	pkgconfig(krb5)
 BuildRequires:	pkgconfig(libunwind)
@@ -681,6 +684,16 @@ export CHROME_VERSION_EXTRA="%{product_vendor} %{product_version}"
 mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/
 sed -i -e "s,^NODE_VERSION=.*,NODE_VERSION=\"v%(rpm -q --qf '%%{VERSION}' nodejs)\"," third_party/node/update_node_binaries
+
+# Dawn tint code generation (//third_party/dawn/src/tint:generate_sources) runs
+# tools/golang/<cipd>/bin/go. Point the CIPD layout at the system GOROOT so
+# generate-sources-gn.py finds a working go (lite tarball has no CIPD golang).
+mkdir -p third_party/dawn/tools/golang
+%ifarch %{aarch64}
+ln -sfn /usr/lib/golang third_party/dawn/tools/golang/linux-arm64
+%else
+ln -sfn /usr/lib/golang third_party/dawn/tools/golang/linux-amd64
+%endif
 
 # Remove bundled libs
 # We could use build/linux/unbundle/remove_bundled_libraries.py here, but
