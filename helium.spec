@@ -86,12 +86,12 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.15.1
+%global helium_version 0.15.3
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 151.0.7922.71
+%define chromium 151.0.7922.108
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -143,7 +143,7 @@ Source4:	chromium-drirc-disable-10bpc-color-configs.conf
 %if 0%{?cef:1}
 Source10:	https://github.com/chromiumembedded/cef/archive/refs/heads/%{cefversion}.tar.gz#/cef-%{cefversion}.tar.gz
 Source11:	https://chromium-fonts.storage.googleapis.com/336e775eec536b2d785cc80eff6ac39051931286#/test_fonts.tar.gz
-# pkg-config template for the system-library view of CEF (OnlyOffice tree stays under %{_libdir}/cef).
+# pkg-config template for the system-library view of CEF (OnlyOffice tree stays under %%{_libdir}/cef).
 Source12:	cef.pc.in
 %endif
 Source100:	%{name}.rpmlintrc
@@ -311,9 +311,9 @@ Patch1052:	chromium-148-fix-build-without-ubsan.patch
 # Patches 2000 to 2999 are applied inside the CEF tree.
 # ============================================================================
 # Rebase CEF's chromium patchset so it applies on top of Helium/ungoogled
-# (domain substitution in nested CEF patches + drop libxml_visibility for
-# system libxml). Helium UI API renames may still need further rebases if
-# CEF patch.sh fails against the Helium tree.
+# (domain substitution in nested CEF patches, drop libxml_visibility for
+# system libxml, chrome_runtime_views constructor vs zen-mode animations,
+# crashpad_1995 vs Helium crash-key sanitization / versioning).
 Patch2000:	cef-7922-helium-patch-rebase.patch
 # Incomplete type content::WebContents after Chromium include cleanup
 # (CEF file_dialog_manager.cc needs the full web_contents.h).
@@ -454,7 +454,7 @@ BuildRequires:	pkgconfig(openh264)
 # FIXME as of 0.7.1, re2 headers seem to be required even when
 # not using system re2. This is clearly a build system bug, but
 # as long as the 2 versions are in sync, won't break things badly
-#if %{system re2}
+#if system re2
 BuildRequires:	pkgconfig(re2)
 #endif
 %if %{system zlib}
@@ -665,11 +665,21 @@ sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
 
 # Blink generate_bindings.py fans out to multiprocessing.cpu_count() workers.
 # On high-core ABF builders that collides with ninja -j and OOM-kills the pool
-# (aarch64 build_list 630579: FAILED generate_bindings_interface code=267).
-# Cap workers by RAM (~1.5 GiB headroom each) and by 16.
-_blink_bind_workers=$(awk '/MemTotal:/ { w=int($2/1024/1536); if (w<1) w=1; if (w>16) w=16; print w }' /proc/meminfo)
+# (aarch64 build_lists 630579 and 648862: FAILED generate_bindings_interface
+# code=267, leaked multiprocessing semaphores). A RAM-based cap of 16 is still
+# too high next to ninja -j and thin LTO; keep a small fixed pool.
+_blink_tq=third_party/blink/renderer/bindings/scripts/bind_gen/task_queue.py
+%ifarch %{aarch64}
+_blink_bind_workers=2
+%else
+_blink_bind_workers=4
+%endif
+if ! grep -q 'self._pool_size = multiprocessing.cpu_count()' ${_blink_tq}; then
+	echo "ERROR: blink TaskQueue pool_size assignment changed; update helium.spec"
+	exit 1
+fi
 sed -i "s/self\._pool_size = multiprocessing\.cpu_count()/self._pool_size = min(multiprocessing.cpu_count(), ${_blink_bind_workers})/" \
-	third_party/blink/renderer/bindings/scripts/bind_gen/task_queue.py
+	${_blink_tq}
 
 %if ! %{with libcxx}
 # Get rid of internal libc++ headers to make sure they aren't accidentally

@@ -1,6 +1,6 @@
 diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
 --- cef-7922-orig/patch/patch.cfg	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patch.cfg	2026-08-02 00:38:23.017294714 +0200
++++ cef-7922/patch/patch.cfg	2026-08-08 15:34:09.362546126 +0200
 @@ -27,13 +27,13 @@
      # due to conflicting outputs with the //cef:repack_locales_pack target.
      #
@@ -321,7 +321,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
    {
 diff -urN cef-7922-orig/patch/patches/chrome_browser_webui_version.patch cef-7922/patch/patches/chrome_browser_webui_version.patch
 --- cef-7922-orig/patch/patches/chrome_browser_webui_version.patch	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patches/chrome_browser_webui_version.patch	2026-08-02 00:38:22.936291284 +0200
++++ cef-7922/patch/patches/chrome_browser_webui_version.patch	2026-08-08 15:34:09.362783409 +0200
 @@ -282,10 +282,10 @@
         </table>
  +<if expr="enable_cef">
@@ -335,9 +335,35 @@ diff -urN cef-7922-orig/patch/patches/chrome_browser_webui_version.patch cef-792
  +        protects against multiple app instances writing to the same "$i18n{user_data_path_name}" directory.
  +        Implement <a href="https://cef-builds.spotifycdn.com/docs/stable.html?classCefBrowserProcessHandler.html#a052a91639483467c0b546d57a05c2f06" target="_new">CefBrowserProcessHandler:: OnAlreadyRunningAppRelaunch</a>
  +        to handle the case of app relaunch with the same directory.
+diff -urN cef-7922-orig/patch/patches/chrome_runtime_views.patch cef-7922/patch/patches/chrome_runtime_views.patch
+--- cef-7922-orig/patch/patches/chrome_runtime_views.patch	2026-07-30 22:09:36.000000000 +0200
++++ cef-7922/patch/patches/chrome_runtime_views.patch	2026-08-08 15:34:31.741655059 +0200
+@@ -225,7 +225,7 @@
+ index ab77c657e98dff31a845bbfbdd8eede65acc3f3f..c89d71d2b546e8730a8cd770016263641441c6a4 100644
+ --- chrome/browser/ui/views/frame/browser_view.cc
+ +++ chrome/browser/ui/views/frame/browser_view.cc
+-@@ -872,11 +872,21 @@ class BrowserView::PipExclusionObserverImpl
++@@ -872,13 +872,23 @@ class BrowserView::PipExclusionObserverImpl
+  ///////////////////////////////////////////////////////////////////////////////
+  // BrowserView, public:
+  
+@@ -234,9 +234,10 @@
+  BrowserView::BrowserView(Browser* browser)
+      : views::ClientView(nullptr, nullptr),
+        exclusive_access_context_(
+--          std::make_unique<ExclusiveAccessContextImpl>(*this)),
+--      browser_(browser) {
+-+          std::make_unique<ExclusiveAccessContextImpl>(*this)) {
++           std::make_unique<ExclusiveAccessContextImpl>(*this)),
++-      browser_(browser),
++       zen_top_chrome_animation_(this),
++       zen_side_chrome_animation_(this) {
+ +  if (browser) {
+ +    InitBrowser(browser);
+ +  }
 diff -urN cef-7922-orig/patch/patches/content_2015.patch cef-7922/patch/patches/content_2015.patch
 --- cef-7922-orig/patch/patches/content_2015.patch	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patches/content_2015.patch	2026-08-02 00:38:22.914435610 +0200
++++ cef-7922/patch/patches/content_2015.patch	2026-08-08 15:34:09.362854410 +0200
 @@ -197,7 +197,7 @@
  +  void DevToolsAgentDetached() override;
  +
@@ -347,9 +373,82 @@ diff -urN cef-7922-orig/patch/patches/content_2015.patch cef-7922/patch/patches/
     void SetIsLockedToSite();
  diff --git content/shell/browser/shell_content_browser_client.cc content/shell/browser/shell_content_browser_client.cc
  index 948a8755c033d7661974eb9f92417a66a7aac893..57fa6cbabe9bb0a219455f4eb77a82e6274611aa 100644
+diff -urN cef-7922-orig/patch/patches/crashpad_1995.patch cef-7922/patch/patches/crashpad_1995.patch
+--- cef-7922-orig/patch/patches/crashpad_1995.patch	2026-07-30 22:09:36.000000000 +0200
++++ cef-7922/patch/patches/crashpad_1995.patch	2026-08-08 15:41:38.482507882 +0200
+@@ -112,12 +112,12 @@
+  std::deque<CrashKeyWithName>& GetCommandLineStringAnnotations() {
+    static base::NoDestructor<std::deque<CrashKeyWithName>>
+        command_line_string_annotations;
+-@@ -213,7 +219,7 @@ void AppendStringAnnotationsCommandLineSwitch(base::CommandLine* command_line) {
+- void SetCrashKeysFromCommandLine(const base::CommandLine& command_line) {
+-   SetStringAnnotations(command_line);
+-   HandleEnableDisableFeatures(command_line);
+--  SetSwitchesFromCommandLine(command_line, &IsBoringSwitch);
+-+  SetSwitchesFromCommandLine(command_line, &IsBoringChromeSwitch);
++@@ -248,7 +254,7 @@ void SetCrashKeysFromCommandLine(const base::CommandLine& command_line) {
++     }
++   }
++   HandleEnableDisableFeatures(sanitized);
++-  SetSwitchesFromCommandLine(sanitized, &IsBoringSwitch);
+++  SetSwitchesFromCommandLine(sanitized, &IsBoringChromeSwitch);
+  }
+  
+  }  // namespace crash_keys
+@@ -298,13 +298,14 @@
+ index 3b131e1fc804a55c80b3b2704686270211fcf9fb..c2a7dd560f841aaa7d4f74ea831a5758c01310c3 100644
+ --- components/crash/core/app/crashpad_mac.mm
+ +++ components/crash/core/app/crashpad_mac.mm
+-@@ -17,10 +17,13 @@
++@@ -17,11 +17,14 @@
+  #include "base/apple/foundation_util.h"
+  #include "base/check.h"
+  #include "base/files/file_path.h"
+ +#include "base/path_service.h"
+  #include "base/strings/string_number_conversions.h"
+  #include "base/strings/sys_string_conversions.h"
++ #include "base/version_info/version_info.h"
+  #include "build/branding_buildflags.h"
+  #include "components/crash/core/app/crash_reporter_client.h"
+ +#include "components/crash/core/app/crash_switches.h"
+@@ -341,19 +342,13 @@
+  
+  #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+        // Empty means stable.
+-@@ -77,12 +87,20 @@ std::map<std::string, std::string> GetProcessSimpleAnnotations() {
++@@ -77,9 +87,17 @@ std::map<std::string, std::string> GetProcessSimpleAnnotations() {
+          }
+        }
+  
+--      NSString* version =
+--          base::apple::ObjCCast<NSString>([base::apple::FrameworkBundle()
+--              objectForInfoDictionaryKey:@"CFBundleShortVersionString"]);
+--      process_annotations["ver"] = base::SysNSStringToUTF8(version);
++-      process_annotations["ver"] = version_info::GetHeliumVersionNumber();
+ +      if (product_info.version.empty()) {
+-+        NSString* version =
+-+            base::apple::ObjCCast<NSString>([base::apple::FrameworkBundle()
+-+                objectForInfoDictionaryKey:@"CFBundleShortVersionString"]);
+-+        process_annotations["version"] = base::SysNSStringToUTF8(version);
+++        process_annotations["version"] = version_info::GetHeliumVersionNumber();
+ +      } else {
+ +        process_annotations["version"] = product_info.version;
+ +      }
+@@ -404,9 +399,9 @@
+    crash_reporter_client->GetProductNameAndVersion(
+        exe_file, &product_name, &version, &special_build, &channel_name);
+ -  (*annotations)["prod"] = base::WideToUTF8(product_name);
+--  (*annotations)["ver"] = base::WideToUTF8(version);
++-  (*annotations)["ver"] = version_info::GetHeliumVersionNumber();
+ +  (*annotations)["product"] = base::WideToUTF8(product_name);
+-+  (*annotations)["version"] = base::WideToUTF8(version);
+++  (*annotations)["version"] = version_info::GetHeliumVersionNumber();
+  #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+    // Empty means stable.
+    const bool allow_empty_channel = true;
 diff -urN cef-7922-orig/patch/patches/linux_gtk_theme_3610.patch cef-7922/patch/patches/linux_gtk_theme_3610.patch
 --- cef-7922-orig/patch/patches/linux_gtk_theme_3610.patch	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patches/linux_gtk_theme_3610.patch	2026-08-02 00:38:22.901288803 +0200
++++ cef-7922/patch/patches/linux_gtk_theme_3610.patch	2026-08-08 15:34:09.362916260 +0200
 @@ -16,7 +16,7 @@
     }
  +  // Disable GTK theme change notifications because they are extremely slow.
@@ -361,7 +460,7 @@ diff -urN cef-7922-orig/patch/patches/linux_gtk_theme_3610.patch cef-7922/patch/
     connect(settings, "notify::gtk-icon-theme-name", &GtkUi::OnThemeChanged);
 diff -urN cef-7922-orig/patch/patches/osr_win_remove_keyed_mutex_2575.patch cef-7922/patch/patches/osr_win_remove_keyed_mutex_2575.patch
 --- cef-7922-orig/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-08-02 00:38:22.891081145 +0200
++++ cef-7922/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-08-08 15:34:09.362964911 +0200
 @@ -43,7 +43,7 @@
  +    // flag to disable mutex in the GMBFactoryDXGI because this enum is also
  +    // used above in macOS and CrOS for similar usage (claim no other one will
