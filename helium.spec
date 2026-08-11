@@ -108,7 +108,7 @@ Version:	%{helium_version}
 # CEF 7922 branch tip matching Chromium 151.0.7922.x.
 %define cef 5d67476b12f718c8388918d1740aeec27f6b2b80
 %define cefversion %(echo %{chromium} |cut -d. -f3)
-# make_distrib expects out/Release_GN_<arch>; we build in out/Release-CEF.
+# make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
 %ifarch %{x86_64}
 %define cef_gn_dir Release_GN_x64
 %define cef_md_arch --x64-build
@@ -692,7 +692,7 @@ export CHROME_VERSION_EXTRA="%{product_vendor} %{product_version}"
 
 # use the system nodejs
 mkdir -p third_party/node/linux/node-linux-x64/bin
-ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/
+ln -sfn /usr/bin/node third_party/node/linux/node-linux-x64/bin/
 sed -i -e "s,^NODE_VERSION=.*,NODE_VERSION=\"v%(rpm -q --qf '%%{VERSION}' nodejs)\"," third_party/node/update_node_binaries
 
 # Dawn tint code generation (//third_party/dawn/src/tint:generate_sources) runs
@@ -768,7 +768,7 @@ df -h . 2>/dev/null || :
 %ifarch %{arm}
 # Use linker flags to reduce memory consumption on low-mem architectures
 mkdir -p bfd
-ln -s %{_bindir}/ld.bfd bfd/ld
+ln -sfn %{_bindir}/ld.bfd bfd/ld
 export PATH=$PWD/bfd:$PATH
 # Use linker flags to reduce memory consumption
 %global ldflags %{ldflags} -fuse-ld=bfd -Wl,--no-keep-memory -Wl,--reduce-memory-overheads
@@ -1034,7 +1034,7 @@ for bin in rustc cargo rustfmt bindgen; do
     [ -f %{_bindir}/$bin ] && ln -sf %{_bindir}/$bin third_party/rust-toolchain/bin/$bin
 done
 mkdir -p third_party/gperf/cipd/bin
-ln -s %{_bindir}/gperf third_party/gperf/cipd/bin/
+ln -sfn %{_bindir}/gperf third_party/gperf/cipd/bin/
 
 # Choose ninja -j from free disk so parallel .o/.tmp files do not ENOSPC.
 # Rough budget: ~1.5 GiB free headroom per compile job, cap at min(nproc, 32).
@@ -1051,13 +1051,34 @@ echo "Using ninja -j${_ninja_jobs} (nproc=$(getconf _NPROCESSORS_ONLN))"
 df -h . || :
 
 %if %{with browser}
+# Browser is configured and linked *before* CEF's Chromium patchset. Those
+# patches rewrite shared chrome/blink/v8 sources and flip ENABLE_CEF /
+# blink_heap_inside_shared_library; shipping chrome from a post-patch tree
+# (or reusing its .o files) is not safe — ninja only rebuilds what depfiles
+# and command-line hashes notice.
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args)" out/Release
 ninja -j${_ninja_jobs} -C out/Release chrome chrome_sandbox chromedriver
+# Freeze the shipping browser payload *now*, before patch.sh mtimes sources
+# under out/Release's still-valid ninja graph.
+rm -rf browser-dist
+mkdir -p browser-dist/locales
+cp -a out/Release/chrome out/Release/chrome_sandbox \
+	out/Release/chrome_crashpad_handler out/Release/chromedriver \
+	out/Release/libqt6_shim.so out/Release/libGLESv2.so \
+	out/Release/libEGL.so out/Release/libffmpeg.so \
+	out/Release/libvulkan.so.1 out/Release/libvk_swiftshader.so \
+	out/Release/chrome_100_percent.pak out/Release/resources.pak \
+	out/Release/vk_swiftshader_icd.json \
+	out/Release/*.bin \
+	browser-dist/
+cp -a out/Release/locales/*.pak browser-dist/locales/
+cp -a out/Release/angledata out/Release/resources browser-dist/
+if [ -e out/Release/icudtl.dat ]; then
+	cp -a out/Release/icudtl.dat browser-dist/
+fi
+# Dual browser+CEF: drop compiler intermediates (not the gn binary) so the
+# CEF tree has disk. Never touch browser-dist after this.
 %if 0%{?cef:1}
-# Dual browser+CEF builds two nearly-full Chromium trees. ABF builders hit
-# ENOSPC during %install (see build_lists 630578) if we keep obj/gen from the
-# browser tree while compiling CEF. Drop compiler intermediates; keep final
-# binaries, pak/dat/bin payloads, and out/Release/gn for the CEF gn gen below.
 rm -rf out/Release/obj out/Release/gen out/Release/thinlto-cache
 df -h . || :
 %endif
@@ -1075,20 +1096,18 @@ if [ ! -x ../third_party/llvm-build/Release+Asserts/bin/clang ]; then
 	ln -sfn %{_bindir}/clang++ ../third_party/llvm-build/Release+Asserts/bin/clang++
 fi
 python tools/version_manager.py -u --fast-check || :
-# Apply CEF specific patches and build CEF...
 ./tools/patch.sh
 cd ..
 
-# Lastly, try to build it...
-# We have to use use_thin_lto=false because LTO in CEF causes
-# an OOM while linking libcef.so even on boxes with 64 GB RAM + 64 GB swap
-# blink_heap_inside_shared_library=true is required for libcef.so (shared
-# library); without it Blink uses local-exec TLS and ld.lld fails with
-# R_X86_64_TPOFF32 cannot be used with -shared. CEF's gn_args.py sets this
-# automatically; we must pass it ourselves with custom args.
-out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0 blink_heap_inside_shared_library=true" out/Release-CEF
-# `cef` pulls in cefclient (GTK) and cefclient_qt samples on Linux.
-ninja -j${_ninja_jobs} -C out/Release-CEF cef chrome_sandbox
+# Fresh output dir: empty obj/ tree, new args.gn / build.ninja. Nothing is
+# reused from out/Release, so a missed header dep cannot leave a pre-patch .o.
+# use_thin_lto=false: LTO OOMs linking libcef.so even with 64 GB RAM.
+# blink_heap_inside_shared_library=true: else R_X86_64_TPOFF32 on -shared.
+# enable_cef=true: v8_used_in_shared_library tracks this after patch.sh.
+out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0 blink_heap_inside_shared_library=true enable_cef=true" out/Release-CEF
+# Do *not* ninja the `cef` group: it is testonly and pulls ceftests +
+# libcef_static_unittests. We package libcef, the wrapper, sandbox, samples.
+ninja -j${_ninja_jobs} -C out/Release-CEF libcef chrome_sandbox cefclient cefclient_qt libcef_dll_wrapper
 # libcef_dll_wrapper.a is a thin archive (object paths, not contents). Expand
 # it while obj/ still exists, then drop CEF intermediates so %install has room
 # for BUILDROOT copies of libcef.so + Resources (ENOSPC at that step on ABF).
@@ -1107,19 +1126,13 @@ mkdir -p out/Release-CEF/libcef_dll_wrapper
 # README/CREDITS, etc.). Point it at our ninja output dir and run before
 # purging intermediates for disk space.
 ln -sfn Release-CEF out/%{cef_gn_dir}
-# about_credits.html is required by make_distrib; browser build usually has it.
+# about_credits.html is required by make_distrib; CEF ninja usually has it.
 if [ ! -f out/Release-CEF/gen/components/resources/about_credits.html ]; then
 	mkdir -p out/Release-CEF/gen/components/resources
-	if [ -f out/Release/gen/components/resources/about_credits.html ]; then
-		cp -a out/Release/gen/components/resources/about_credits.html \
-			out/Release-CEF/gen/components/resources/
-	else
-		printf '%s\n' '<html><body>credits unavailable</body></html>' \
-			> out/Release-CEF/gen/components/resources/about_credits.html
-	fi
+	printf '%s\n' '<html><body>credits unavailable</body></html>' \
+		> out/Release-CEF/gen/components/resources/about_credits.html
 fi
-# Fixed subdir name so %install does not have to glob versioned paths.
-# --minimal: Release + Resources + include + libcef_dll + cmake (no Debug/tests).
+# --minimal appends _minimal to --distrib-subdir (cef_dist -> cef_dist_minimal).
 # --allow-partial: Debug tree is not built. --no-archive: we package via rpm.
 # --no-format: skip clang-format on transferred autogen sources.
 ( cd cef && PYTHONPATH=tools python tools/make_distrib.py \
@@ -1128,7 +1141,7 @@ fi
 	--distrib-subdir=cef_dist \
 	--output-dir ../cef_binary_distrib )
 # OM extras not shipped by upstream make_distrib (and fat wrapper for linkers).
-_cef_dist=cef_binary_distrib/cef_dist
+_cef_dist=cef_binary_distrib/cef_dist_minimal
 cp -a out/Release-CEF/libcef_dll_wrapper "$_cef_dist"/
 # snapshot_blob.bin is still used by some embedders; not always in make_distrib.
 if [ -f out/Release-CEF/snapshot_blob.bin ]; then
@@ -1137,6 +1150,9 @@ fi
 if [ -f out/Release-CEF/libqt6_shim.so ]; then
 	cp -a out/Release-CEF/libqt6_shim.so "$_cef_dist"/Release/
 fi
+install -m 755 out/Release-CEF/cefclient out/Release-CEF/cefclient_qt \
+	"$_cef_dist"/Release/
+cp -a out/Release-CEF/cefclient_files "$_cef_dist"/Release/
 # Keep both sandbox names (ninja: chrome_sandbox; official: chrome-sandbox).
 if [ -e "$_cef_dist"/Release/chrome-sandbox ] && [ ! -e "$_cef_dist"/Release/chrome_sandbox ]; then
 	ln -s chrome-sandbox "$_cef_dist"/Release/chrome_sandbox
@@ -1154,44 +1170,44 @@ df -h . || :
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_libdir}/%{name}/locales
 mkdir -p %{buildroot}%{_libdir}/%{name}/themes
-mkdir -p %{buildroot}%{_libdir}/%{name}/default_apps
 mkdir -p %{buildroot}%{_mandir}/man1
 install -m 755 %{SOURCE1} %{buildroot}%{_libdir}/%{name}/
-install -m 755 out/Release/chrome %{buildroot}%{_libdir}/%{name}/
-install -m 4755 out/Release/chrome_sandbox %{buildroot}%{_libdir}/%{name}/chrome-sandbox
-install -m 755 out/Release/chrome_crashpad_handler %{buildroot}%{_libdir}/%{name}/
-install -m 644 out/Release/locales/*.pak %{buildroot}%{_libdir}/%{name}/locales/
-install -m 644 out/Release/chrome_100_percent.pak %{buildroot}%{_libdir}/%{name}/
-install -m 644 out/Release/resources.pak %{buildroot}%{_libdir}/%{name}/
-install -m 755 out/Release/libqt6_shim.so %{buildroot}%{_libdir}/%{name}/
+# browser-dist/ was snapshotted after the pre-CEF-patch ninja; do not
+# install chrome from out/Release (patch.sh has since rewritten sources).
+install -m 755 browser-dist/chrome %{buildroot}%{_libdir}/%{name}/
+install -m 4755 browser-dist/chrome_sandbox %{buildroot}%{_libdir}/%{name}/chrome-sandbox
+install -m 755 browser-dist/chrome_crashpad_handler %{buildroot}%{_libdir}/%{name}/
+install -m 644 browser-dist/locales/*.pak %{buildroot}%{_libdir}/%{name}/locales/
+install -m 644 browser-dist/chrome_100_percent.pak %{buildroot}%{_libdir}/%{name}/
+install -m 644 browser-dist/resources.pak %{buildroot}%{_libdir}/%{name}/
+install -m 755 browser-dist/libqt6_shim.so %{buildroot}%{_libdir}/%{name}/
 # libGLESv2.so/libEGL.so look like dupes from the system, but aren't:
 # Loading happens in ui/ozone/common/egl_util.cc -- indicating libGLESv2.so
 # and libEGL.so (as opposed to their .1/.2 counterparts) are ANGLE (OpenGL ES
 # -> native GL API wrapper)
 # Now for most HW that shouldn't be necessary, so we may want to get rid of
 # the custom libs and just use Mesa's libraries directly at some point.
-install -m 755 out/Release/libGLESv2.so %{buildroot}%{_libdir}/%{name}/
-install -m 755 out/Release/libEGL.so %{buildroot}%{_libdir}/%{name}/
+install -m 755 browser-dist/libGLESv2.so %{buildroot}%{_libdir}/%{name}/
+install -m 755 browser-dist/libEGL.so %{buildroot}%{_libdir}/%{name}/
 # ANGLE data files (fake ICD for custom vulkan bits?), probably needed unless and
 # until we drop the custom libEGL/libGLESv2
-cp -a out/Release/angledata %{buildroot}%{_libdir}/%{name}/
-cp out/Release/vk_swiftshader_icd.json %{buildroot}%{_libdir}/%{name}/
+cp -a browser-dist/angledata %{buildroot}%{_libdir}/%{name}/
+cp browser-dist/vk_swiftshader_icd.json %{buildroot}%{_libdir}/%{name}/
 # FIXME why can't we just use system ffmpeg?
-install -m 755 out/Release/libffmpeg.so %{buildroot}%{_libdir}/%{name}/
+install -m 755 browser-dist/libffmpeg.so %{buildroot}%{_libdir}/%{name}/
 # FIXME is the custom vulkan needed, or is this just dupes from system vulkan
 # for prehistoric distros?
-install -m 755 out/Release/libvulkan.so.1 %{buildroot}%{_libdir}/%{name}/
-install -m 755 out/Release/libvk_swiftshader.so %{buildroot}%{_libdir}/%{name}/
+install -m 755 browser-dist/libvulkan.so.1 %{buildroot}%{_libdir}/%{name}/
+install -m 755 browser-dist/libvk_swiftshader.so %{buildroot}%{_libdir}/%{name}/
 # May or may not be there depending on whether or not we use system icu
-[ -e out/Release/icudtl.dat ] && install -m 644 out/Release/icudtl.dat %{buildroot}%{_libdir}/%{name}/
-install -m 644 out/Release/*.bin %{buildroot}%{_libdir}/%{name}/
-install -m 644 chrome/browser/resources/default_apps/* %{buildroot}%{_libdir}/%{name}/default_apps/
+[ -e browser-dist/icudtl.dat ] && install -m 644 browser-dist/icudtl.dat %{buildroot}%{_libdir}/%{name}/
+install -m 644 browser-dist/*.bin %{buildroot}%{_libdir}/%{name}/
 ln -s %{_libdir}/%{name}/chromium-wrapper %{buildroot}%{_bindir}/%{name}
-cp -a out/Release/chromedriver %{buildroot}%{_libdir}/%{name}/chromedriver
+cp -a browser-dist/chromedriver %{buildroot}%{_libdir}/%{name}/chromedriver
 ln -s %{_libdir}/%{name}/chromedriver %{buildroot}%{_bindir}/chromedriver
 
-find out/Release/resources/ -name "*.d" -exec rm {} \;
-cp -r out/Release/resources %{buildroot}%{_libdir}/%{name}
+find browser-dist/resources/ -name "*.d" -exec rm {} \;
+cp -r browser-dist/resources %{buildroot}%{_libdir}/%{name}
 
 # desktop file
 mkdir -p %{buildroot}%{_datadir}/applications
@@ -1235,7 +1251,7 @@ rm -rf out/Release
 # Release/, Resources/, include/ (incl. generated cef_config.h etc.),
 # libcef_dll/, cmake/, plus our fat libcef_dll_wrapper/ and OM Qt shim.
 # Assembled in %build via tools/make_distrib.py --minimal.
-_cef_dist=cef_binary_distrib/cef_dist
+_cef_dist=cef_binary_distrib/cef_dist_minimal
 if [ ! -d "$_cef_dist" ]; then
 	echo "FATAL: missing $_cef_dist (make_distrib failed in %%build)" >&2
 	exit 1
@@ -1284,9 +1300,10 @@ sed -e 's|@PREFIX@|%{_prefix}|g' \
 ln -sfn cef.pc %{buildroot}%{_libdir}/pkgconfig/libcef.pc
 # Sample apps: live next to libcef.so so $ORIGIN rpath finds the library, and
 # so GetResourceDir() resolves ./cefclient_files beside the executable.
-install -m 755 out/Release-CEF/cefclient out/Release-CEF/cefclient_qt \
+# Copied into the make_distrib tree in %build so we can drop out/Release.
+install -m 755 "$_cef_dist"/Release/cefclient "$_cef_dist"/Release/cefclient_qt \
 	%{buildroot}%{_libdir}/cef/Release/
-cp -a out/Release-CEF/cefclient_files %{buildroot}%{_libdir}/cef/Release/
+cp -a "$_cef_dist"/Release/cefclient_files %{buildroot}%{_libdir}/cef/Release/
 # Convenience launchers (exec the real binary so $ORIGIN stays Release/).
 # Unquoted heredoc so rpm expands %{_libdir}; escape $ so the shell keeps "$@".
 mkdir -p %{buildroot}%{_bindir}
@@ -1356,7 +1373,6 @@ chmod 755 %{buildroot}%{_bindir}/cefclient %{buildroot}%{_bindir}/cefclient_qt
 %{_libdir}/%{name}/resources.pak
 %{_libdir}/%{name}/resources
 %{_libdir}/%{name}/themes
-%{_libdir}/%{name}/default_apps
 %{_datadir}/applications/*.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.*
 
