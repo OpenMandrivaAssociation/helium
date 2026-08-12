@@ -127,7 +127,7 @@ Version:	%{helium_version}
 %endif
 %endif
 %endif
-Release:	1
+Release:	2
 Summary:	A fast, privacy friendly, web browser based on Ungoogled Chromium
 Group:		Networking/WWW
 License:	BSD, LGPL
@@ -911,16 +911,15 @@ google_default_client_id="%{google_default_client_id}"
 google_default_client_secret="%{google_default_client_secret}"
 %endif
 use_lld=true
-%ifarch %{x86_64}
-# Workaround for OOMs
+%ifarch %{x86_64} %{aarch64}
+# x86_64: ThinLTO OOMs / ENOSPC on multi-GB chrome links.
+# aarch64: ThinLTO merges DWARF32 until lld fails LINK chrome with
+# R_AARCH64_ABS32 out of range in .debug_info (ABF 648862, 649252).
+# Chromium asserts if concurrent_links is set together with use_thin_lto
+# (aarch64 638819), so only set it when ThinLTO is off.
 thin_lto_enable_optimizations=false
-use_lld=true
 use_thin_lto=false
 is_cfi=false
-# Cap concurrent links: default is memory-based and can open many multi-GB
-# link jobs at once, which blew disk on znver1 (ENOSPC during LINK of
-# code_cache_generator / v8_context_snapshot_generator). Chromium asserts
-# if concurrent_links is set together with use_thin_lto (aarch64 638819).
 concurrent_links=2
 %else
 thin_lto_enable_optimizations=true
