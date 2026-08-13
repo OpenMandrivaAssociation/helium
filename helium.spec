@@ -65,9 +65,12 @@
 # re2 (as of 124.x): //third_party/googletest:gtest_config(//build/toolchain/linux/unbundle:default) needs //third_party/re2:re2_config(//build/toolchain/linux/unbundle:default) (+ libc++/libstdc++ issue)
 # zlib: Breaks extracting extensions
 %if %{with libcxx}
-%global system_libs fontconfig harfbuzz libjpeg libpng libdrm libxml libxslt opus libusb openh264 freetype zstd libwebp
+# ffmpeg: system FFmpeg 9.x via build/linux/unbundle (no private libffmpeg.so).
+# Avoids shipping Chromium's vendored fork and symbol clashes with apps that
+# already link system libav* (e.g. OBS + obs-browser/CEF in one process).
+%global system_libs fontconfig harfbuzz libjpeg libpng libdrm libxml libxslt opus libusb openh264 freetype zstd libwebp ffmpeg
 %else
-%global system_libs fontconfig harfbuzz libjpeg libpng libdrm libxml libxslt opus libusb openh264 freetype zstd libwebp jsoncpp snappy
+%global system_libs fontconfig harfbuzz libjpeg libpng libdrm libxml libxslt opus libusb openh264 freetype zstd libwebp jsoncpp snappy ffmpeg
 # System absl is not quite working yet
 # absl_algorithm absl_base absl_cleanup absl_container absl_crc absl_debugging absl_flags absl_functional absl_hash absl_log absl_log_internal absl_memory absl_meta absl_numeric absl_random absl_status absl_strings absl_synchronization absl_time absl_types absl_utility
 %endif
@@ -80,18 +83,16 @@
 %define google_default_client_id 1089316189405-m0ropn3qa4p1phesfvi2urs7qps1d79o.apps.googleusercontent.com
 %define google_default_client_secret RDdr-pHq2gStY4uw0m-zxXeo
 
-%global __requires_exclude libffmpeg.so\\(\\)\\(64bit\\)
-
 Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.15.3
+%global helium_version 0.15.4
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 151.0.7922.108
+%define chromium 151.0.7922.137
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -127,7 +128,7 @@ Version:	%{helium_version}
 %endif
 %endif
 %endif
-Release:	2
+Release:	1
 Summary:	A fast, privacy friendly, web browser based on Ungoogled Chromium
 Group:		Networking/WWW
 License:	BSD, LGPL
@@ -254,6 +255,14 @@ Patch1001:	chromium-64-system-curl.patch
 Patch1002:	chromium-69-no-static-libstdc++.patch
 Patch1003:	chromium-system-zlib.patch
 Patch1004:	chromium-107-system-libs.patch
+# Drop Chromium-private AVFMT_FLAG_NOH264PARSE when using system FFmpeg.
+%if %{system ffmpeg}
+Patch1005:	chromium-system-ffmpeg-no-noh264parse.patch
+# System FFmpeg decoder names differ from Chromium's fork (opus vs libopus,
+# mp3float vs mp3). Without this, avcodec_open2 rejects YouTube Opus and
+# HTML5 MP3.
+Patch1009:	chromium-system-ffmpeg-runtime.patch
+%endif
 # JPEG XL: Chromium 151+ decodes via the Rust jxl crate (third_party/rust/jxl),
 # not C libjxl. enable_jxl_decoder defaults to true; we set it explicitly in
 # openmandriva.gn_args. The old chromium-restore-jpeg-xl-support.patch (C API +
@@ -932,7 +941,9 @@ symbol_level=0
 
 use_pulseaudio=true
 link_pulseaudio=true
-is_component_ffmpeg=true
+# With system ffmpeg (unbundle), there is no private libffmpeg.so component.
+# Keep this false so installers/tests do not expect a chrome-dir libffmpeg.so.
+is_component_ffmpeg=false
 enable_hangout_services_extension=true
 enable_widevine=true
 use_vaapi=true
@@ -1055,8 +1066,31 @@ df -h . || :
 # blink_heap_inside_shared_library; shipping chrome from a post-patch tree
 # (or reusing its .o files) is not safe — ninja only rebuilds what depfiles
 # and command-line hashes notice.
+#
+# Browser and CEF both use openmandriva.gn_args (use_system_ffmpeg=true,
+# is_component_ffmpeg=false when ffmpeg is in system_libs).
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args)" out/Release
+%if %{system ffmpeg}
+grep -q 'use_system_ffmpeg=true' out/Release/args.gn
+grep -q 'is_component_ffmpeg=false' out/Release/args.gn
+grep -q 'USE_SYSTEM_FFMPEG=true' third_party/ffmpeg/BUILD.gn
+%endif
 ninja -j${_ninja_jobs} -C out/Release chrome chrome_sandbox chromedriver
+%if %{system ffmpeg}
+# No private component DSO when linking system libav*.
+if [ -e out/Release/libffmpeg.so ]; then
+	echo "FATAL: out/Release/libffmpeg.so present despite system ffmpeg" >&2
+	exit 1
+fi
+if ! readelf -d out/Release/chrome | grep -q 'NEEDED.*libavcodec'; then
+	echo "FATAL: chrome is not linked against system libavcodec" >&2
+	exit 1
+fi
+if readelf -d out/Release/chrome | grep -q 'NEEDED.*libffmpeg\.so'; then
+	echo "FATAL: chrome still NEEDs private libffmpeg.so" >&2
+	exit 1
+fi
+%endif
 # Freeze the shipping browser payload *now*, before patch.sh mtimes sources
 # under out/Release's still-valid ninja graph.
 rm -rf browser-dist
@@ -1064,12 +1098,16 @@ mkdir -p browser-dist/locales
 cp -a out/Release/chrome out/Release/chrome_sandbox \
 	out/Release/chrome_crashpad_handler out/Release/chromedriver \
 	out/Release/libqt6_shim.so out/Release/libGLESv2.so \
-	out/Release/libEGL.so out/Release/libffmpeg.so \
+	out/Release/libEGL.so \
 	out/Release/libvulkan.so.1 out/Release/libvk_swiftshader.so \
 	out/Release/chrome_100_percent.pak out/Release/resources.pak \
 	out/Release/vk_swiftshader_icd.json \
 	out/Release/*.bin \
 	browser-dist/
+# Only present when building Chromium's private component FFmpeg.
+if [ -e out/Release/libffmpeg.so ]; then
+	cp -a out/Release/libffmpeg.so browser-dist/
+fi
 cp -a out/Release/locales/*.pak browser-dist/locales/
 cp -a out/Release/angledata out/Release/resources browser-dist/
 if [ -e out/Release/icudtl.dat ]; then
@@ -1097,16 +1135,59 @@ fi
 python tools/version_manager.py -u --fast-check || :
 ./tools/patch.sh
 cd ..
+%if %{system ffmpeg}
+# CEF patch.sh rewrites shared Chromium sources; re-assert system FFmpeg
+# unbundle + drop Chromium-private AVFMT_FLAG_NOH264PARSE for libcef too.
+if ! grep -q 'USE_SYSTEM_FFMPEG=true' third_party/ffmpeg/BUILD.gn; then
+	echo "FATAL: system ffmpeg unbundle lost after cef/tools/patch.sh" >&2
+	exit 1
+fi
+# Match the assignment, not the explanatory comment that names the flag.
+if grep -q 'flags |= AVFMT_FLAG_NOH264PARSE' media/filters/ffmpeg_glue.cc; then
+	# Patch1005 may have been overwritten by cef/tools/patch.sh; re-apply.
+	%{_bindir}/patch -p1 --fuzz=0 --forward < %{PATCH1005}
+fi
+if grep -q 'flags |= AVFMT_FLAG_NOH264PARSE' media/filters/ffmpeg_glue.cc; then
+	echo "FATAL: AVFMT_FLAG_NOH264PARSE assignment still present (system ffmpeg)" >&2
+	exit 1
+fi
+if ! grep -q 'libopus,opus,flac' media/ffmpeg/ffmpeg_common.cc || ! grep -q 'mp3,mp3float' media/ffmpeg/ffmpeg_common.cc; then
+	%{_bindir}/patch -p1 --fuzz=0 --forward < %{PATCH1009}
+fi
+if ! grep -q 'libopus,opus,flac' media/ffmpeg/ffmpeg_common.cc || ! grep -q 'mp3,mp3float' media/ffmpeg/ffmpeg_common.cc; then
+	echo "FATAL: system FFmpeg opus/mp3 allowlist missing after cef/tools/patch.sh" >&2
+	exit 1
+fi
+%endif
 
 # Fresh output dir: empty obj/ tree, new args.gn / build.ninja. Nothing is
 # reused from out/Release, so a missed header dep cannot leave a pre-patch .o.
 # use_thin_lto=false: LTO OOMs linking libcef.so even with 64 GB RAM.
 # blink_heap_inside_shared_library=true: else R_X86_64_TPOFF32 on -shared.
 # enable_cef=true: v8_used_in_shared_library tracks this after patch.sh.
+# Same openmandriva.gn_args as the browser (system ffmpeg, no component DSO).
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0 blink_heap_inside_shared_library=true enable_cef=true" out/Release-CEF
+%if %{system ffmpeg}
+grep -q 'use_system_ffmpeg=true' out/Release-CEF/args.gn
+grep -q 'is_component_ffmpeg=false' out/Release-CEF/args.gn
+%endif
 # Do *not* ninja the `cef` group: it is testonly and pulls ceftests +
 # libcef_static_unittests. We package libcef, the wrapper, sandbox, samples.
 ninja -j${_ninja_jobs} -C out/Release-CEF libcef chrome_sandbox cefclient cefclient_qt libcef_dll_wrapper
+%if %{system ffmpeg}
+if [ -e out/Release-CEF/libffmpeg.so ]; then
+	echo "FATAL: out/Release-CEF/libffmpeg.so present despite system ffmpeg" >&2
+	exit 1
+fi
+if ! readelf -d out/Release-CEF/libcef.so | grep -q 'NEEDED.*libavcodec'; then
+	echo "FATAL: libcef.so is not linked against system libavcodec" >&2
+	exit 1
+fi
+if readelf -d out/Release-CEF/libcef.so | grep -q 'NEEDED.*libffmpeg\.so'; then
+	echo "FATAL: libcef.so still NEEDs private libffmpeg.so" >&2
+	exit 1
+fi
+%endif
 # libcef_dll_wrapper.a is a thin archive (object paths, not contents). Expand
 # it while obj/ still exists, then drop CEF intermediates so %install has room
 # for BUILDROOT copies of libcef.so + Resources (ENOSPC at that step on ABF).
@@ -1145,6 +1226,10 @@ cp -a out/Release-CEF/libcef_dll_wrapper "$_cef_dist"/
 # snapshot_blob.bin is still used by some embedders; not always in make_distrib.
 if [ -f out/Release-CEF/snapshot_blob.bin ]; then
 	cp -a out/Release-CEF/snapshot_blob.bin "$_cef_dist"/Release/
+fi
+# Private component FFmpeg only (system ffmpeg: libcef links libav* directly).
+if [ -f out/Release-CEF/libffmpeg.so ]; then
+	cp -a out/Release-CEF/libffmpeg.so "$_cef_dist"/Release/
 fi
 if [ -f out/Release-CEF/libqt6_shim.so ]; then
 	cp -a out/Release-CEF/libqt6_shim.so "$_cef_dist"/Release/
@@ -1192,8 +1277,10 @@ install -m 755 browser-dist/libEGL.so %{buildroot}%{_libdir}/%{name}/
 # until we drop the custom libEGL/libGLESv2
 cp -a browser-dist/angledata %{buildroot}%{_libdir}/%{name}/
 cp browser-dist/vk_swiftshader_icd.json %{buildroot}%{_libdir}/%{name}/
-# FIXME why can't we just use system ffmpeg?
-install -m 755 browser-dist/libffmpeg.so %{buildroot}%{_libdir}/%{name}/
+# Private component FFmpeg (absent when using system ffmpeg via unbundle).
+if [ -e browser-dist/libffmpeg.so ]; then
+	install -m 755 browser-dist/libffmpeg.so %{buildroot}%{_libdir}/%{name}/
+fi
 # FIXME is the custom vulkan needed, or is this just dupes from system vulkan
 # for prehistoric distros?
 install -m 755 browser-dist/libvulkan.so.1 %{buildroot}%{_libdir}/%{name}/
