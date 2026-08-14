@@ -1076,8 +1076,15 @@ df -h . || :
 # when ffmpeg is in system_libs; unbundle is via replace_gn_files.py).
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args)" out/Release
 %if %{system ffmpeg}
-grep -q 'is_component_ffmpeg=false' out/Release/args.gn
-grep -q 'USE_SYSTEM_FFMPEG=true' third_party/ffmpeg/BUILD.gn
+# gn pretty-prints args.gn as "is_component_ffmpeg = false"
+if ! grep -qE 'is_component_ffmpeg[[:space:]]*=[[:space:]]*false' out/Release/args.gn; then
+	echo "FATAL: gn did not set is_component_ffmpeg=false" >&2
+	exit 1
+fi
+if ! grep -q 'USE_SYSTEM_FFMPEG=true' third_party/ffmpeg/BUILD.gn; then
+	echo "FATAL: system ffmpeg unbundle missing (USE_SYSTEM_FFMPEG)" >&2
+	exit 1
+fi
 %endif
 ninja -j${_ninja_jobs} -C out/Release chrome chrome_sandbox chromedriver
 %if %{system ffmpeg}
@@ -1174,8 +1181,14 @@ fi
 # display next to Qt (OBS Browser: realloc(): invalid next size).
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0 blink_heap_inside_shared_library=true enable_cef=true use_gtk=false cef_use_gtk=false" out/Release-CEF
 %if %{system ffmpeg}
-grep -q 'is_component_ffmpeg=false' out/Release-CEF/args.gn
-grep -q 'USE_SYSTEM_FFMPEG=true' third_party/ffmpeg/BUILD.gn
+if ! grep -qE 'is_component_ffmpeg[[:space:]]*=[[:space:]]*false' out/Release-CEF/args.gn; then
+	echo "FATAL: CEF gn did not set is_component_ffmpeg=false" >&2
+	exit 1
+fi
+if ! grep -q 'USE_SYSTEM_FFMPEG=true' third_party/ffmpeg/BUILD.gn; then
+	echo "FATAL: system ffmpeg unbundle missing after CEF gn gen" >&2
+	exit 1
+fi
 %endif
 # Last assignment in --args must win over openmandriva.gn_args use_gtk=true.
 if ! grep -q '^use_gtk=false$' out/Release-CEF/args.gn && \
