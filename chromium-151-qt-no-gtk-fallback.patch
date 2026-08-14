@@ -1,7 +1,7 @@
-diff -up chromium/ui/linux/linux_ui_factory.cc.omv~ chromium/ui/linux/linux_ui_factory.cc
---- chromium/ui/linux/linux_ui_factory.cc.omv~	2026-08-14 00:00:00.000000000 +0000
-+++ chromium/ui/linux/linux_ui_factory.cc	2026-08-14 00:00:00.000000000 +0000
-@@ -100,7 +100,12 @@ LinuxUiAndTheme* GetGtkUi() {
+diff -Naur a/ui/linux/linux_ui_factory.cc b/ui/linux/linux_ui_factory.cc
+--- a/ui/linux/linux_ui_factory.cc	2026-08-14 05:44:24.825300832 +0200
++++ b/ui/linux/linux_ui_factory.cc	2026-08-14 05:44:24.801039124 +0200
+@@ -100,7 +100,11 @@
  LinuxUiAndTheme* GetQtUi() {
    auto create_qt_ui = []() {
  #if BUILDFLAG(USE_QT)
@@ -14,20 +14,20 @@ diff -up chromium/ui/linux/linux_ui_factory.cc.omv~ chromium/ui/linux/linux_ui_f
  #else
      return nullptr;
  #endif
-diff -up chromium/ui/qt/BUILD.gn.omv~ chromium/ui/qt/BUILD.gn
---- chromium/ui/qt/BUILD.gn.omv~	2026-08-14 00:00:00.000000000 +0000
-+++ chromium/ui/qt/BUILD.gn	2026-08-14 00:00:00.000000000 +0000
-@@ -149,6 +149,7 @@ component("qt") {
-     "//printing/buildflags",
+diff -Naur a/ui/qt/BUILD.gn b/ui/qt/BUILD.gn
+--- a/ui/qt/BUILD.gn	2026-08-14 05:44:24.825350892 +0200
++++ b/ui/qt/BUILD.gn	2026-08-14 05:44:24.801938617 +0200
+@@ -149,6 +149,7 @@
      "//ui/base",
      "//ui/base/ime/linux",
-+    "//ui/events:dom_keyboard_layout",
      "//ui/color",
++    "//ui/events:dom_keyboard_layout",
      "//ui/color:mixers",
      "//ui/gfx",
-diff -up chromium/ui/qt/qt_ui.cc.omv~ chromium/ui/qt/qt_ui.cc
---- chromium/ui/qt/qt_ui.cc.omv~	2026-08-14 00:00:00.000000000 +0000
-+++ chromium/ui/qt/qt_ui.cc	2026-08-14 00:00:00.000000000 +0000
+     "//ui/linux:linux_ui",
+diff -Naur a/ui/qt/qt_ui.cc b/ui/qt/qt_ui.cc
+--- a/ui/qt/qt_ui.cc	2026-08-14 05:44:24.825455374 +0200
++++ b/ui/qt/qt_ui.cc	2026-08-14 05:44:24.802744807 +0200
 @@ -31,6 +31,7 @@
  #include "ui/base/ime/linux/linux_input_method_context.h"
  #include "ui/base/ime/text_edit_commands.h"
@@ -36,7 +36,8 @@ diff -up chromium/ui/qt/qt_ui.cc.omv~ chromium/ui/qt/qt_ui.cc
  #include "ui/color/color_mixer.h"
  #include "ui/color/color_provider.h"
  #include "ui/color/color_provider_manager.h"
-@@ -142,10 +143,11 @@ QtUi::QtUi(ui::LinuxUi* fallback_linux_u
+@@ -142,10 +143,11 @@
+ QtUi::~QtUi() = default;
  
  std::unique_ptr<ui::LinuxInputMethodContext> QtUi::CreateInputMethodContext(
 -    ui::LinuxInputMethodContextDelegate* delegate) const {
@@ -51,7 +52,7 @@ diff -up chromium/ui/qt/qt_ui.cc.omv~ chromium/ui/qt/qt_ui.cc
  }
  
  gfx::FontRenderParams QtUi::GetDefaultFontRenderParams() {
-@@ -407,17 +409,15 @@ bool QtUi::AnimationsEnabled() const {
+@@ -407,17 +409,12 @@
  }
  
  void QtUi::AddWindowButtonOrderObserver(
@@ -72,7 +73,7 @@ diff -up chromium/ui/qt/qt_ui.cc.omv~ chromium/ui/qt/qt_ui.cc
  }
  
  std::unique_ptr<ui::NavButtonProvider> QtUi::CreateNavButtonProvider(
-@@ -435,8 +435,7 @@ ui::WindowFrameProvider* QtUi::GetWindow
+@@ -435,8 +432,7 @@
  }
  
  base::flat_map<std::string, std::string> QtUi::GetKeyboardLayoutMap() {
@@ -82,10 +83,10 @@ diff -up chromium/ui/qt/qt_ui.cc.omv~ chromium/ui/qt/qt_ui.cc
  }
  
  std::string QtUi::GetCursorThemeName() {
-diff -up chromium/ui/qt/qt_ui.h.omv~ chromium/ui/qt/qt_ui.h
---- chromium/ui/qt/qt_ui.h.omv~	2026-08-14 00:00:00.000000000 +0000
-+++ chromium/ui/qt/qt_ui.h	2026-08-14 00:00:00.000000000 +0000
-@@ -101,8 +101,8 @@ class QtUi : public ui::LinuxUiAndTheme,
+diff -Naur a/ui/qt/qt_ui.h b/ui/qt/qt_ui.h
+--- a/ui/qt/qt_ui.h	2026-08-14 05:44:24.825504324 +0200
++++ b/ui/qt/qt_ui.h	2026-08-14 05:44:24.803669680 +0200
+@@ -101,8 +101,8 @@
  
    std::optional<SkColor> GetColor(int id, bool use_custom_frame) const;
  
