@@ -298,6 +298,8 @@ Patch1030:	chromium-133-workaround-bug-381407882.patch
 Patch1031:	chromium-148-qt-printing.patch
 # Qt native file dialogs when XDG portals are unavailable (no GTK fallback).
 Patch1032:	chromium-150-qt-file-dialog.patch
+# Qt LinuxUi must not construct GtkUi as a fallback (dlopen + gtk_init_check).
+Patch1033:	chromium-151-qt-no-gtk-fallback.patch
 Patch1040:	chromium-134-drop-workarounds-for-ancient-mesa-bugs.patch
 Patch1041:	chromium-134-drop-workarounds-for-ancient-mesa-bugs-part2.patch
 Patch1042:	chromium-134-if-chromeos-can-do-it-so-can-linux.patch
@@ -854,6 +856,9 @@ use_custom_libcxx=false
 %endif
 EOF
 for i in %{system_libs}; do
+	# ffmpeg is unbundled by replace_gn_files.py (third_party/ffmpeg/BUILD.gn
+	# becomes the system shim). There is no use_system_ffmpeg GN arg.
+	[ "$i" = ffmpeg ] && continue
 	echo use_system_$i=true >>openmandriva.gn_args
 done
 if ! echo %{system_libs} |grep -q icu; then
@@ -1067,11 +1072,10 @@ df -h . || :
 # (or reusing its .o files) is not safe — ninja only rebuilds what depfiles
 # and command-line hashes notice.
 #
-# Browser and CEF both use openmandriva.gn_args (use_system_ffmpeg=true,
-# is_component_ffmpeg=false when ffmpeg is in system_libs).
+# Browser and CEF both use openmandriva.gn_args (is_component_ffmpeg=false
+# when ffmpeg is in system_libs; unbundle is via replace_gn_files.py).
 out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args)" out/Release
 %if %{system ffmpeg}
-grep -q 'use_system_ffmpeg=true' out/Release/args.gn
 grep -q 'is_component_ffmpeg=false' out/Release/args.gn
 grep -q 'USE_SYSTEM_FFMPEG=true' third_party/ffmpeg/BUILD.gn
 %endif
@@ -1165,15 +1169,24 @@ fi
 # use_thin_lto=false: LTO OOMs linking libcef.so even with 64 GB RAM.
 # blink_heap_inside_shared_library=true: else R_X86_64_TPOFF32 on -shared.
 # enable_cef=true: v8_used_in_shared_library tracks this after patch.sh.
-# Same openmandriva.gn_args as the browser (system ffmpeg, no component DSO).
-out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0 blink_heap_inside_shared_library=true enable_cef=true" out/Release-CEF
+# Same openmandriva.gn_args as the browser (system ffmpeg, no component DSO),
+# but no GTK: libcef dlopens GTK3 and gtk_init_check() opens a second Wayland
+# display next to Qt (OBS Browser: realloc(): invalid next size).
+out/Release/gn gen --script-executable=/usr/bin/python --args="$(cat $HEDIR/flags.gn ; echo ; cat openmandriva.gn_args) is_cfi=false use_thin_lto=false chrome_pgo_phase=0 blink_heap_inside_shared_library=true enable_cef=true use_gtk=false cef_use_gtk=false" out/Release-CEF
 %if %{system ffmpeg}
-grep -q 'use_system_ffmpeg=true' out/Release-CEF/args.gn
 grep -q 'is_component_ffmpeg=false' out/Release-CEF/args.gn
+grep -q 'USE_SYSTEM_FFMPEG=true' third_party/ffmpeg/BUILD.gn
 %endif
+# Last assignment in --args must win over openmandriva.gn_args use_gtk=true.
+if ! grep -q '^use_gtk=false$' out/Release-CEF/args.gn && \
+   ! grep -q 'use_gtk = false' out/Release-CEF/args.gn; then
+	echo "FATAL: CEF gn args did not disable GTK (use_gtk=false)" >&2
+	exit 1
+fi
 # Do *not* ninja the `cef` group: it is testonly and pulls ceftests +
 # libcef_static_unittests. We package libcef, the wrapper, sandbox, samples.
-ninja -j${_ninja_jobs} -C out/Release-CEF libcef chrome_sandbox cefclient cefclient_qt libcef_dll_wrapper
+# No GTK cefclient when use_gtk/cef_use_gtk are false; Qt sample is enough.
+ninja -j${_ninja_jobs} -C out/Release-CEF libcef chrome_sandbox cefclient_qt libcef_dll_wrapper
 %if %{system ffmpeg}
 if [ -e out/Release-CEF/libffmpeg.so ]; then
 	echo "FATAL: out/Release-CEF/libffmpeg.so present despite system ffmpeg" >&2
@@ -1234,9 +1247,13 @@ fi
 if [ -f out/Release-CEF/libqt6_shim.so ]; then
 	cp -a out/Release-CEF/libqt6_shim.so "$_cef_dist"/Release/
 fi
-install -m 755 out/Release-CEF/cefclient out/Release-CEF/cefclient_qt \
-	"$_cef_dist"/Release/
-cp -a out/Release-CEF/cefclient_files "$_cef_dist"/Release/
+install -m 755 out/Release-CEF/cefclient_qt "$_cef_dist"/Release/
+if [ -e out/Release-CEF/cefclient ]; then
+	install -m 755 out/Release-CEF/cefclient "$_cef_dist"/Release/
+fi
+if [ -d out/Release-CEF/cefclient_files ]; then
+	cp -a out/Release-CEF/cefclient_files "$_cef_dist"/Release/
+fi
 # Keep both sandbox names (ninja: chrome_sandbox; official: chrome-sandbox).
 if [ -e "$_cef_dist"/Release/chrome-sandbox ] && [ ! -e "$_cef_dist"/Release/chrome_sandbox ]; then
 	ln -s chrome-sandbox "$_cef_dist"/Release/chrome_sandbox
@@ -1349,6 +1366,29 @@ cp -a "$_cef_dist"/Release "$_cef_dist"/Resources "$_cef_dist"/include \
 if [ -d "$_cef_dist"/cmake ]; then
 	cp -a "$_cef_dist"/cmake %{buildroot}%{_libdir}/cef/
 fi
+# Official-build libcef.so is multi-GB with debug_info; packaged cef was ~270M.
+# Strip Release ELF payloads here so brp-strip/debuginfo is not eating ABF disks.
+find %{buildroot}%{_libdir}/cef/Release -type f -print0 | while IFS= read -r -d '' f; do
+	case "$(file -b "$f")" in
+	ELF*)
+		%{_bindir}/llvm-strip --strip-unneeded "$f" 2>/dev/null || \
+			strip --strip-unneeded "$f" || :
+		;;
+	esac
+done
+# Linux CEF sets DIR_ASSETS to libcef's directory (Release/). make_distrib
+# --minimal puts icudtl.dat and *.pak in Resources/; without these links
+# CefInitialize CHECK-fails in InitializeICUFromDataFile (OBS Browser source).
+for f in icudtl.dat chrome_100_percent.pak chrome_200_percent.pak resources.pak; do
+	if [ -f %{buildroot}%{_libdir}/cef/Resources/$f ] && \
+	   [ ! -e %{buildroot}%{_libdir}/cef/Release/$f ]; then
+		ln -sfn ../Resources/$f %{buildroot}%{_libdir}/cef/Release/$f
+	fi
+done
+if [ -d %{buildroot}%{_libdir}/cef/Resources/locales ] && \
+   [ ! -e %{buildroot}%{_libdir}/cef/Release/locales ]; then
+	ln -sfn ../Resources/locales %{buildroot}%{_libdir}/cef/Release/locales
+fi
 # Sample sources for cef-devel (not part of --minimal).
 cp -a cef/tests %{buildroot}%{_libdir}/cef/
 # Header referenced by CEF wrappers but not always in the transfer list.
@@ -1387,21 +1427,28 @@ ln -sfn cef.pc %{buildroot}%{_libdir}/pkgconfig/libcef.pc
 # Sample apps: live next to libcef.so so $ORIGIN rpath finds the library, and
 # so GetResourceDir() resolves ./cefclient_files beside the executable.
 # Copied into the make_distrib tree in %build so we can drop out/Release.
-install -m 755 "$_cef_dist"/Release/cefclient "$_cef_dist"/Release/cefclient_qt \
-	%{buildroot}%{_libdir}/cef/Release/
-cp -a "$_cef_dist"/Release/cefclient_files %{buildroot}%{_libdir}/cef/Release/
+install -m 755 "$_cef_dist"/Release/cefclient_qt %{buildroot}%{_libdir}/cef/Release/
+if [ -e "$_cef_dist"/Release/cefclient ]; then
+	install -m 755 "$_cef_dist"/Release/cefclient %{buildroot}%{_libdir}/cef/Release/
+fi
+if [ -d "$_cef_dist"/Release/cefclient_files ]; then
+	cp -a "$_cef_dist"/Release/cefclient_files %{buildroot}%{_libdir}/cef/Release/
+fi
 # Convenience launchers (exec the real binary so $ORIGIN stays Release/).
 # Unquoted heredoc so rpm expands %{_libdir}; escape $ so the shell keeps "$@".
 mkdir -p %{buildroot}%{_bindir}
+if [ -e %{buildroot}%{_libdir}/cef/Release/cefclient ]; then
 cat > %{buildroot}%{_bindir}/cefclient << EOF
 #!/bin/sh
 exec %{_libdir}/cef/Release/cefclient "\$@"
 EOF
+chmod 755 %{buildroot}%{_bindir}/cefclient
+fi
 cat > %{buildroot}%{_bindir}/cefclient_qt << EOF
 #!/bin/sh
 exec %{_libdir}/cef/Release/cefclient_qt "\$@"
 EOF
-chmod 755 %{buildroot}%{_bindir}/cefclient %{buildroot}%{_bindir}/cefclient_qt
+chmod 755 %{buildroot}%{_bindir}/cefclient_qt
 
 %files -n cef
 %dir %{_libdir}/cef
@@ -1431,11 +1478,11 @@ chmod 755 %{buildroot}%{_bindir}/cefclient %{buildroot}%{_bindir}/cefclient_qt
 %{_libdir}/pkgconfig/libcef.pc
 
 %files -n cef-examples
-%{_bindir}/cefclient
+%optional %{_bindir}/cefclient
 %{_bindir}/cefclient_qt
-%{_libdir}/cef/Release/cefclient
+%optional %{_libdir}/cef/Release/cefclient
 %{_libdir}/cef/Release/cefclient_qt
-%{_libdir}/cef/Release/cefclient_files
+%optional %{_libdir}/cef/Release/cefclient_files
 %endif
 
 %if %{with browser}
