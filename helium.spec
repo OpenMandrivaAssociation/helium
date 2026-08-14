@@ -1366,16 +1366,6 @@ cp -a "$_cef_dist"/Release "$_cef_dist"/Resources "$_cef_dist"/include \
 if [ -d "$_cef_dist"/cmake ]; then
 	cp -a "$_cef_dist"/cmake %{buildroot}%{_libdir}/cef/
 fi
-# Official-build libcef.so is multi-GB with debug_info; packaged cef was ~270M.
-# Strip Release ELF payloads here so brp-strip/debuginfo is not eating ABF disks.
-find %{buildroot}%{_libdir}/cef/Release -type f -print0 | while IFS= read -r -d '' f; do
-	case "$(file -b "$f")" in
-	ELF*)
-		%{_bindir}/llvm-strip --strip-unneeded "$f" 2>/dev/null || \
-			strip --strip-unneeded "$f" || :
-		;;
-	esac
-done
 # Linux CEF sets DIR_ASSETS to libcef's directory (Release/). make_distrib
 # --minimal puts icudtl.dat and *.pak in Resources/; without these links
 # CefInitialize CHECK-fails in InitializeICUFromDataFile (OBS Browser source).
