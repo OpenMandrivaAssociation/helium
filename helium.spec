@@ -278,6 +278,9 @@ Patch1012:	chromium-105-minizip-ng.patch
 Patch1013:	chromium-132-compile.patch
 Patch1014:	chromium-150-partition-alloc-stub.patch
 Patch1053:	chromium-150-skcms-avx512-flags.patch
+# Clang 23 ICE on aarch64 if -fmodule-name=* _Private is on every cxx command
+# while use_clang_modules=false (ABF 653532, 653753).
+Patch1054:	chromium-151-no-fmodule-name-without-modules.patch
 Patch1015:	chromium-147-clang22-no-no-lifetime-dse.patch
 Patch1016:	chroimum-119-workaround-crash-on-startup.patch
 # More and better search engines
