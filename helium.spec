@@ -87,12 +87,12 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.15.4
+%global helium_version 0.15.7
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 151.0.7922.137
+%define chromium 151.0.7922.173
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -106,8 +106,9 @@ Version:	%{helium_version}
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-# CEF 7922 branch tip matching Chromium 151.0.7922.x.
-%define cef 5d67476b12f718c8388918d1740aeec27f6b2b80
+# CEF 7922 branch tip matching Chromium 151.0.7922.x
+# (2384915 tracks 151.0.7922.174; Helium is 151.0.7922.173).
+%define cef 2384915b7b1f0fe5ad1107e48d80c34e86b698d7
 %define cefversion %(echo %{chromium} |cut -d. -f3)
 # make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
 %ifarch %{x86_64}
@@ -151,8 +152,8 @@ Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_version}.tar.gz
 # See deps.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202607242007/nonfree-search-engines-data-202607242007.tar.gz
-Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202607301504/helium-onboarding-202607301504.tar.gz
-Source1003:	https://github.com/imputnet/uBlock/releases/download/1.72.2/uBlock0_1.72.2.chromium.zip
+Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202608210720/helium-onboarding-202608210720.tar.gz
+Source1003:	https://github.com/imputnet/uBlock/releases/download/1.73.0/uBlock0_1.73.0.chromium.zip
 
 # ============================================================================
 # Patches 0 to 1999 are applied in the top level Chromium directory

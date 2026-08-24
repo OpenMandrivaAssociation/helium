@@ -1,6 +1,6 @@
 diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
---- cef-7922-orig/patch/patch.cfg	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patch.cfg	2026-08-08 15:34:09.362546126 +0200
+--- cef-7922-orig/patch/patch.cfg	2026-08-21 17:54:42.000000000 +0200
++++ cef-7922/patch/patch.cfg	2026-08-24 21:02:20.280256473 +0200
 @@ -27,13 +27,13 @@
      # due to conflicting outputs with the //cef:repack_locales_pack target.
      #
@@ -100,7 +100,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      #
      # Pass ui::ResourceBundle::Delegate to InitSharedInstanceWithLocale.
      # https://github.com/chromiumembedded/cef/issues/3685
-@@ -329,7 +329,7 @@
+@@ -333,7 +333,7 @@
      # Fix incorrect movement of parent window when showing modal dialog.
      # https://github.com/chromiumembedded/cef/issues/3629
      # Partially reverts
@@ -109,7 +109,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'chrome_browser_dialogs_widget',
    },
    {
-@@ -406,7 +406,7 @@
+@@ -416,7 +416,7 @@
    },
    {
      # Fix component build dependency issue.
@@ -118,7 +118,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'chrome_browser_safe_browsing',
    },
    {
-@@ -428,10 +428,10 @@
+@@ -438,10 +438,10 @@
    },
    {
      # Support customization of crash report pruning limits.
@@ -131,7 +131,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'crashpad_tp_1995',
    },
    {
-@@ -439,7 +439,7 @@
+@@ -449,7 +449,7 @@
      # https://github.com/chromiumembedded/cef/issues/1984
      #
      # Windows: Fix crash during window creation.
@@ -140,7 +140,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      #
      # Add RWHVAura::SetRootWindowBoundsCallback.
      # https://github.com/chromiumembedded/cef/issues/3920
-@@ -448,10 +448,10 @@
+@@ -458,10 +458,10 @@
    {
      # Expose RFH via NavigationHandle for retrieval in DidFinishNavigation on
      # network error.
@@ -153,7 +153,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      #
      # Add ContentRendererClient::DevToolsAgent[Attached|Detached] methods.
      #
-@@ -526,7 +526,7 @@
+@@ -536,7 +536,7 @@
      # Restore the net::LOAD_DO_NOT_SEND_COOKIES flag to support disabling of
      # cookie load/save on a per-request basis.
      # Partially reverts the changes from
@@ -162,7 +162,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'net_cookie_flags',
    },
    {
-@@ -561,19 +561,14 @@
+@@ -571,19 +571,14 @@
      'name': 'osr_fling_2745',
    },
    {
@@ -184,7 +184,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      #
      # Fix crash in NavigationRequest::GetOriginForURLLoaderFactory() when
      # navigating to an unregistered (e.g. non-standard) scheme.
-@@ -588,7 +583,7 @@
+@@ -598,7 +593,7 @@
    },
    {
      # Linux: Fix ATK assertion error when generating ARM build config.
@@ -193,7 +193,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'linux_atk_1123214',
    },
    {
-@@ -609,7 +604,7 @@
+@@ -619,7 +614,7 @@
    },
    {
      # Fix deadlock in EmbeddedTestServer::ShutdownAndWaitUntilComplete.
@@ -202,7 +202,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'net_test_server_3798752'
    },
    {
-@@ -617,12 +612,12 @@
+@@ -627,12 +622,12 @@
      # qualified type 'volatile gsize' (aka 'volatile unsigned long') is
      # deprecated [-Werror,-Wdeprecated-volatile]" when building with
      # use_sysroot=false on Ubuntu 18.04.
@@ -217,7 +217,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'blink_web_element_4200240'
    },
    {
-@@ -644,32 +639,32 @@
+@@ -654,32 +649,32 @@
    },
    {
      # win/linux: Fix rounding errors with Screen[Win] DIP/pixel conversions.
@@ -256,7 +256,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      #
      # Add ContentBrowserClient::CreateWindowResult callback.
      # https://github.com/chromiumembedded/cef/issues/3776
-@@ -709,7 +704,7 @@
+@@ -719,7 +714,7 @@
    },
    {
      # views: Update textfield colors when enabled state changes
@@ -265,7 +265,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'views_textfield_5399416'
    },
    {
-@@ -721,7 +716,7 @@
+@@ -731,7 +726,7 @@
      # linux: Disable GtkUi with multi-threaded-message-loop to avoid crashes.
      # linux: Disable GTK theme change notifications due to performance issues.
      # https://github.com/chromiumembedded/cef/issues/3610
@@ -274,7 +274,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'linux_gtk_theme_3610'
    },
    {
-@@ -735,7 +730,7 @@
+@@ -745,7 +740,7 @@
      # https://bitbucket.org/chromiumembedded/cef/pull-requests/734
      # https://github.com/chromiumembedded/cef/issues/2575
      # It is a bit hacky, not suitable for merging into upstream.
@@ -283,7 +283,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'osr_win_remove_keyed_mutex_2575'
    },
    {
-@@ -746,7 +741,7 @@
+@@ -756,7 +751,7 @@
    {
      # Fix ThreadPool DCHECK during startup when using multi-threaded message
      # loop. Related to the following CL:
@@ -292,7 +292,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'base_thread_pool_5548577'
    },
    {
-@@ -754,7 +749,7 @@
+@@ -764,7 +759,7 @@
      # CheckedLockImpl::Acquire (DCHECK-only) allocates on PostTask, entering
      # PartitionAlloc -> ThreadCache::Get; on this path the `static thread_local
      # MetricsSubSampler g_shared_subsampler` added by
@@ -301,7 +301,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      # constructed, and its ctor seeds InsecureRandomGenerator via
      # base::RandUint64() -> BoringSSL RAND_bytes -> OPENSSL_malloc, reentering
      # the allocator. Lazy-seed InsecureRandomGenerator so its ctor doesn't
-@@ -774,7 +769,7 @@
+@@ -784,7 +779,7 @@
    {
      # Add v8_used_in_shared_library GN arg to configure the
      # V8_TLS_USED_IN_LIBRARY define.
@@ -310,7 +310,7 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
      'name': 'v8_build',
      'path': 'v8'
    },
-@@ -863,7 +858,7 @@
+@@ -873,7 +868,7 @@
      # Disable TPM metrics collection on Windows/Mac. This can crash on some
      # Windows machines with buggy TPM drivers (null pointer dereference in
      # PCPKsp.dll when calling NCryptIsAlgSupported).
@@ -320,8 +320,8 @@ diff -urN cef-7922-orig/patch/patch.cfg cef-7922/patch/patch.cfg
    },
    {
 diff -urN cef-7922-orig/patch/patches/chrome_browser_webui_version.patch cef-7922/patch/patches/chrome_browser_webui_version.patch
---- cef-7922-orig/patch/patches/chrome_browser_webui_version.patch	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patches/chrome_browser_webui_version.patch	2026-08-08 15:34:09.362783409 +0200
+--- cef-7922-orig/patch/patches/chrome_browser_webui_version.patch	2026-08-21 17:54:42.000000000 +0200
++++ cef-7922/patch/patches/chrome_browser_webui_version.patch	2026-08-24 21:02:20.280467056 +0200
 @@ -282,10 +282,10 @@
         </table>
  +<if expr="enable_cef">
@@ -336,10 +336,10 @@ diff -urN cef-7922-orig/patch/patches/chrome_browser_webui_version.patch cef-792
  +        Implement <a href="https://cef-builds.spotifycdn.com/docs/stable.html?classCefBrowserProcessHandler.html#a052a91639483467c0b546d57a05c2f06" target="_new">CefBrowserProcessHandler:: OnAlreadyRunningAppRelaunch</a>
  +        to handle the case of app relaunch with the same directory.
 diff -urN cef-7922-orig/patch/patches/chrome_runtime_views.patch cef-7922/patch/patches/chrome_runtime_views.patch
---- cef-7922-orig/patch/patches/chrome_runtime_views.patch	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patches/chrome_runtime_views.patch	2026-08-08 15:34:31.741655059 +0200
+--- cef-7922-orig/patch/patches/chrome_runtime_views.patch	2026-08-21 17:54:42.000000000 +0200
++++ cef-7922/patch/patches/chrome_runtime_views.patch	2026-08-24 21:02:20.280725570 +0200
 @@ -225,7 +225,7 @@
- index ab77c657e98dff31a845bbfbdd8eede65acc3f3f..c89d71d2b546e8730a8cd770016263641441c6a4 100644
+ index 4a2d263f41a9945c146975eb0f42c0dc0c0430d6..4d07d79177a5af622c67abfc48df6c300b6cff13 100644
  --- chrome/browser/ui/views/frame/browser_view.cc
  +++ chrome/browser/ui/views/frame/browser_view.cc
 -@@ -872,11 +872,21 @@ class BrowserView::PipExclusionObserverImpl
@@ -362,8 +362,8 @@ diff -urN cef-7922-orig/patch/patches/chrome_runtime_views.patch cef-7922/patch/
  +    InitBrowser(browser);
  +  }
 diff -urN cef-7922-orig/patch/patches/content_2015.patch cef-7922/patch/patches/content_2015.patch
---- cef-7922-orig/patch/patches/content_2015.patch	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patches/content_2015.patch	2026-08-08 15:34:09.362854410 +0200
+--- cef-7922-orig/patch/patches/content_2015.patch	2026-08-21 17:54:42.000000000 +0200
++++ cef-7922/patch/patches/content_2015.patch	2026-08-24 21:02:20.280814021 +0200
 @@ -197,7 +197,7 @@
  +  void DevToolsAgentDetached() override;
  +
@@ -374,8 +374,8 @@ diff -urN cef-7922-orig/patch/patches/content_2015.patch cef-7922/patch/patches/
  diff --git content/shell/browser/shell_content_browser_client.cc content/shell/browser/shell_content_browser_client.cc
  index 948a8755c033d7661974eb9f92417a66a7aac893..57fa6cbabe9bb0a219455f4eb77a82e6274611aa 100644
 diff -urN cef-7922-orig/patch/patches/crashpad_1995.patch cef-7922/patch/patches/crashpad_1995.patch
---- cef-7922-orig/patch/patches/crashpad_1995.patch	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patches/crashpad_1995.patch	2026-08-08 15:41:38.482507882 +0200
+--- cef-7922-orig/patch/patches/crashpad_1995.patch	2026-08-21 17:54:42.000000000 +0200
++++ cef-7922/patch/patches/crashpad_1995.patch	2026-08-24 21:02:20.280871732 +0200
 @@ -112,12 +112,12 @@
   std::deque<CrashKeyWithName>& GetCommandLineStringAnnotations() {
     static base::NoDestructor<std::deque<CrashKeyWithName>>
@@ -447,8 +447,8 @@ diff -urN cef-7922-orig/patch/patches/crashpad_1995.patch cef-7922/patch/patches
     // Empty means stable.
     const bool allow_empty_channel = true;
 diff -urN cef-7922-orig/patch/patches/linux_gtk_theme_3610.patch cef-7922/patch/patches/linux_gtk_theme_3610.patch
---- cef-7922-orig/patch/patches/linux_gtk_theme_3610.patch	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patches/linux_gtk_theme_3610.patch	2026-08-08 15:34:09.362916260 +0200
+--- cef-7922-orig/patch/patches/linux_gtk_theme_3610.patch	2026-08-21 17:54:42.000000000 +0200
++++ cef-7922/patch/patches/linux_gtk_theme_3610.patch	2026-08-24 21:02:20.280942552 +0200
 @@ -16,7 +16,7 @@
     }
  +  // Disable GTK theme change notifications because they are extremely slow.
@@ -459,8 +459,8 @@ diff -urN cef-7922-orig/patch/patches/linux_gtk_theme_3610.patch cef-7922/patch/
     connect(settings, "notify::gtk-theme-name", &GtkUi::OnThemeChanged);
     connect(settings, "notify::gtk-icon-theme-name", &GtkUi::OnThemeChanged);
 diff -urN cef-7922-orig/patch/patches/osr_win_remove_keyed_mutex_2575.patch cef-7922/patch/patches/osr_win_remove_keyed_mutex_2575.patch
---- cef-7922-orig/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-07-30 22:09:36.000000000 +0200
-+++ cef-7922/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-08-08 15:34:09.362964911 +0200
+--- cef-7922-orig/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-08-21 17:54:42.000000000 +0200
++++ cef-7922/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-08-24 21:02:20.280983663 +0200
 @@ -43,7 +43,7 @@
  +    // flag to disable mutex in the GMBFactoryDXGI because this enum is also
  +    // used above in macOS and CrOS for similar usage (claim no other one will
