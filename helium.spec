@@ -87,12 +87,12 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.15.7
+%global helium_version 0.16.2
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 151.0.7922.173
+%define chromium 152.0.7977.64
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -106,9 +106,9 @@ Version:	%{helium_version}
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-# CEF 7922 branch tip matching Chromium 151.0.7922.x
-# (2384915 tracks 151.0.7922.174; Helium is 151.0.7922.173).
-%define cef 2384915b7b1f0fe5ad1107e48d80c34e86b698d7
+# CEF 7977 branch tip matching Chromium 152.0.7977.x
+# (b129680 tracks 152.0.7977.54; Helium is 152.0.7977.64).
+%define cef b129680e4084ebea0429a1c289fb7c24ac604b36
 %define cefversion %(echo %{chromium} |cut -d. -f3)
 # make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
 %ifarch %{x86_64}
@@ -152,8 +152,8 @@ Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_version}.tar.gz
 # See deps.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202607242007/nonfree-search-engines-data-202607242007.tar.gz
-Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202608210720/helium-onboarding-202608210720.tar.gz
-Source1003:	https://github.com/imputnet/uBlock/releases/download/1.73.0/uBlock0_1.73.0.chromium.zip
+Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202608281912/helium-onboarding-202608281912.tar.gz
+Source1003:	https://github.com/imputnet/uBlock/releases/download/1.74.0/uBlock0_1.74.0.chromium.zip
 
 # ============================================================================
 # Patches 0 to 1999 are applied in the top level Chromium directory
@@ -321,21 +321,28 @@ Patch1049:	helium-webrtc-default-to-publicandprivateinterfaces.patch
 Patch1050:	dont-assume-system-rust-is-prehistoric.patch
 Patch1051:	chromium-149-no-flags-for-unreleased-clang.patch
 Patch1052:	chromium-148-fix-build-without-ubsan.patch
+# Do not offer Helium's crash-report dialog for GPU-process dumps written
+# while probing Vulkan. The GPU process is still allowed to crash and fall
+# back; Vulkan stays enabled for hardware where it works.
+Patch1055:	helium-hide-gpu-probe-crash-notification.patch
+# Ozone/Wayland cannot use native Vulkan. Decline it silently and keep
+# --ozone-platform=wayland; X11 still gets Vulkan by default.
+Patch1056:	helium-wayland-ozone-silent-no-vulkan.patch
 
 # ============================================================================
 # Patches 2000 to 2999 are applied inside the CEF tree.
 # ============================================================================
 # Rebase CEF's chromium patchset so it applies on top of Helium/ungoogled
 # (domain substitution in nested CEF patches, drop libxml_visibility for
-# system libxml, chrome_runtime_views constructor vs zen-mode animations,
-# crashpad_1995 vs Helium crash-key sanitization / versioning).
-Patch2000:	cef-7922-helium-patch-rebase.patch
+# system libxml, chrome_runtime_views ctor/dtor vs zen-mode + shortcut
+# service, crashpad_1995 vs Helium crash-key sanitization / versioning).
+Patch2000:	cef-7977-helium-patch-rebase.patch
 # Incomplete type content::WebContents after Chromium include cleanup
 # (CEF file_dialog_manager.cc needs the full web_contents.h).
 Patch2001:	cef-7871-web_contents-include.patch
 Patch2002:	cef-126-zlib-ng.patch
 # Qt cefclient sample + host libstdc++ wrapper (applied inside cef/).
-Patch2003:	cef-7922-qt-cefclient.patch
+Patch2003:	cef-7977-qt-cefclient.patch
 # Soften CEF nested-patch apply for Helium tree (patch --fuzz=3; no git apply).
 Patch2004:	cef-patcher-fuzz.patch
 

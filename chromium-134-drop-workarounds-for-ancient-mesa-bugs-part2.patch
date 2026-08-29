@@ -1,7 +1,7 @@
-diff -up chromium-144.0.7559.96/gpu/config/gpu_finch_features.cc.55~ chromium-144.0.7559.96/gpu/config/gpu_finch_features.cc
---- chromium-144.0.7559.96/gpu/config/gpu_finch_features.cc.55~	2026-01-17 23:59:25.000000000 +0100
-+++ chromium-144.0.7559.96/gpu/config/gpu_finch_features.cc	2026-01-23 17:14:05.345951443 +0100
-@@ -173,7 +173,7 @@ bool IsShaderDiskCacheEnabled(const base
+diff -up chromium-152.0.7977.64/gpu/config/gpu_finch_features.cc.55~ chromium-152.0.7977.64/gpu/config/gpu_finch_features.cc
+--- chromium-152.0.7977.64/gpu/config/gpu_finch_features.cc.55~	2026-01-17 23:59:25.000000000 +0100
++++ chromium-152.0.7977.64/gpu/config/gpu_finch_features.cc	2026-01-23 17:14:05.345951443 +0100
+@@ -253,7 +253,7 @@
  // --use-vulkan will be followed.
  // Note Android WebView uses kWebViewDrawFunctorUsesVulkan instead of this.
  BASE_FEATURE(kVulkan,
@@ -10,7 +10,7 @@ diff -up chromium-144.0.7559.96/gpu/config/gpu_finch_features.cc.55~ chromium-14
               base::FEATURE_ENABLED_BY_DEFAULT
  #else
               base::FEATURE_DISABLED_BY_DEFAULT
-@@ -195,7 +195,7 @@ BASE_FEATURE(kEnableDrDc,
+@@ -280,7 +280,7 @@
  // Enable WebGPU on gpu service side only. This is used with origin trial and
  // enabled by default on supported platforms.
  #if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_WIN) || BUILDFLAG(IS_CHROMEOS) || \
@@ -19,10 +19,10 @@ diff -up chromium-144.0.7559.96/gpu/config/gpu_finch_features.cc.55~ chromium-14
  #define WEBGPU_ENABLED base::FEATURE_ENABLED_BY_DEFAULT
  #else
  #define WEBGPU_ENABLED base::FEATURE_DISABLED_BY_DEFAULT
-diff -up chromium-144.0.7559.96/media/base/media_switches.cc.55~ chromium-144.0.7559.96/media/base/media_switches.cc
---- chromium-144.0.7559.96/media/base/media_switches.cc.55~	2026-01-23 16:49:59.716691180 +0100
-+++ chromium-144.0.7559.96/media/base/media_switches.cc	2026-01-23 16:50:26.551014609 +0100
-@@ -690,7 +690,7 @@ BASE_FEATURE(kUnifiedAutoplay, base::FEA
+diff -up chromium-152.0.7977.64/media/base/media_switches.cc.55~ chromium-152.0.7977.64/media/base/media_switches.cc
+--- chromium-152.0.7977.64/media/base/media_switches.cc.55~	2026-01-23 16:49:59.716691180 +0100
++++ chromium-152.0.7977.64/media/base/media_switches.cc	2026-01-23 16:50:26.551014609 +0100
+@@ -808,7 +808,7 @@
  // on chromeos, but needs an experiment on linux.
  BASE_FEATURE(kAcceleratedVideoDecodeLinux,
               "AcceleratedVideoDecoder",
@@ -31,7 +31,7 @@ diff -up chromium-144.0.7559.96/media/base/media_switches.cc.55~ chromium-144.0.
               base::FEATURE_ENABLED_BY_DEFAULT);
  #else
               base::FEATURE_DISABLED_BY_DEFAULT);
-@@ -700,12 +700,12 @@ BASE_FEATURE(kAcceleratedVideoDecodeLinu
+@@ -818,12 +818,12 @@
  
  BASE_FEATURE(kAcceleratedVideoEncodeLinux,
               "AcceleratedVideoEncoder",
@@ -43,6 +43,6 @@ diff -up chromium-144.0.7559.96/media/base/media_switches.cc.55~ chromium-144.0.
  // implementations.
 -BASE_FEATURE(kVaapiIgnoreDriverChecks, base::FEATURE_DISABLED_BY_DEFAULT);
 +BASE_FEATURE(kVaapiIgnoreDriverChecks, base::FEATURE_ENABLED_BY_DEFAULT);
- #endif  // BUILDFLAG(IS_LINUX)
  
- // NVIDIA VA-API drivers do not support Chromium and can sometimes cause
+ // When both USE_VAAPI and USE_V4L2_CODEC are compiled in, selects the active
+ // hardware video acceleration backend. Disabled (default) => VA-API; enabled

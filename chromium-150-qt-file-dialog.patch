@@ -80,27 +80,28 @@ diff -Naur a/ui/qt/qt_interface.h b/ui/qt/qt_interface.h
 diff -Naur a/ui/qt/qt_shim.cc b/ui/qt/qt_shim.cc
 --- a/ui/qt/qt_shim.cc	2026-07-26 14:46:56.399563865 +0200
 +++ b/ui/qt/qt_shim.cc	2026-07-26 14:46:56.404101500 +0200
-@@ -14,7 +14,12 @@
+@@ -7,16 +7,21 @@
+ #include "ui/qt/qt_shim.h"
  
- #include <cmath>
- 
+ #include <QApplication>
 +#include <cstdlib>
 +#include <cstring>
-+
- #include <QApplication>
 +#include <QFileDialog>
 +#include <QFileInfo>
  #include <QFont>
  #include <QIcon>
  #include <QMimeDatabase>
-@@ -25,6 +30,7 @@
+ #include <QMimeType>
+ #include <QPainter>
+ #include <QPalette>
+ #include <QPrintDialog>
  #include <QPrinter>
  #include <QPrinterInfo>
  #include <QScreen>
 +#include <QStringList>
  #include <QStyle>
  #include <QStyleOptionTitleBar>
- 
+ #include <cmath>
 @@ -489,6 +495,145 @@
    }
  
