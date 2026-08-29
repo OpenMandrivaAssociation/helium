@@ -328,6 +328,10 @@ Patch1055:	helium-hide-gpu-probe-crash-notification.patch
 # Ozone/Wayland cannot use native Vulkan. Decline it silently and keep
 # --ozone-platform=wayland; X11 still gets Vulkan by default.
 Patch1056:	helium-wayland-ozone-silent-no-vulkan.patch
+# Chromium 152 CBOR depends on Crubit (bundled rust-toolchain). System rust
+# sets rust_sysroot_absolute and enable_cpp_api_from_rust=false; keep the
+# C++ CBOR path and do not load rust-toolchain Crubit BUILD.gn files.
+Patch1057:	chromium-152-cbor-no-crubit-without-chromium-rust.patch
 
 # ============================================================================
 # Patches 2000 to 2999 are applied inside the CEF tree.
