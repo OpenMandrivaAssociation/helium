@@ -699,6 +699,10 @@ echo "%{revision}" > build/LASTCHANGE.in
 
 #sed -i 's!-nostdlib++!!g'  build/config/posix/BUILD.gn
 sed -i 's!ffmpeg_buildflags!ffmpeg_features!g' build/linux/unbundle/ffmpeg.gn
+# DevTools @ts-expect-error is written for tsc 6/7. System tsc 5.9 does not
+# emit those errors (TS2578 unused directive). @ts-ignore is valid on both.
+find third_party/devtools-frontend/src/front_end -name '*.ts' -print0 \
+	| xargs -0 sed -i 's/@ts-expect-error/@ts-ignore/g'
 
 # Allow building against system libraries in official builds
 sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
