@@ -339,9 +339,9 @@ Patch1057:	chromium-152-cbor-no-crubit-without-chromium-rust.patch
 # third_party/iamf_tools (new in 153) includes vendored Opus via
 # "include/opus.h". With system opus those paths do not resolve.
 Patch1058:	chromium-153-iamf-tools-unbundled-opus.patch
-# 153 defaults use_typescript_go=true (needs the CIPD tsgo binary, absent
-# from the lite tarball). Keep the bundled JS compiler for WebUI and point
-# DevTools at system /usr/bin/tsc.
+# 153 defaults use_typescript_go=true (CIPD tsgo is empty in the lite
+# tarball). Keep the bundled JS compiler for WebUI; DevTools uses system
+# TypeScript 7 /usr/bin/tsc.
 Patch1059:	chromium-153-typescript.patch
 
 # ============================================================================
@@ -533,8 +533,9 @@ BuildRequires:	pkgconfig(libpci)
 BuildRequires:	pkgconfig(libexif)
 BuildRequires:	ninja
 BuildRequires:	nodejs
-# Chromium 153 WebUI/DevTools TypeScript (system tsc; CIPD tsgo is off).
-BuildRequires:	typescript
+# Chromium 153 DevTools needs TypeScript 7 (Map.getOrInsert, tsc-6
+# @ts-expect-error). CIPD tsgo is empty in the lite tarball.
+BuildRequires:	typescript >= 7
 BuildRequires:	jdk-current
 
 Recommends: (%{name}-qt6 = %{EVRD} if %{_lib}Qt6Gui)
@@ -699,10 +700,6 @@ echo "%{revision}" > build/LASTCHANGE.in
 
 #sed -i 's!-nostdlib++!!g'  build/config/posix/BUILD.gn
 sed -i 's!ffmpeg_buildflags!ffmpeg_features!g' build/linux/unbundle/ffmpeg.gn
-# DevTools @ts-expect-error is written for tsc 6/7. System tsc 5.9 does not
-# emit those errors (TS2578 unused directive). @ts-ignore is valid on both.
-find third_party/devtools-frontend/src/front_end -name '*.ts' -print0 \
-	| xargs -0 sed -i 's/@ts-expect-error/@ts-ignore/g'
 
 # Allow building against system libraries in official builds
 sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \

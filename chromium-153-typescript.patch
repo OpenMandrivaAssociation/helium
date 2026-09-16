@@ -1,12 +1,10 @@
 TypeScript became a build dependency (added in crrev.com/c/7861311, enabled in
 crrev.com/c/8104602). Work around it for a system build:
 
-  * Disable the native TypeScript compiler (tsgo) for the WebUI; the JS-based
-    compiler bundled with the checkout still works.
+  * Disable the CIPD native compiler (tsgo) for WebUI; the JS-based compiler
+    bundled with the checkout still works (lite tarball has empty CIPD dirs).
   * DevTools already removed that flag (crrev.com/c/8193297), so point its
-    typescript.py helper at the system tsc binary (from the typescript package).
-    TypeScript 5.9's lib Map does not include the upsert proposal methods, so
-    drop `override` on MapWithDefault.getOrInsert* (TS4113).
+    typescript.py helper at system /usr/bin/tsc (TypeScript 7).
 
 Credit: https://github.com/ungoogled-software/ungoogled-chromium/pull/3946
 
@@ -21,26 +19,6 @@ Credit: https://github.com/ungoogled-software/ungoogled-chromium/pull/3946
  }
 
  if (enable_cast_receiver || is_cast_android || is_castos) {
---- a/third_party/devtools-frontend/src/front_end/core/common/MapWithDefault.ts
-+++ b/third_party/devtools-frontend/src/front_end/core/common/MapWithDefault.ts
-@@ -8,7 +8,7 @@
-  * TODO: Once the proposal is merged, just replace `MapWithDefault` with `Map` and remove it.
-  **/
- export class MapWithDefault<K, V> extends Map<K, V> {
--  override getOrInsert(key: K, defaultValue: V): V {
-+  getOrInsert(key: K, defaultValue: V): V {
-     if (!this.has(key)) {
-       this.set(key, defaultValue);
-     }
-@@ -16,7 +16,7 @@ export class MapWithDefault<K, V> extends Map<K, V> {
-     return this.get(key) as V;
-   }
- 
--  override getOrInsertComputed(key: K, callbackFunction: (key: K) => V): V {
-+  getOrInsertComputed(key: K, callbackFunction: (key: K) => V): V {
-     if (!this.has(key)) {
-       this.set(key, callbackFunction(key));
-     }
 --- a/third_party/devtools-frontend/src/third_party/typescript/typescript.py
 +++ b/third_party/devtools-frontend/src/third_party/typescript/typescript.py
 @@ -10,6 +10,7 @@
