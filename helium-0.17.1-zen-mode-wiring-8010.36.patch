@@ -1,0 +1,31 @@
+Helium 0.17.1 zen-mode-wiring was refreshed for Chromium 153.0.8010.47
+(ToastId 56). Official -lite tarball is still 153.0.8010.36 (stops at 55).
+
+--- a/patches/helium/ui/layout/zen-mode-wiring.patch	2026-09-16 18:41:47.164306295 +0200
++++ b/patches/helium/ui/layout/zen-mode-wiring.patch	2026-09-16 18:41:47.188303848 +0200
+@@ -287,11 +287,10 @@
+      case ToastId::kSendTabToSelfTabsOpenedInBackground:
+ --- a/chrome/browser/ui/toasts/api/toast_id.h
+ +++ b/chrome/browser/ui/toasts/api/toast_id.h
+-@@ -77,7 +77,8 @@ enum class ToastId {
++@@ -77,5 +77,6 @@ enum class ToastId {
+    kIndigoDeleteSuccess = 54,
+    kAtMemorySpiiFetchErrorMessage = 55,
+-   kDictationNoMicrophoneError = 56,
+--  kMaxValue = kDictationNoMicrophoneError,
++-  kMaxValue = kAtMemorySpiiFetchErrorMessage,
+ +  kZenModeNewTabCreated = 301,
+ +  kMaxValue = kZenModeNewTabCreated,
+  };
+@@ -299,10 +298,9 @@
+  
+ --- a/tools/metrics/histograms/metadata/toasts/enums.xml
+ +++ b/tools/metrics/histograms/metadata/toasts/enums.xml
+-@@ -116,6 +116,7 @@ chromium-metrics-reviews@google.com.
++@@ -116,5 +116,6 @@ chromium-metrics-reviews@google.com.
+    <int value="54" label="Indigo delete uploaded photo success"/>
+    <int value="55" label="Showed AtMemory SPII fetch error message"/>
+-   <int value="56" label="Dictation no microphone detected error"/>
+ +  <int value="301" label="New tab created in Zen mode"/>
+  </enum>
+  

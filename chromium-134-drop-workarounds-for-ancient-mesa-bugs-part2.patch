@@ -19,10 +19,9 @@ diff -up chromium-152.0.7977.64/gpu/config/gpu_finch_features.cc.55~ chromium-15
  #define WEBGPU_ENABLED base::FEATURE_ENABLED_BY_DEFAULT
  #else
  #define WEBGPU_ENABLED base::FEATURE_DISABLED_BY_DEFAULT
-diff -up chromium-152.0.7977.64/media/base/media_switches.cc.55~ chromium-152.0.7977.64/media/base/media_switches.cc
---- chromium-152.0.7977.64/media/base/media_switches.cc.55~	2026-01-23 16:49:59.716691180 +0100
-+++ chromium-152.0.7977.64/media/base/media_switches.cc	2026-01-23 16:50:26.551014609 +0100
-@@ -808,7 +808,7 @@
+--- a/media/base/media_switches.cc
++++ b/media/base/media_switches.cc
+@@ -1476,7 +1476,7 @@
  // on chromeos, but needs an experiment on linux.
  BASE_FEATURE(kAcceleratedVideoDecodeLinux,
               "AcceleratedVideoDecoder",
@@ -31,18 +30,21 @@ diff -up chromium-152.0.7977.64/media/base/media_switches.cc.55~ chromium-152.0.
               base::FEATURE_ENABLED_BY_DEFAULT);
  #else
               base::FEATURE_DISABLED_BY_DEFAULT);
-@@ -818,12 +818,12 @@
+@@ -1486,7 +1486,7 @@
  
  BASE_FEATURE(kAcceleratedVideoEncodeLinux,
               "AcceleratedVideoEncoder",
 -             base::FEATURE_DISABLED_BY_DEFAULT);
 +             base::FEATURE_ENABLED_BY_DEFAULT);
  
+ BASE_FEATURE(kPreferV4L2VideoAcceleration, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+@@ -1500,7 +1500,7 @@
  // Ignore the non-intel driver blacklist for VaapiVideoDecoder implementations.
- // Intended for manual usage only in order to gague the status of newer driver
+ // Intended for manual usage only in order to gauge the status of newer driver
  // implementations.
 -BASE_FEATURE(kVaapiIgnoreDriverChecks, base::FEATURE_DISABLED_BY_DEFAULT);
 +BASE_FEATURE(kVaapiIgnoreDriverChecks, base::FEATURE_ENABLED_BY_DEFAULT);
  
- // When both USE_VAAPI and USE_V4L2_CODEC are compiled in, selects the active
- // hardware video acceleration backend. Disabled (default) => VA-API; enabled
+ #endif  // BUILDFLAG(IS_LINUX)
+ 

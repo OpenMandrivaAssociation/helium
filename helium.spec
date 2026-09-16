@@ -87,12 +87,15 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.16.2
+%global helium_version 0.17.1
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-%define chromium 152.0.7977.64
+# Helium 0.17.1 asks for 153.0.8010.47; the official -lite tarball for .47
+# is not published yet (checked 2026-09-16). Use the last published 153
+# snapshot (.36, same milestone as 0.17.0) until Google ships .47.
+%define chromium 153.0.8010.36
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -106,10 +109,10 @@ Version:	%{helium_version}
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-# CEF 7977 branch tip matching Chromium 152.0.7977.x
-# (b129680 tracks 152.0.7977.54; Helium is 152.0.7977.64).
+# CEF skipped 8010 (Chromium 153): supported branches jump 7977 (152) to
+# 8037 (154). Keep 7977 tip and rebase nested patches onto the Helium 153 tree.
 %define cef b129680e4084ebea0429a1c289fb7c24ac604b36
-%define cefversion %(echo %{chromium} |cut -d. -f3)
+%define cefversion 7977
 # make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
 %ifarch %{x86_64}
 %define cef_gn_dir Release_GN_x64
@@ -151,9 +154,9 @@ Source12:	cef.pc.in
 Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_version}.tar.gz
 # See deps.ini inside the helium tarball (Source1000) and keep in sync
-Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202607242007/nonfree-search-engines-data-202607242007.tar.gz
+Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202609082320/nonfree-search-engines-data-202609082320.tar.gz
 Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202608281912/helium-onboarding-202608281912.tar.gz
-Source1003:	https://github.com/imputnet/uBlock/releases/download/1.74.0/uBlock0_1.74.0.chromium.zip
+Source1003:	https://github.com/imputnet/uBlock/releases/download/1.74.0-2/uBlock0_1.74.0-2.chromium.zip
 
 # ============================================================================
 # Patches 0 to 1999 are applied in the top level Chromium directory
@@ -328,10 +331,18 @@ Patch1055:	helium-hide-gpu-probe-crash-notification.patch
 # Ozone/Wayland cannot use native Vulkan. Decline it silently and keep
 # --ozone-platform=wayland; X11 still gets Vulkan by default.
 Patch1056:	helium-wayland-ozone-silent-no-vulkan.patch
-# Chromium 152 CBOR depends on Crubit (bundled rust-toolchain). System rust
-# sets rust_sysroot_absolute and enable_cpp_api_from_rust=false; keep the
-# C++ CBOR path and do not load rust-toolchain Crubit BUILD.gn files.
+# Chromium 152+ CBOR (and 153 Blink font-format) depend on Crubit (bundled
+# rust-toolchain). System rust sets rust_sysroot_absolute and
+# enable_cpp_api_from_rust=false; keep the C++ CBOR path, switch font-format
+# to cxx bindings, and do not load rust-toolchain Crubit BUILD.gn files.
 Patch1057:	chromium-152-cbor-no-crubit-without-chromium-rust.patch
+# third_party/iamf_tools (new in 153) includes vendored Opus via
+# "include/opus.h". With system opus those paths do not resolve.
+Patch1058:	chromium-153-iamf-tools-unbundled-opus.patch
+# 153 defaults use_typescript_go=true (needs the CIPD tsgo binary, absent
+# from the lite tarball). Keep the bundled JS compiler for WebUI and point
+# DevTools at system /usr/bin/tsc.
+Patch1059:	chromium-153-typescript.patch
 
 # ============================================================================
 # Patches 2000 to 2999 are applied inside the CEF tree.
@@ -359,6 +370,8 @@ Patch2004:	cef-patcher-fuzz.patch
 # Patches 4000+ are applied inside the helium tree before
 # the ungoogling scripts are run
 # ============================================================================
+# Helium 0.17.1 patches target 153.0.8010.47; official -lite is still .36.
+Patch4000:	helium-0.17.1-zen-mode-wiring-8010.36.patch
 
 Provides:	%{crname}
 Obsoletes:	chromium-browser-unstable < %{EVRD}
@@ -520,6 +533,8 @@ BuildRequires:	pkgconfig(libpci)
 BuildRequires:	pkgconfig(libexif)
 BuildRequires:	ninja
 BuildRequires:	nodejs
+# Chromium 153 WebUI/DevTools TypeScript (system tsc; CIPD tsgo is off).
+BuildRequires:	typescript
 BuildRequires:	jdk-current
 
 Recommends: (%{name}-qt6 = %{EVRD} if %{_lib}Qt6Gui)
