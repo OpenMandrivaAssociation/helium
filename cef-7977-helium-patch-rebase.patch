@@ -3395,3 +3395,26 @@ diff -urN cef-7977-orig/patch/patches/win_app_icon_3606.patch cef-7977/patch/pat
 + inline constexpr base::FilePath::CharType kElfDll[] =
 +     FILE_PATH_LITERAL("chrome_elf.dll");
 + inline constexpr base::FilePath::CharType kRendererDll[] =
+
+
+--- cef-7977-orig/patch/patches/chrome_browser_webui_license.patch	2026-08-20 16:03:41.000000000 +0200
++++ cef-7977/patch/patches/chrome_browser_webui_license.patch	2026-09-17 15:13:10.589023395 +0200
+@@ -116,7 +116,7 @@
+  #include "chrome/common/buildflags.h"
+  #include "components/enterprise/buildflags/buildflags.h"
+  #include "components/signin/public/base/signin_buildflags.h"
+-@@ -196,6 +197,10 @@ inline constexpr char kChromeUIInternalsHost[] = "internals";
++@@ -207,6 +208,10 @@ inline constexpr char kChromeUIInternalsHost[] = "internals";
+  inline constexpr char kChromeUIInterstitialHost[] = "interstitials";
+  inline constexpr char kChromeUIInterstitialURL[] = "chrome://interstitials/";
+  inline constexpr char kChromeUIIwaDevHost[] = "iwa-dev";
+@@ -124,6 +124,6 @@
+ +inline constexpr char kChromeUILicenseHost[] = "license";
+ +inline constexpr char kChromeUILicenseURL[] = "chrome://license/";
+ +#endif
+- inline constexpr char kChromeUILocalStateHost[] = "local-state";
+- inline constexpr char kChromeUILocalStateURL[] = "chrome://local-state";
+- inline constexpr char kChromeUILocationInternalsHost[] = "location-internals";
++ inline constexpr char kChromeUILensOverlayHost[] = "lens-overlay";
++ inline constexpr char kChromeUILensOverlayUntrustedURL[] =
++     "chrome-untrusted://lens-overlay/";
