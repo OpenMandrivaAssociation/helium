@@ -92,10 +92,8 @@ Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.17.1 asks for 153.0.8010.47; the official -lite tarball for .47
-# is not published yet (checked 2026-09-16). Use the last published 153
-# snapshot (.36, same milestone as 0.17.0) until Google ships .47.
-%define chromium 153.0.8010.36
+# Helium 0.17.1 asks for 153.0.8010.47.
+%define chromium 153.0.8010.47
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -136,8 +134,15 @@ Release:	1
 Summary:	A fast, privacy friendly, web browser based on Ungoogled Chromium
 Group:		Networking/WWW
 License:	BSD, LGPL
-# From : http://gsdview.appspot.com/chromium-browser-official/
+# Chromium source: official -lite when --with from_google, otherwise the
+# Gentoo chromium-tarballs archive (same export_tarball.py flow; Debian
+# uses this when FROM_GOOGLE is unset).
+%bcond_with from_google
+%if %{with from_google}
 Source0:	https://commondatastorage.googleapis.com/chromium-browser-official/chromium-%{chromium}-lite.tar.xz
+%else
+Source0:	https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/%{chromium}/chromium-%{chromium}-linux.tar.xz
+%endif
 Source1:	chromium-wrapper
 Source2:	chromium-browser.desktop
 Source3:	master_preferences
@@ -370,8 +375,6 @@ Patch2004:	cef-patcher-fuzz.patch
 # Patches 4000+ are applied inside the helium tree before
 # the ungoogling scripts are run
 # ============================================================================
-# Helium 0.17.1 patches target 153.0.8010.47; official -lite is still .36.
-Patch4000:	helium-0.17.1-zen-mode-wiring-8010.36.patch
 
 Provides:	%{crname}
 Obsoletes:	chromium-browser-unstable < %{EVRD}
