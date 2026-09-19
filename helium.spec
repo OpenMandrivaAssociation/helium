@@ -365,6 +365,9 @@ Patch2002:	cef-126-zlib-ng.patch
 Patch2003:	cef-7977-qt-cefclient.patch
 # Soften CEF nested-patch apply for Helium tree (patch --fuzz=3; no git apply).
 Patch2004:	cef-patcher-fuzz.patch
+# Chromium 153 DevToolsWindow passes BrowserWindowInterface* as the opener
+# (CEF 7977 still used Browser*; 8037 already switched).
+Patch2005:	cef-7977-devtools-bwi.patch
 
 # ============================================================================
 # Patches 3000+ are from the various chromium upstream repositories

@@ -1,0 +1,74 @@
+Chromium 153 DevToolsWindow passes BrowserWindowInterface* as the
+DevTools opener. CEF 7977 still declared Browser* (CEF 8037 already
+switched). Also use GetTabStripModel() which is the BWI API.
+
+--- a/libcef/browser/chrome/browser_delegate.h	2026-08-20 16:03:41.000000000 +0200
++++ b/libcef/browser/chrome/browser_delegate.h	2026-09-19 16:45:24.028837580 +0200
+@@ -50,7 +50,7 @@
+   // take ownership of |devtools_contents|.
+   static Browser* CreateDevToolsBrowser(
+       Profile* profile,
+-      Browser* opener,
++      BrowserWindowInterface* opener,
+       content::WebContents* inspected_web_contents,
+       std::unique_ptr<content::WebContents>& devtools_contents);
+ 
+--- a/libcef/browser/chrome/chrome_browser_delegate.h	2026-08-20 16:03:41.000000000 +0200
++++ b/libcef/browser/chrome/chrome_browser_delegate.h	2026-09-19 16:45:24.029249985 +0200
+@@ -55,7 +55,7 @@
+ 
+   static Browser* CreateDevToolsBrowser(
+       Profile* profile,
+-      Browser* opener,
++      BrowserWindowInterface* opener,
+       content::WebContents* inspected_web_contents,
+       std::unique_ptr<content::WebContents>& devtools_contents);
+ 
+--- a/libcef/browser/chrome/chrome_browser_delegate.cc	2026-08-20 16:03:41.000000000 +0200
++++ b/libcef/browser/chrome/chrome_browser_delegate.cc	2026-09-19 16:45:24.030205207 +0200
+@@ -58,7 +58,7 @@
+ // static
+ Browser* ChromeBrowserDelegate::CreateDevToolsBrowser(
+     Profile* profile,
+-    Browser* opener,
++    BrowserWindowInterface* opener,
+     content::WebContents* inspected_web_contents,
+     std::unique_ptr<content::WebContents>& devtools_contents) {
+   // |opener| is the same value that will be passed to the ChromeBrowserDelegate
+@@ -879,7 +879,7 @@
+ // static
+ Browser* BrowserDelegate::CreateDevToolsBrowser(
+     Profile* profile,
+-    Browser* opener,
++    BrowserWindowInterface* opener,
+     content::WebContents* inspected_web_contents,
+     std::unique_ptr<content::WebContents>& devtools_contents) {
+   return ChromeBrowserDelegate::CreateDevToolsBrowser(
+--- a/libcef/browser/chrome/chrome_browser_host_impl.h	2026-08-20 16:03:41.000000000 +0200
++++ b/libcef/browser/chrome/chrome_browser_host_impl.h	2026-09-19 16:45:24.030670893 +0200
+@@ -57,7 +57,7 @@
+       const content::GlobalRenderFrameHostId& global_id);
+   // Returns the browser associated with the specified Browser.
+   static CefRefPtr<ChromeBrowserHostImpl> GetBrowserForBrowser(
+-      const Browser* browser);
++      const BrowserWindowInterface* browser);
+ 
+   ~ChromeBrowserHostImpl() override;
+ 
+--- a/libcef/browser/chrome/chrome_browser_host_impl.cc	2026-08-20 16:03:41.000000000 +0200
++++ b/libcef/browser/chrome/chrome_browser_host_impl.cc	2026-09-19 16:45:24.031048287 +0200
+@@ -95,12 +95,12 @@
+ 
+ // static
+ CefRefPtr<ChromeBrowserHostImpl> ChromeBrowserHostImpl::GetBrowserForBrowser(
+-    const Browser* browser) {
++    const BrowserWindowInterface* browser) {
+   // Return the ChromeBrowserHostImpl that is currently active.
+   // Views-hosted Browsers will contain a single ChromeBrowserHostImpl.
+   // Otherwise, there will be a ChromeBrowserHostImpl per Tab/WebContents.
+   // |contents| may be nullptr during Browser initialization or destruction.
+-  auto contents = browser->tab_strip_model()->GetActiveWebContents();
++  auto contents = browser->GetTabStripModel()->GetActiveWebContents();
+   if (!contents) {
+     return nullptr;
+   }
