@@ -87,13 +87,13 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.17.1
+%global helium_version 0.17.2
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.17.1 asks for 153.0.8010.47.
-%define chromium 153.0.8010.47
+# Helium 0.17.2 asks for 153.0.8010.52.
+%define chromium 153.0.8010.52
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -160,8 +160,8 @@ Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_version}.tar.gz
 # See deps.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202609082320/nonfree-search-engines-data-202609082320.tar.gz
-Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202608281912/helium-onboarding-202608281912.tar.gz
-Source1003:	https://github.com/imputnet/uBlock/releases/download/1.74.0-2/uBlock0_1.74.0-2.chromium.zip
+Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202609160835/helium-onboarding-202609160835.tar.gz
+Source1003:	https://github.com/imputnet/uBlock/releases/download/1.75.0/uBlock0_1.75.0.chromium.zip
 
 # ============================================================================
 # Patches 0 to 1999 are applied in the top level Chromium directory
