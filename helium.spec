@@ -368,6 +368,9 @@ Patch2004:	cef-patcher-fuzz.patch
 # Chromium 153 DevToolsWindow passes BrowserWindowInterface* as the opener
 # (CEF 7977 still used Browser*; 8037 already switched).
 Patch2005:	cef-7977-devtools-bwi.patch
+# Header-only BrowserForBWI() from CEF 8037; 7977 chrome_runtime_views hunks
+# that we took from 8037 include this file (it does not exist in 7977).
+Patch2006:	cef-7977-browser-util.patch
 
 # ============================================================================
 # Patches 3000+ are from the various chromium upstream repositories
