@@ -1,0 +1,18 @@
+--- a/tools/version_manager.py	2026-09-21 16:11:12.046157863 +0200
++++ b/tools/version_manager.py	2026-09-21 16:11:35.763477287 +0200
+@@ -37,10 +37,12 @@
+   last_version, last_revision = version_parse(json['last'])
+ 
+   if major_version < last_version:
++    # Helium 153 + CEF 8037 (API last is 154): still translate wrappers and
++    # write untracked hashes; do not add a new versioned API revision.
+     sys.stderr.write(
+-        'ERROR: Cannot add new API versions on old branches/checkouts '
+-        '(found %d, expected >= %d)\b' % (major_version, last_version))
+-    return -1
++        'WARNING: Chrome %d < CEF last API %d; not adding a new API version\n'
++        % (major_version, last_version))
++    return last_revision
+ 
+   if major_version == last_version:
+     # Increment the revision for the current major version.

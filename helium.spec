@@ -352,13 +352,16 @@ Patch1059:	chromium-153-typescript.patch
 # ============================================================================
 # Patches 2000 to 2999 are applied inside the CEF tree.
 # ============================================================================
-# Domain-substitute URLs in CEF nested patches so they match the Helium tree.
+# Domain-substitute URLs in CEF nested patches so they match the Helium tree,
+# and rebase 8037 hunks that still target Chromium 154 APIs onto Helium 153.
 Patch2000:	cef-8037-helium-patch-rebase.patch
 Patch2002:	cef-126-zlib-ng.patch
 # Qt cefclient sample + host libstdc++ wrapper (applied inside cef/).
 Patch2003:	cef-8037-qt-cefclient.patch
 # Soften CEF nested-patch apply for Helium tree (patch --fuzz=3; no git apply).
 Patch2004:	cef-patcher-fuzz.patch
+# CEF 8037 version_manager -u refuses Chrome < 154; keep translate + untracked hashes.
+Patch2005:	cef-8037-version-manager-old-chrome.patch
 # Helium/ungoogled already rewrites IsIncognitoBrowser(); retarget the CEF
 # null-check hunk so it is not fuzz-applied after the closing brace.
 Patch2007:	cef-7977-incognito-themes-runtime-views.patch
@@ -1175,6 +1178,11 @@ if [ ! -x ../third_party/llvm-build/Release+Asserts/bin/clang ]; then
 	ln -sfn %{_bindir}/clang++ ../third_party/llvm-build/Release+Asserts/bin/clang++
 fi
 python tools/version_manager.py -u --fast-check || :
+# CEF 8037 version_manager -u refuses Chrome 153 (API last is 154).
+# Still generate cef_paths.gypi and libcef_dll wrappers from existing headers.
+if [ ! -f cef_paths.gypi ]; then
+	python tools/translator.py --root-dir "$PWD"
+fi
 ./tools/patch.sh
 cd ..
 %if %{system ffmpeg}
