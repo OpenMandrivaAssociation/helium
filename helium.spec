@@ -377,6 +377,9 @@ Patch2006:	cef-7977-browser-util.patch
 # Helium/ungoogled already rewrites IsIncognitoBrowser(); retarget the CEF
 # null-check hunk so it is not fuzz-applied after the closing brace.
 Patch2007:	cef-7977-incognito-themes-runtime-views.patch
+# 8037 chrome_browser_browser calls BrowserDelegate::CreateWebContentsDelegate,
+# which 7977 does not have. Thin factory returning Chromium's class.
+Patch2008:	cef-7977-create-web-contents-delegate.patch
 
 # ============================================================================
 # Patches 3000+ are from the various chromium upstream repositories

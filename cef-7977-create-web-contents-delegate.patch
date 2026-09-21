@@ -1,0 +1,80 @@
+CEF 7977 has no CreateWebContentsDelegate; 8037 chrome_browser_browser
+calls it. Provide a factory that returns Chromium's
+BrowserWebContentsDelegate so the 153 CEF ninja links.
+
+--- a/libcef/browser/chrome/browser_delegate.h	2026-09-21 06:30:08.743076959 +0200
++++ b/libcef/browser/chrome/browser_delegate.h	2026-09-21 06:30:08.743119569 +0200
+@@ -17,8 +17,22 @@
+ #include "ui/base/window_open_disposition.h"
+ 
+ class Browser;
++class BrowserUiController;
++class BrowserWebContentsDelegate;
++class BrowserWindow;
+ class BrowserWindowInterface;
++class DesktopBrowserWindowCapabilities;
++class ExclusiveAccessManager;
+ class Profile;
++class UnloadController;
++
++namespace chrome {
++class BrowserCommandController;
++}
++
++namespace web_app {
++class AppBrowserController;
++}
+ 
+ namespace content {
+ class NavigationHandle;
+@@ -45,6 +59,19 @@
+       scoped_refptr<CreateParams> cef_params,
+       const BrowserWindowInterface* opener);
+ 
++  // Called from BrowserWindowFeatures after the window and its controllers
++  // have been initialized. 8037 ships a CEF subclass; 7977 returns Chromium's
++  // BrowserWebContentsDelegate so the 153 chrome_browser_browser hunk links.
++  static std::unique_ptr<BrowserWebContentsDelegate> CreateWebContentsDelegate(
++      BrowserWindowInterface* browser,
++      ExclusiveAccessManager& exclusive_access_manager,
++      chrome::BrowserCommandController& command_controller,
++      UnloadController& unload_controller,
++      web_app::AppBrowserController* app_browser_controller,
++      BrowserWindow& window,
++      DesktopBrowserWindowCapabilities& capabilities,
++      BrowserUiController& browser_ui_controller);
++
+   // Optionally override Browser creation in
+   // DevToolsWindow::CreateDevToolsBrowser. The returned Browser, if any, will
+   // take ownership of |devtools_contents|.
+--- a/libcef/browser/chrome/chrome_browser_delegate.cc	2026-09-21 06:30:08.743288151 +0200
++++ b/libcef/browser/chrome/chrome_browser_delegate.cc	2026-09-21 06:30:08.743330662 +0200
+@@ -25,6 +25,7 @@
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/ui/browser.h"
+ #include "chrome/browser/ui/browser_tabstrip.h"
++#include "chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.h"
+ #include "components/input/native_web_keyboard_event.h"
+ #include "content/public/browser/global_routing_id.h"
+ #include "content/public/browser/keyboard_event_processing_result.h"
+@@ -886,4 +887,20 @@
+       profile, opener, inspected_web_contents, devtools_contents);
+ }
+ 
++// static
++std::unique_ptr<BrowserWebContentsDelegate>
++BrowserDelegate::CreateWebContentsDelegate(
++    BrowserWindowInterface* browser,
++    ExclusiveAccessManager& exclusive_access_manager,
++    chrome::BrowserCommandController& command_controller,
++    UnloadController& unload_controller,
++    web_app::AppBrowserController* app_browser_controller,
++    BrowserWindow& window,
++    DesktopBrowserWindowCapabilities& capabilities,
++    BrowserUiController& browser_ui_controller) {
++  return std::make_unique<BrowserWebContentsDelegate>(
++      browser, exclusive_access_manager, command_controller, unload_controller,
++      app_browser_controller, window, capabilities, browser_ui_controller);
++}
++
+ }  // namespace cef
