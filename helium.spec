@@ -371,6 +371,9 @@ Patch2005:	cef-7977-devtools-bwi.patch
 # Header-only BrowserForBWI() from CEF 8037; 7977 chrome_runtime_views hunks
 # that we took from 8037 include this file (it does not exist in 7977).
 Patch2006:	cef-7977-browser-util.patch
+# Helium/ungoogled already rewrites IsIncognitoBrowser(); retarget the CEF
+# null-check hunk so it is not fuzz-applied after the closing brace.
+Patch2007:	cef-7977-incognito-themes-runtime-views.patch
 
 # ============================================================================
 # Patches 3000+ are from the various chromium upstream repositories
