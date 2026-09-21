@@ -1,11 +1,11 @@
 --- a/patch/patches/chrome_runtime_views.patch
 +++ b/patch/patches/chrome_runtime_views.patch
-@@ -663,13 +663,15 @@
+@@ -680,13 +680,15 @@
     }
     GetRootView()->InvalidateLayout();
   }
--@@ -567,5 +602,8 @@ bool BrowserWidget::RegenerateFrameOnThemeChange(
-+@@ -589,7 +624,10 @@ bool BrowserWidget::RegenerateFrameOnThemeChange(
+-@@ -611,6 +646,9 @@ bool BrowserWidget::RegenerateFrameOnThemeChange(
++@@ -611,8 +646,11 @@ bool BrowserWidget::RegenerateFrameOnThemeChange(
   }
   
   bool BrowserWidget::IsIncognitoBrowser() const {
@@ -16,4 +16,4 @@
 +     return false;
     return browser_view_->browser()->GetProfile()->IsIncognitoProfile();
   }
- diff --git chrome/browser/ui/views/frame/browser_widget.h chrome/browser/ui/views/frame/browser_widget.h
+  
