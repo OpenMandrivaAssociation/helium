@@ -1,6 +1,6 @@
 diff -urN a/patch/patch.cfg b/patch/patch.cfg
 --- a/patch/patch.cfg	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patch.cfg	2026-09-21 21:10:58.314443022 +0200
++++ b/patch/patch.cfg	2026-09-21 22:03:50.971742868 +0200
 @@ -27,13 +27,13 @@
      # due to conflicting outputs with the //cef:repack_locales_pack target.
      #
@@ -333,7 +333,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
    {
 diff -urN a/patch/patches/chrome_autofill_bubble_3796.patch b/patch/patches/chrome_autofill_bubble_3796.patch
 --- a/patch/patches/chrome_autofill_bubble_3796.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/chrome_autofill_bubble_3796.patch	2026-09-21 21:10:58.314771286 +0200
++++ b/patch/patches/chrome_autofill_bubble_3796.patch	2026-09-21 22:03:50.972034562 +0200
 @@ -74,7 +74,7 @@
  +  if (!browser_window) {
  +    return;
@@ -345,7 +345,7 @@ diff -urN a/patch/patches/chrome_autofill_bubble_3796.patch b/patch/patches/chro
  -          ->browser();
 diff -urN a/patch/patches/chrome_browser_permission_prompt.patch b/patch/patches/chrome_browser_permission_prompt.patch
 --- a/patch/patches/chrome_browser_permission_prompt.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/chrome_browser_permission_prompt.patch	2026-09-21 21:10:58.314844927 +0200
++++ b/patch/patches/chrome_browser_permission_prompt.patch	2026-09-21 22:03:50.972111893 +0200
 @@ -29,9 +29,8 @@
   }  // namespace
   
@@ -360,7 +360,7 @@ diff -urN a/patch/patches/chrome_browser_permission_prompt.patch b/patch/patches
  +  g_create_permission_prompt_ptr = ptr;
 diff -urN a/patch/patches/chrome_browser_profiles.patch b/patch/patches/chrome_browser_profiles.patch
 --- a/patch/patches/chrome_browser_profiles.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/chrome_browser_profiles.patch	2026-09-21 21:10:58.314913858 +0200
++++ b/patch/patches/chrome_browser_profiles.patch	2026-09-21 22:03:50.972202025 +0200
 @@ -66,17 +66,15 @@
       // Creates a unique OTR profile id to be used for DevTools browser contexts.
       static OTRProfileID CreateUniqueForDevTools();
@@ -386,7 +386,7 @@ diff -urN a/patch/patches/chrome_browser_profiles.patch b/patch/patches/chrome_b
  -  void NotifyOffTheRecordProfileCreated(Profile* off_the_record);
 diff -urN a/patch/patches/chrome_browser_webui_version.patch b/patch/patches/chrome_browser_webui_version.patch
 --- a/patch/patches/chrome_browser_webui_version.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/chrome_browser_webui_version.patch	2026-09-21 21:10:58.314999549 +0200
++++ b/patch/patches/chrome_browser_webui_version.patch	2026-09-21 22:03:50.972291346 +0200
 @@ -282,10 +282,10 @@
         </table>
  +<if expr="enable_cef">
@@ -402,7 +402,7 @@ diff -urN a/patch/patches/chrome_browser_webui_version.patch b/patch/patches/chr
  +        to handle the case of app relaunch with the same directory.
 diff -urN a/patch/patches/chrome_runtime_views.patch b/patch/patches/chrome_runtime_views.patch
 --- a/patch/patches/chrome_runtime_views.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/chrome_runtime_views.patch	2026-09-21 21:10:58.315145510 +0200
++++ b/patch/patches/chrome_runtime_views.patch	2026-09-21 22:03:50.972437458 +0200
 @@ -261,24 +261,25 @@
   using base::UserMetricsAction;
   using content::WebContents;
@@ -551,7 +551,7 @@ diff -urN a/patch/patches/chrome_runtime_views.patch b/patch/patches/chrome_runt
     ~ToolbarView() override;
 diff -urN a/patch/patches/content_2015.patch b/patch/patches/content_2015.patch
 --- a/patch/patches/content_2015.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/content_2015.patch	2026-09-21 21:10:58.315328783 +0200
++++ b/patch/patches/content_2015.patch	2026-09-21 22:03:50.972619720 +0200
 @@ -197,7 +197,7 @@
  +  void DevToolsAgentDetached() override;
  +
@@ -563,7 +563,7 @@ diff -urN a/patch/patches/content_2015.patch b/patch/patches/content_2015.patch
  index 1f730d3e774a311bdab058e4989dc6287c9089b9..0c42cde4fcfe6fba740fd54d380e859d8b7b596b 100644
 diff -urN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patch
 --- a/patch/patches/crashpad_1995.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/crashpad_1995.patch	2026-09-21 21:10:58.318500443 +0200
++++ b/patch/patches/crashpad_1995.patch	2026-09-21 22:03:50.976191498 +0200
 @@ -111,15 +111,13 @@
   std::deque<CrashKeyWithName>& GetCommandLineStringAnnotations() {
     static base::NoDestructor<std::deque<CrashKeyWithName>>
@@ -586,9 +586,19 @@ diff -urN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patc
  diff --git chrome/common/crash_keys.h chrome/common/crash_keys.h
  index a274b3e364084c90d2f4783bab576ac85af285ea..3d995cf6433991f6f8abe7cd2d4eac17dcba55dd 100644
  --- chrome/common/crash_keys.h
-@@ -183,10 +181,10 @@
+@@ -175,18 +173,18 @@
+ index ceda11ed43d222ae46ec9c6a82351fd79d0c0aff..65b677ca74d99b0215816438f86a715e2dcad28f 100644
+ --- components/crash/core/app/crash_reporter_client.h
+ +++ components/crash/core/app/crash_reporter_client.h
+-@@ -7,6 +7,7 @@
++@@ -7,5 +7,7 @@
+  
+  #include <stdint.h>
+  
+ +#include <map>
+++#include <vector>
   #include <string>
-  #include <vector>
+- #include <vector>
   
 -@@ -193,6 +194,20 @@ class CrashReporterClient {
 +@@ -191,5 +192,19 @@ class CrashReporterClient {
@@ -666,7 +676,7 @@ diff -urN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patc
     const bool allow_empty_channel = true;
 diff -urN a/patch/patches/linux_gtk_theme_3610.patch b/patch/patches/linux_gtk_theme_3610.patch
 --- a/patch/patches/linux_gtk_theme_3610.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/linux_gtk_theme_3610.patch	2026-09-21 21:10:58.315521595 +0200
++++ b/patch/patches/linux_gtk_theme_3610.patch	2026-09-21 22:03:50.972827623 +0200
 @@ -16,7 +16,7 @@
     }
  +  // Disable GTK theme change notifications because they are extremely slow.
@@ -678,7 +688,7 @@ diff -urN a/patch/patches/linux_gtk_theme_3610.patch b/patch/patches/linux_gtk_t
     connect(settings, "notify::gtk-icon-theme-name", &GtkUi::OnThemeChanged);
 diff -urN a/patch/patches/osr_win_remove_keyed_mutex_2575.patch b/patch/patches/osr_win_remove_keyed_mutex_2575.patch
 --- a/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-09-21 21:10:58.315568806 +0200
++++ b/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-09-21 22:03:50.972897274 +0200
 @@ -43,7 +43,7 @@
  +    // flag to disable mutex in the GMBFactoryDXGI because this enum is also
  +    // used above in macOS and CrOS for similar usage (claim no other one will
