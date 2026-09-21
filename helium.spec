@@ -108,9 +108,9 @@ Version:	%{helium_version}
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
 # CEF skipped 8010 (Chromium 153): supported branches jump 7977 (152) to
-# 8037 (154). Keep 7977 tip and rebase nested patches onto the Helium 153 tree.
-%define cef b129680e4084ebea0429a1c289fb7c24ac604b36
-%define cefversion 7977
+# 8037 (154). Use 8037 tip (Chromium 154 APIs) on the Helium 153 tree.
+%define cef 062ebe433bf6575a71cac2dc71c405617202e3d7
+%define cefversion 8037
 # make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
 %ifarch %{x86_64}
 %define cef_gn_dir Release_GN_x64
@@ -155,9 +155,6 @@ Source10:	https://github.com/chromiumembedded/cef/archive/refs/heads/%{cefversio
 Source11:	https://chromium-fonts.storage.googleapis.com/336e775eec536b2d785cc80eff6ac39051931286#/test_fonts.tar.gz
 # pkg-config template for the system-library view of CEF (OnlyOffice tree stays under %%{_libdir}/cef).
 Source12:	cef.pc.in
-# CEF 8037 chrome_runtime_views (153 BrowserWindowInterface / WindowFeature APIs).
-# Copied over the 7977 nested patch after Patch2000-2006.
-Source13:	cef-8037-chrome-runtime-views.patch
 %endif
 Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_version}.tar.gz
@@ -355,31 +352,16 @@ Patch1059:	chromium-153-typescript.patch
 # ============================================================================
 # Patches 2000 to 2999 are applied inside the CEF tree.
 # ============================================================================
-# Rebase CEF's chromium patchset so it applies on top of Helium/ungoogled
-# (domain substitution in nested CEF patches, drop libxml_visibility for
-# system libxml, chrome_runtime_views ctor/dtor vs zen-mode + shortcut
-# service, crashpad_1995 vs Helium crash-key sanitization / versioning).
-Patch2000:	cef-7977-helium-patch-rebase.patch
-# Incomplete type content::WebContents after Chromium include cleanup
-# (CEF file_dialog_manager.cc needs the full web_contents.h).
-Patch2001:	cef-7871-web_contents-include.patch
+# Domain-substitute URLs in CEF nested patches so they match the Helium tree.
+Patch2000:	cef-8037-helium-patch-rebase.patch
 Patch2002:	cef-126-zlib-ng.patch
 # Qt cefclient sample + host libstdc++ wrapper (applied inside cef/).
-Patch2003:	cef-7977-qt-cefclient.patch
+Patch2003:	cef-8037-qt-cefclient.patch
 # Soften CEF nested-patch apply for Helium tree (patch --fuzz=3; no git apply).
 Patch2004:	cef-patcher-fuzz.patch
-# Chromium 153 DevToolsWindow passes BrowserWindowInterface* as the opener
-# (CEF 7977 still used Browser*; 8037 already switched).
-Patch2005:	cef-7977-devtools-bwi.patch
-# Header-only BrowserForBWI() from CEF 8037; 7977 chrome_runtime_views hunks
-# that we took from 8037 include this file (it does not exist in 7977).
-Patch2006:	cef-7977-browser-util.patch
 # Helium/ungoogled already rewrites IsIncognitoBrowser(); retarget the CEF
 # null-check hunk so it is not fuzz-applied after the closing brace.
 Patch2007:	cef-7977-incognito-themes-runtime-views.patch
-# 8037 chrome_browser_browser calls BrowserDelegate::CreateWebContentsDelegate,
-# which 7977 does not have. Thin factory returning Chromium's class.
-Patch2008:	cef-7977-create-web-contents-delegate.patch
 
 # ============================================================================
 # Patches 3000+ are from the various chromium upstream repositories
@@ -689,12 +671,7 @@ mv cef-* cef
 cd third_party/pdfium ; git init; cd ../..
 cd cef; git init; cd ..
 cd cef
-%autopatch -p1 -m 2000 -M 2006
-# 7977 chrome_runtime_views still uses Browser::command_controller /
-# SupportsWindowFeature. Replace with the 8037 patch, then retarget
-# IsIncognitoBrowser for Helium's enable-incognito-themes rewrite.
-cp %{S:13} patch/patches/chrome_runtime_views.patch
-%autopatch -p1 -m 2007 -M 2999
+%autopatch -p1 -m 2000 -M 2999
 COMMIT_NUMBER=%(echo %{helium_version} |cut -d. -f3) COMMIT_HASH=%{cef} python tools/make_version_header.py include/cef_version.h --cef_version VERSION.in --chrome_version ../chrome/VERSION --cpp_header_dir include
 cd ..
 

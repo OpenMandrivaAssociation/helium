@@ -1,6 +1,6 @@
 diff -urN a/BUILD.gn b/BUILD.gn
---- a/BUILD.gn	2026-07-30 22:09:36.000000000 +0200
-+++ b/BUILD.gn	2026-08-02 00:50:47.769538159 +0200
+--- a/BUILD.gn	2026-09-16 23:21:43.000000000 +0200
++++ b/BUILD.gn	2026-09-21 15:39:40.017689325 +0200
 @@ -339,6 +339,9 @@
  
    if (!is_linux || ozone_platform_x11) {
@@ -11,7 +11,7 @@ diff -urN a/BUILD.gn b/BUILD.gn
    }
  }
  
-@@ -430,6 +433,10 @@
+@@ -429,6 +432,10 @@
      "libcef/features:config",
      "//build/config:precompiled_headers",
    ]
@@ -22,7 +22,7 @@ diff -urN a/BUILD.gn b/BUILD.gn
  }
  
  # Executable target that provides test coverage for libcef_static_unittested
-@@ -1288,6 +1295,27 @@
+@@ -1289,6 +1296,27 @@
    }
  }
  
@@ -50,7 +50,7 @@ diff -urN a/BUILD.gn b/BUILD.gn
  # libcef_dll_wrapper target.
  static_library("libcef_dll_wrapper") {
    sources = includes_common +
-@@ -1320,6 +1348,36 @@
+@@ -1321,6 +1349,36 @@
  
    # Disable clang modules for this target (see issue #3611).
    use_libcxx_modules = false
@@ -87,7 +87,7 @@ diff -urN a/BUILD.gn b/BUILD.gn
  }
  
  # Distribution variant of libcef_dll_wrapper for client DLLs loaded by
-@@ -2611,8 +2669,14 @@
+@@ -2621,8 +2679,14 @@
  
        deps += [
          ":copy_cefclient_files",
@@ -102,7 +102,7 @@ diff -urN a/BUILD.gn b/BUILD.gn
        libs = [
          "GL",
          "X11",
-@@ -2635,6 +2699,73 @@
+@@ -2645,6 +2709,73 @@
      }
    }
  
@@ -176,7 +176,7 @@ diff -urN a/BUILD.gn b/BUILD.gn
    if (is_win) {
      # Like the "cefclient" executable target, but building a DLL to be loaded by
      # bootstrap.exe.
-@@ -2765,6 +2896,11 @@
+@@ -2776,6 +2907,11 @@
        sources += includes_linux +
                   gypi_paths2.cefsimple_sources_linux
  
@@ -188,7 +188,7 @@ diff -urN a/BUILD.gn b/BUILD.gn
        if (ozone_platform_x11) {
          libs = [
            "X11",
-@@ -3019,6 +3155,13 @@
+@@ -3030,6 +3166,13 @@
        # Set rpath to find our own libfreetype even in a non-component build.
        configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
      }
@@ -203,9 +203,9 @@ diff -urN a/BUILD.gn b/BUILD.gn
  
    if (is_win) {
 diff -urN a/cef_paths2.gypi b/cef_paths2.gypi
---- a/cef_paths2.gypi	2026-07-30 22:09:36.000000000 +0200
-+++ b/cef_paths2.gypi	2026-08-02 00:50:47.679035625 +0200
-@@ -462,6 +462,26 @@
+--- a/cef_paths2.gypi	2026-09-16 23:21:43.000000000 +0200
++++ b/cef_paths2.gypi	2026-09-21 15:39:40.018226013 +0200
+@@ -467,6 +467,26 @@
        'tests/cefclient/browser/window_test_runner_gtk.h',
        'tests/cefclient/cefclient_gtk.cc',
      ],
@@ -234,7 +234,7 @@ diff -urN a/cef_paths2.gypi b/cef_paths2.gypi
        'tests/cefsimple/simple_app.h',
 diff -urN a/tests/cefclient/browser/browser_window_std_qt.cc b/tests/cefclient/browser/browser_window_std_qt.cc
 --- a/tests/cefclient/browser/browser_window_std_qt.cc	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/browser_window_std_qt.cc	2026-08-02 00:50:47.683041844 +0200
++++ b/tests/cefclient/browser/browser_window_std_qt.cc	2026-09-21 15:39:40.018398085 +0200
 @@ -0,0 +1,189 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -427,7 +427,7 @@ diff -urN a/tests/cefclient/browser/browser_window_std_qt.cc b/tests/cefclient/b
 +}  // namespace client
 diff -urN a/tests/cefclient/browser/browser_window_std_qt.h b/tests/cefclient/browser/browser_window_std_qt.h
 --- a/tests/cefclient/browser/browser_window_std_qt.h	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/browser_window_std_qt.h	2026-08-02 00:50:47.687055273 +0200
++++ b/tests/cefclient/browser/browser_window_std_qt.h	2026-09-21 15:39:40.018474836 +0200
 @@ -0,0 +1,52 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -482,8 +482,8 @@ diff -urN a/tests/cefclient/browser/browser_window_std_qt.h b/tests/cefclient/br
 +
 +#endif  // CEF_TESTS_CEFCLIENT_BROWSER_BROWSER_WINDOW_STD_QT_H_
 diff -urN a/tests/cefclient/browser/client_handler.cc b/tests/cefclient/browser/client_handler.cc
---- a/tests/cefclient/browser/client_handler.cc	2026-07-30 22:09:36.000000000 +0200
-+++ b/tests/cefclient/browser/client_handler.cc	2026-08-02 00:50:47.690878721 +0200
+--- a/tests/cefclient/browser/client_handler.cc	2026-09-16 23:21:43.000000000 +0200
++++ b/tests/cefclient/browser/client_handler.cc	2026-09-21 15:39:40.018581528 +0200
 @@ -531,18 +531,18 @@
        command_line->HasSwitch(switches::kFilterChromeCommands);
  
@@ -546,8 +546,8 @@ diff -urN a/tests/cefclient/browser/client_handler.cc b/tests/cefclient/browser/
  #endif  // defined(OS_LINUX)
  }
 diff -urN a/tests/cefclient/browser/client_handler.h b/tests/cefclient/browser/client_handler.h
---- a/tests/cefclient/browser/client_handler.h	2026-07-30 22:09:36.000000000 +0200
-+++ b/tests/cefclient/browser/client_handler.h	2026-08-02 00:50:47.694751848 +0200
+--- a/tests/cefclient/browser/client_handler.h	2026-09-16 23:21:43.000000000 +0200
++++ b/tests/cefclient/browser/client_handler.h	2026-09-21 15:39:40.018750410 +0200
 @@ -16,9 +16,14 @@
  #include "tests/cefclient/browser/test_runner.h"
  
@@ -583,8 +583,8 @@ diff -urN a/tests/cefclient/browser/client_handler.h b/tests/cefclient/browser/c
    // Safe to access from any thread during browser lifetime.
    Delegate* delegate_;
 diff -urN a/tests/cefclient/browser/client_types.h b/tests/cefclient/browser/client_types.h
---- a/tests/cefclient/browser/client_types.h	2026-07-30 22:09:36.000000000 +0200
-+++ b/tests/cefclient/browser/client_types.h	2026-08-02 00:50:47.698659127 +0200
+--- a/tests/cefclient/browser/client_types.h	2026-09-16 23:21:43.000000000 +0200
++++ b/tests/cefclient/browser/client_types.h	2026-09-21 15:39:40.018832941 +0200
 @@ -9,10 +9,16 @@
  #include "include/cef_base.h"
  
@@ -604,7 +604,7 @@ diff -urN a/tests/cefclient/browser/client_types.h b/tests/cefclient/browser/cli
  #endif
 diff -urN a/tests/cefclient/browser/dialog_handler_qt.cc b/tests/cefclient/browser/dialog_handler_qt.cc
 --- a/tests/cefclient/browser/dialog_handler_qt.cc	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/dialog_handler_qt.cc	2026-08-02 00:50:47.703083639 +0200
++++ b/tests/cefclient/browser/dialog_handler_qt.cc	2026-09-21 15:39:40.018881312 +0200
 @@ -0,0 +1,254 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -862,7 +862,7 @@ diff -urN a/tests/cefclient/browser/dialog_handler_qt.cc b/tests/cefclient/brows
 +}  // namespace client
 diff -urN a/tests/cefclient/browser/dialog_handler_qt.h b/tests/cefclient/browser/dialog_handler_qt.h
 --- a/tests/cefclient/browser/dialog_handler_qt.h	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/dialog_handler_qt.h	2026-08-02 00:50:47.706979798 +0200
++++ b/tests/cefclient/browser/dialog_handler_qt.h	2026-09-21 15:39:40.019033344 +0200
 @@ -0,0 +1,51 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -917,7 +917,7 @@ diff -urN a/tests/cefclient/browser/dialog_handler_qt.h b/tests/cefclient/browse
 +#endif  // CEF_TESTS_CEFCLIENT_BROWSER_DIALOG_HANDLER_QT_H_
 diff -urN a/tests/cefclient/browser/main_message_loop_multithreaded_qt.cc b/tests/cefclient/browser/main_message_loop_multithreaded_qt.cc
 --- a/tests/cefclient/browser/main_message_loop_multithreaded_qt.cc	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/main_message_loop_multithreaded_qt.cc	2026-08-02 00:50:47.710290481 +0200
++++ b/tests/cefclient/browser/main_message_loop_multithreaded_qt.cc	2026-09-21 15:39:40.019101675 +0200
 @@ -0,0 +1,65 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -986,7 +986,7 @@ diff -urN a/tests/cefclient/browser/main_message_loop_multithreaded_qt.cc b/test
 +}  // namespace client
 diff -urN a/tests/cefclient/browser/main_message_loop_multithreaded_qt.h b/tests/cefclient/browser/main_message_loop_multithreaded_qt.h
 --- a/tests/cefclient/browser/main_message_loop_multithreaded_qt.h	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/main_message_loop_multithreaded_qt.h	2026-08-02 00:50:47.713847165 +0200
++++ b/tests/cefclient/browser/main_message_loop_multithreaded_qt.h	2026-09-21 15:39:40.019165236 +0200
 @@ -0,0 +1,44 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -1034,7 +1034,7 @@ diff -urN a/tests/cefclient/browser/main_message_loop_multithreaded_qt.h b/tests
 +#endif  // CEF_TESTS_CEFCLIENT_BROWSER_MAIN_MESSAGE_LOOP_MULTITHREADED_QT_H_
 diff -urN a/tests/cefclient/browser/print_handler_qt.cc b/tests/cefclient/browser/print_handler_qt.cc
 --- a/tests/cefclient/browser/print_handler_qt.cc	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/print_handler_qt.cc	2026-08-02 00:50:47.715306979 +0200
++++ b/tests/cefclient/browser/print_handler_qt.cc	2026-09-21 15:39:40.019238377 +0200
 @@ -0,0 +1,69 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -1107,7 +1107,7 @@ diff -urN a/tests/cefclient/browser/print_handler_qt.cc b/tests/cefclient/browse
 +}  // namespace client
 diff -urN a/tests/cefclient/browser/print_handler_qt.h b/tests/cefclient/browser/print_handler_qt.h
 --- a/tests/cefclient/browser/print_handler_qt.h	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/print_handler_qt.h	2026-08-02 00:50:47.716856625 +0200
++++ b/tests/cefclient/browser/print_handler_qt.h	2026-09-21 15:39:40.019303518 +0200
 @@ -0,0 +1,43 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -1153,8 +1153,8 @@ diff -urN a/tests/cefclient/browser/print_handler_qt.h b/tests/cefclient/browser
 +
 +#endif  // CEF_TESTS_CEFCLIENT_BROWSER_PRINT_HANDLER_QT_H_
 diff -urN a/tests/cefclient/browser/root_window_create.cc b/tests/cefclient/browser/root_window_create.cc
---- a/tests/cefclient/browser/root_window_create.cc	2026-07-30 22:09:36.000000000 +0200
-+++ b/tests/cefclient/browser/root_window_create.cc	2026-08-02 00:50:47.720530650 +0200
+--- a/tests/cefclient/browser/root_window_create.cc	2026-09-16 23:21:43.000000000 +0200
++++ b/tests/cefclient/browser/root_window_create.cc	2026-09-21 15:39:40.019363199 +0200
 @@ -8,7 +8,11 @@
  #if defined(OS_WIN)
  #include "tests/cefclient/browser/root_window_win.h"
@@ -1181,7 +1181,7 @@ diff -urN a/tests/cefclient/browser/root_window_create.cc b/tests/cefclient/brow
  #else
 diff -urN a/tests/cefclient/browser/root_window_qt.cc b/tests/cefclient/browser/root_window_qt.cc
 --- a/tests/cefclient/browser/root_window_qt.cc	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/root_window_qt.cc	2026-08-02 00:50:47.722310278 +0200
++++ b/tests/cefclient/browser/root_window_qt.cc	2026-09-21 15:39:40.019410110 +0200
 @@ -0,0 +1,659 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -1844,7 +1844,7 @@ diff -urN a/tests/cefclient/browser/root_window_qt.cc b/tests/cefclient/browser/
 +}  // namespace client
 diff -urN a/tests/cefclient/browser/root_window_qt.h b/tests/cefclient/browser/root_window_qt.h
 --- a/tests/cefclient/browser/root_window_qt.h	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/root_window_qt.h	2026-08-02 00:50:47.726211456 +0200
++++ b/tests/cefclient/browser/root_window_qt.h	2026-09-21 15:39:40.019695744 +0200
 @@ -0,0 +1,145 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -1992,8 +1992,8 @@ diff -urN a/tests/cefclient/browser/root_window_qt.h b/tests/cefclient/browser/r
 +
 +#endif  // CEF_TESTS_CEFCLIENT_BROWSER_ROOT_WINDOW_QT_H_
 diff -urN a/tests/cefclient/browser/window_test.cc b/tests/cefclient/browser/window_test.cc
---- a/tests/cefclient/browser/window_test.cc	2026-07-30 22:09:36.000000000 +0200
-+++ b/tests/cefclient/browser/window_test.cc	2026-08-02 00:50:47.729799271 +0200
+--- a/tests/cefclient/browser/window_test.cc	2026-09-16 23:21:43.000000000 +0200
++++ b/tests/cefclient/browser/window_test.cc	2026-09-21 15:39:40.019771275 +0200
 @@ -21,7 +21,11 @@
  #if defined(OS_WIN)
  #include "tests/cefclient/browser/window_test_runner_win.h"
@@ -2020,7 +2020,7 @@ diff -urN a/tests/cefclient/browser/window_test.cc b/tests/cefclient/browser/win
  #else
 diff -urN a/tests/cefclient/browser/window_test_runner_qt.cc b/tests/cefclient/browser/window_test_runner_qt.cc
 --- a/tests/cefclient/browser/window_test_runner_qt.cc	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/window_test_runner_qt.cc	2026-08-02 00:50:47.733926141 +0200
++++ b/tests/cefclient/browser/window_test_runner_qt.cc	2026-09-21 15:39:40.019826606 +0200
 @@ -0,0 +1,53 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -2077,7 +2077,7 @@ diff -urN a/tests/cefclient/browser/window_test_runner_qt.cc b/tests/cefclient/b
 +}  // namespace client
 diff -urN a/tests/cefclient/browser/window_test_runner_qt.h b/tests/cefclient/browser/window_test_runner_qt.h
 --- a/tests/cefclient/browser/window_test_runner_qt.h	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/browser/window_test_runner_qt.h	2026-08-02 00:50:47.734998072 +0200
++++ b/tests/cefclient/browser/window_test_runner_qt.h	2026-09-21 15:39:40.019906407 +0200
 @@ -0,0 +1,26 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
@@ -2107,7 +2107,7 @@ diff -urN a/tests/cefclient/browser/window_test_runner_qt.h b/tests/cefclient/br
 +#endif  // CEF_TESTS_CEFCLIENT_BROWSER_WINDOW_TEST_RUNNER_QT_H_
 diff -urN a/tests/cefclient/cefclient_qt.cc b/tests/cefclient/cefclient_qt.cc
 --- a/tests/cefclient/cefclient_qt.cc	1970-01-01 01:00:00.000000000 +0100
-+++ b/tests/cefclient/cefclient_qt.cc	2026-08-02 00:50:47.738836709 +0200
++++ b/tests/cefclient/cefclient_qt.cc	2026-09-21 15:39:40.019995778 +0200
 @@ -0,0 +1,156 @@
 +// Copyright (c) 2026 The Chromium Embedded Framework Authors. All rights
 +// reserved. Use of this source code is governed by a BSD-style license that
