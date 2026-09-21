@@ -155,6 +155,9 @@ Source10:	https://github.com/chromiumembedded/cef/archive/refs/heads/%{cefversio
 Source11:	https://chromium-fonts.storage.googleapis.com/336e775eec536b2d785cc80eff6ac39051931286#/test_fonts.tar.gz
 # pkg-config template for the system-library view of CEF (OnlyOffice tree stays under %%{_libdir}/cef).
 Source12:	cef.pc.in
+# CEF 8037 chrome_runtime_views (153 BrowserWindowInterface / WindowFeature APIs).
+# Copied over the 7977 nested patch after Patch2000-2006.
+Source13:	cef-8037-chrome-runtime-views.patch
 %endif
 Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_version}.tar.gz
@@ -683,7 +686,12 @@ mv cef-* cef
 cd third_party/pdfium ; git init; cd ../..
 cd cef; git init; cd ..
 cd cef
-%autopatch -p1 -m 2000 -M 2999
+%autopatch -p1 -m 2000 -M 2006
+# 7977 chrome_runtime_views still uses Browser::command_controller /
+# SupportsWindowFeature. Replace with the 8037 patch, then retarget
+# IsIncognitoBrowser for Helium's enable-incognito-themes rewrite.
+cp %{S:13} patch/patches/chrome_runtime_views.patch
+%autopatch -p1 -m 2007 -M 2999
 COMMIT_NUMBER=%(echo %{helium_version} |cut -d. -f3) COMMIT_HASH=%{cef} python tools/make_version_header.py include/cef_version.h --cef_version VERSION.in --chrome_version ../chrome/VERSION --cpp_header_dir include
 cd ..
 
