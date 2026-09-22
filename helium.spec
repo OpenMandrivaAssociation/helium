@@ -362,6 +362,8 @@ Patch2003:	cef-8037-qt-cefclient.patch
 Patch2004:	cef-patcher-fuzz.patch
 # CEF 8037 version_manager -u refuses Chrome < 154; keep translate + untracked hashes.
 Patch2005:	cef-8037-version-manager-old-chrome.patch
+# CEF 8037 still targets Chromium 154 ToolbarView(BWI*) and layer_surface.h.
+Patch2006:	cef-8037-chromium153-apis.patch
 # Helium/ungoogled already rewrites IsIncognitoBrowser(); retarget the CEF
 # null-check hunk so it is not fuzz-applied after the closing brace.
 Patch2007:	cef-7977-incognito-themes-runtime-views.patch

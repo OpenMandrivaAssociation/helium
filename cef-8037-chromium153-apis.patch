@@ -1,0 +1,52 @@
+diff -urN a/libcef/browser/chrome/views/toolbar_view_view.cc b/libcef/browser/chrome/views/toolbar_view_view.cc
+--- a/libcef/browser/chrome/views/toolbar_view_view.cc	2026-09-22 02:31:37.118504671 +0200
++++ b/libcef/browser/chrome/views/toolbar_view_view.cc	2026-09-22 02:31:37.148689706 +0200
+@@ -4,13 +4,17 @@
+ 
+ #include "cef/libcef/browser/chrome/views/toolbar_view_view.h"
+ 
++#include "cef/libcef/browser/chrome/browser_util.h"
+ #include "ui/base/metadata/metadata_impl_macros.h"
+ 
+ CefToolbarViewView::CefToolbarViewView(CefViewDelegate* cef_delegate,
+                                        BrowserWindowInterface* browser,
+                                        BrowserView* browser_view,
+                                        std::optional<DisplayMode> display_mode)
+-    : ParentClass(cef_delegate, browser, browser_view, display_mode) {}
++    : ParentClass(cef_delegate,
++                  cef::BrowserForBWI(browser),
++                  browser_view,
++                  display_mode) {}
+ 
+ BEGIN_METADATA(CefToolbarViewView)
+ END_METADATA
+diff -urN a/libcef/browser/osr/render_widget_host_view_osr.cc b/libcef/browser/osr/render_widget_host_view_osr.cc
+--- a/libcef/browser/osr/render_widget_host_view_osr.cc	2026-09-22 02:31:37.206505782 +0200
++++ b/libcef/browser/osr/render_widget_host_view_osr.cc	2026-09-22 02:31:37.235296890 +0200
+@@ -242,7 +242,7 @@
+ 
+   root_layer_ = std::make_unique<ui::LayerSurface>();
+ 
+-  root_layer_->SetFallbackBackgroundColor(
++  root_layer_->SetBackgroundColor(
+       SkColor4f::FromColor(background_color_));
+ 
+   external_begin_frame_enabled_ = use_external_begin_frame;
+@@ -1940,5 +1940,5 @@
+ 
+   bool opaque = SkColorGetA(color) == SK_AlphaOPAQUE;
+   GetRootLayer()->SetFillsBoundsOpaquely(opaque);
+-  root_layer_->SetFallbackBackgroundColor(SkColor4f::FromColor(color));
++  root_layer_->SetBackgroundColor(SkColor4f::FromColor(color));
+ }
+diff -urN a/libcef/browser/osr/render_widget_host_view_osr.h b/libcef/browser/osr/render_widget_host_view_osr.h
+--- a/libcef/browser/osr/render_widget_host_view_osr.h	2026-09-22 02:31:37.162505226 +0200
++++ b/libcef/browser/osr/render_widget_host_view_osr.h	2026-09-22 02:31:37.190428838 +0200
+@@ -33,7 +33,6 @@
+ #include "ui/base/ime/text_input_client.h"
+ #include "ui/compositor/compositor.h"
+ #include "ui/compositor/layer.h"
+-#include "ui/compositor/layer_surface.h"
+ #include "ui/events/base_event_utils.h"
+ #include "ui/events/gesture_detection/filtered_gesture_provider.h"
+ #include "ui/events/gesture_detection/gesture_configuration.h"
