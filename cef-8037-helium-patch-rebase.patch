@@ -331,59 +331,6 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'chrome_browser_metrics_tpm_476896967'
    },
    {
-diff -urN a/patch/patches/chrome_autofill_bubble_3796.patch b/patch/patches/chrome_autofill_bubble_3796.patch
---- a/patch/patches/chrome_autofill_bubble_3796.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/chrome_autofill_bubble_3796.patch	2026-09-21 22:03:50.972034562 +0200
-@@ -74,7 +74,7 @@
- +  if (!browser_window) {
- +    return;
- +  }
--   BrowserWindowInterface* browser =
-+   Browser* browser =
- -      BrowserWindow::FindBrowserWindowWithWebContents(web_contents())
- -          ->AsBrowserView()
- -          ->browser();
-diff -urN a/patch/patches/chrome_browser_permission_prompt.patch b/patch/patches/chrome_browser_permission_prompt.patch
---- a/patch/patches/chrome_browser_permission_prompt.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/chrome_browser_permission_prompt.patch	2026-09-21 22:03:50.972111893 +0200
-@@ -29,9 +29,8 @@
-  }  // namespace
-  
-  bool ShouldShowPermissionPromptEvenIfOmniboxEditedOrEmpty(
--@@ -281,9 +283,25 @@ bool ShouldShowPermissionPromptEvenIfOmniboxEditedOrEmpty(
--   return false;
-- }
-+@@ -278,8 +280,24 @@ std::unique_ptr<permissions::PermissionPrompt> CreateQuietPrompt(
-+ }  // namespace
-  
- +void SetCreatePermissionPromptFunction(CreatePermissionPromptFunctionPtr ptr) {
- +  g_create_permission_prompt_ptr = ptr;
-diff -urN a/patch/patches/chrome_browser_profiles.patch b/patch/patches/chrome_browser_profiles.patch
---- a/patch/patches/chrome_browser_profiles.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/chrome_browser_profiles.patch	2026-09-21 22:03:50.972202025 +0200
-@@ -66,17 +66,15 @@
-      // Creates a unique OTR profile id to be used for DevTools browser contexts.
-      static OTRProfileID CreateUniqueForDevTools();
-  
--@@ -518,6 +522,8 @@ class Profile : public content::BrowserContext {
-+@@ -503,4 +507,7 @@ class Profile : public content::BrowserContext {
-    virtual void AckCrashForTracking() = 0;
-  #endif
-- 
-++
- +  void NotifyOffTheRecordProfileCreated(Profile* off_the_record);
- +
--   LifecycleState lifecycle_state() const { return lifecycle_state_; }
--   void set_lifecycle_state(LifecycleState lifecycle_state) {
--     lifecycle_state_ = lifecycle_state;
--@@ -535,7 +541,6 @@ class Profile : public content::BrowserContext {
--       Profile*,
-+  protected:
-+   // Creates an OffTheRecordProfile which points to this Profile.
-+@@ -515,6 +522,5 @@ class Profile : public content::BrowserContext {
-        bool incognito_pref_store);
-  
- -  void NotifyOffTheRecordProfileCreated(Profile* off_the_record);
 diff -urN a/patch/patches/chrome_browser_webui_version.patch b/patch/patches/chrome_browser_webui_version.patch
 --- a/patch/patches/chrome_browser_webui_version.patch	2026-09-16 23:21:43.000000000 +0200
 +++ b/patch/patches/chrome_browser_webui_version.patch	2026-09-21 22:03:50.972291346 +0200
@@ -401,154 +348,66 @@ diff -urN a/patch/patches/chrome_browser_webui_version.patch b/patch/patches/chr
  +        Implement <a href="https://cef-builds.spotifycdn.com/docs/stable.html?classCefBrowserProcessHandler.html#a052a91639483467c0b546d57a05c2f06" target="_new">CefBrowserProcessHandler:: OnAlreadyRunningAppRelaunch</a>
  +        to handle the case of app relaunch with the same directory.
 diff -urN a/patch/patches/chrome_runtime_views.patch b/patch/patches/chrome_runtime_views.patch
---- a/patch/patches/chrome_runtime_views.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/chrome_runtime_views.patch	2026-09-21 22:03:50.972437458 +0200
-@@ -261,24 +261,25 @@
+--- a/patch/patches/chrome_runtime_views.patch
++++ b/patch/patches/chrome_runtime_views.patch
+@@ -261,7 +261,7 @@
   using base::UserMetricsAction;
   using content::WebContents;
   using input::NativeWebKeyboardEvent;
 -@@ -882,11 +886,21 @@ class BrowserView::PipExclusionObserverImpl
-+@@ -978,13 +978,23 @@ void BrowserView::StopTabCycling() {
++@@ -882,13 +886,23 @@ class BrowserView::PipExclusionObserverImpl
   ///////////////////////////////////////////////////////////////////////////////
   // BrowserView, public:
   
- +BrowserView::BrowserView() : BrowserView(nullptr) {}
- +
-- BrowserView::BrowserView(BrowserWindowInterface* browser)
-+ BrowserView::BrowserView(Browser* browser)
+@@ -271,8 +271,12 @@
       : views::ClientView(nullptr, nullptr),
         exclusive_access_context_(
---          std::make_unique<ExclusiveAccessContextImpl>(*this)),
+ -          std::make_unique<ExclusiveAccessContextImpl>(*this)),
 --      browser_(browser) {
 -+          std::make_unique<ExclusiveAccessContextImpl>(*this)) {
-+           std::make_unique<ExclusiveAccessContextImpl>(*this)),
 +-      browser_(browser),
-+       zen_top_chrome_animation_(this),
-+       zen_side_chrome_animation_(this) {
++-      zen_top_chrome_animation_(this),
++-      zen_side_chrome_animation_(this) {
+++          std::make_unique<ExclusiveAccessContextImpl>(*this)),
+++      zen_top_chrome_animation_(this),
+++      zen_side_chrome_animation_(this) {
  +  if (browser) {
  +    InitBrowser(browser);
  +  }
- +}
- +
--+void BrowserView::InitBrowser(BrowserWindowInterface* browser) {
-++void BrowserView::InitBrowser(Browser* browser) {
- +  DCHECK(!browser_);
- +  browser_ = browser;
- +
-@@ -314,7 +315,7 @@
+@@ -314,7 +318,7 @@
   
     top_container_separator_ = top_container_->AddChildView(
         ContentsSeparator::CreateContentsSeparator());
 -@@ -1093,6 +1116,10 @@ BrowserView::BrowserView(BrowserWindowInterface* browser)
-+@@ -1193,6 +1216,10 @@ BrowserView::BrowserView(Browser* browser)
++@@ -1093,10 +1116,14 @@ BrowserView::BrowserView(BrowserWindowInterface* browser)
   }
   
   BrowserView::~BrowserView() {
-@@ -322,16 +323,16 @@
+@@ -322,6 +326,11 @@
  +  // RemoveAllChildViews().
  +  WillDestroyToolbar();
  +
--   // Remove the layout manager to avoid dangling. This needs to be earlier than
--   // other cleanups that destroy views referenced in the layout manager.
--   SetLayoutManager(nullptr);
 +   if (browser_shortcut_service_) {
 +     browser_shortcut_service_->RemoveObserver(this);
 +     browser_shortcut_service_ = nullptr;
- @@ -1105,7 +1132,9 @@ BrowserView::~BrowserView() {
-  
-    // All the tabs should have been destroyed already. If we were closed by the
-    // OS with some tabs than the BrowserNativeWidget should have destroyed them.
---  DCHECK_EQ(0, browser_->GetTabStripModel()->count());
-+-  DCHECK_EQ(0, browser_->tab_strip_model()->count());
- +  if (browser_) {
--+    DCHECK_EQ(0, browser_->GetTabStripModel()->count());
-++    DCHECK_EQ(0, browser_->tab_strip_model()->count());
- +  }
-  
-    // Stop the animation timer explicitly here to avoid running it in a nested
-@@ -529,8 +530,8 @@
-    static constexpr char kBrowserViewKey[] = "__BROWSER_VIEW__";
-  
- +  BrowserView();
--   explicit BrowserView(BrowserWindowInterface* browser);
--+  void InitBrowser(BrowserWindowInterface* browser);
-+   explicit BrowserView(Browser* browser);
-++  void InitBrowser(Browser* browser);
-    BrowserView(const BrowserView&) = delete;
-    BrowserView& operator=(const BrowserView&) = delete;
-    ~BrowserView() override;
-@@ -561,9 +562,9 @@
-    // The BrowserWidget that owns this view.
-    std::unique_ptr<BrowserWidget> browser_widget_;
-  
--   // The owning BrowserWindowInterface object. `browser_` will outlive this.
---  const raw_ptr<BrowserWindowInterface> browser_;
--+  raw_ptr<BrowserWindowInterface> browser_;
-+   // The owning Browser object. `browser_` will outlive this.
-+-  const raw_ptr<Browser> browser_;
-++  raw_ptr<Browser> browser_;
-  
-    base::CallbackListSubscription chip_visibility_subscription_;
-  
-@@ -1072,14 +1073,6 @@
- index 58334f610569244b55dcfee3db5bc337b7e3c357..ad0528de81dd7a936faa9acdc1a8d649270ed66c 100644
- --- chrome/browser/ui/views/toolbar/toolbar_view.cc
- +++ chrome/browser/ui/views/toolbar/toolbar_view.cc
--@@ -43,6 +43,7 @@
-- #include "chrome/browser/themes/theme_properties.h"
-- #include "chrome/browser/ui/actions/chrome_action_id.h"
-- #include "chrome/browser/ui/ai_overlay_dialog/ai_overlay_dialog_controller.h"
--+#include "chrome/browser/ui/browser.h"
-- #include "chrome/browser/ui/browser_actions.h"
-- #include "chrome/browser/ui/browser_command_controller.h"
-- #include "chrome/browser/ui/browser_commands.h"
- @@ -174,6 +175,10 @@
-  #include "ui/aura/window_occlusion_tracker.h"
-  #endif
-@@ -1091,11 +1084,11 @@
-  using base::UserMetricsAction;
-  using content::WebContents;
-  
--@@ -261,12 +266,13 @@ void SetRefreshMargins(views::View* button, bool expanded) {
-+@@ -261,11 +266,13 @@ void SetRefreshMargins(views::View* button, bool expanded) {
-  DEFINE_CLASS_ELEMENT_IDENTIFIER_VALUE(ToolbarView, kToolbarElementId);
-  
-- ToolbarView::ToolbarView(BrowserWindowInterface* browser,
---                         BrowserView* browser_view)
-+-ToolbarView::ToolbarView(Browser* browser, BrowserView* browser_view)
-++ToolbarView::ToolbarView(Browser* browser,
- +                         BrowserView* browser_view,
- +                         std::optional<DisplayMode> display_mode)
-      : AnimationDelegateViews(this),
-@@ -1161,10 +1154,10 @@
-      battery_saver_button_ =
++   }
++
+    // Remove the layout manager to avoid dangling. This needs to be earlier than
+    // other cleanups that destroy views referenced in the layout manager.
+    SetLayoutManager(nullptr);
+@@ -1162,9 +1171,9 @@
           AddChildView(std::make_unique<BatterySaverButton>(browser_));
     }
--@@ -581,7 +604,7 @@ void ToolbarView::Init() {
+ @@ -581,7 +604,7 @@ void ToolbarView::Init() {
 -     avatar_ = AddChildView(std::make_unique<AvatarToolbarButton>(browser_));
 -     bool show_avatar_toolbar_button =
 -         AvatarToolbarButtonInterface::CanShowForProfile(browser_->GetProfile());
-+@@ -679,7 +702,7 @@ void ToolbarView::Init() {
 +     else if (sab_value == "never")
 +       show_avatar_toolbar_button = false;
-+ 
++
  -    avatar_->SetVisible(show_avatar_toolbar_button);
  +    avatar_->SetVisible(show_avatar_toolbar_button && BUTTON_VISIBLE(kAvatar));
     }
-@@ -1178,10 +1171,10 @@
-  
-    DECLARE_CLASS_ELEMENT_IDENTIFIER_VALUE(kToolbarElementId);
-  
---  ToolbarView(BrowserWindowInterface* browser, BrowserView* browser_view);
--+  ToolbarView(BrowserWindowInterface* browser,
-+-  ToolbarView(Browser* browser, BrowserView* browser_view);
-++  ToolbarView(Browser* browser,
- +              BrowserView* browser_view,
--+              std::optional<DisplayMode> display_mode);
-++              std::optional<DisplayMode> display_mode = std::nullopt);
-    ToolbarView(const ToolbarView&) = delete;
-    ToolbarView& operator=(const ToolbarView&) = delete;
-    ~ToolbarView() override;
 diff -urN a/patch/patches/content_2015.patch b/patch/patches/content_2015.patch
 --- a/patch/patches/content_2015.patch	2026-09-16 23:21:43.000000000 +0200
 +++ b/patch/patches/content_2015.patch	2026-09-21 22:03:50.972619720 +0200
@@ -562,8 +421,8 @@ diff -urN a/patch/patches/content_2015.patch b/patch/patches/content_2015.patch
  diff --git content/shell/browser/shell_content_browser_client.cc content/shell/browser/shell_content_browser_client.cc
  index 1f730d3e774a311bdab058e4989dc6287c9089b9..0c42cde4fcfe6fba740fd54d380e859d8b7b596b 100644
 diff -urN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patch
---- a/patch/patches/crashpad_1995.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/crashpad_1995.patch	2026-09-21 22:03:50.976191498 +0200
+--- a/patch/patches/crashpad_1995.patch
++++ b/patch/patches/crashpad_1995.patch
 @@ -111,15 +111,13 @@
   std::deque<CrashKeyWithName>& GetCommandLineStringAnnotations() {
     static base::NoDestructor<std::deque<CrashKeyWithName>>
@@ -623,6 +482,21 @@ diff -urN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patc
  diff --git components/crash/core/app/crashpad.cc components/crash/core/app/crashpad.cc
  index db68eaa22030aca74f31a9d8612b4952a3b25642..e02625e502b73f10569ab54714ad4826ccff87b0 100644
  --- components/crash/core/app/crashpad.cc
+@@ -249,10 +246,10 @@
+      crash_reporter_client->GetProductInfo(&product_info);
+  
+      std::map<std::string, std::string> annotations;
+--    annotations["prod"] = product_info.product_name;
+--    annotations["ver"] = product_info.version;
+-+    annotations["product"] = product_info.product_name;
+-+    annotations["version"] = product_info.version;
++-    annotations["prod"] = std::string(product_info.product_name());
++-    annotations["ver"] = std::string(product_info.version());
+++    annotations["product"] = std::string(product_info.product_name());
+++    annotations["version"] = std::string(product_info.version());
+  
+  #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+      // Empty means stable.
 @@ -295,13 +292,14 @@
  index 3b131e1fc804a55c80b3b2704686270211fcf9fb..c2a7dd560f841aaa7d4f74ea831a5758c01310c3 100644
  --- components/crash/core/app/crashpad_mac.mm

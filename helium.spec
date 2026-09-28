@@ -87,13 +87,13 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.17.2
+%global helium_version 0.18.1
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.17.2 asks for 153.0.8010.52.
-%define chromium 153.0.8010.52
+# Helium 0.18.1 asks for 154.0.8037.57.
+%define chromium 154.0.8037.57
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -107,8 +107,9 @@ Version:	%{helium_version}
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-# CEF skipped 8010 (Chromium 153): supported branches jump 7977 (152) to
-# 8037 (154). Use 8037 tip (Chromium 154 APIs) on the Helium 153 tree.
+# CEF branch 8037 tracks Chromium 154. This snapshot's
+# CHROMIUM_BUILD_COMPATIBILITY.txt is refs/tags/154.0.8037.17; Helium
+# 0.18.1 is 154.0.8037.57 (no CEF commit pins .57; .58 is the next bump).
 %define cef 062ebe433bf6575a71cac2dc71c405617202e3d7
 %define cefversion 8037
 # make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
@@ -262,7 +263,9 @@ Patch421:	https://github.com/obsproject/cef/commit/f88220be4c4c02db5f9f0170dfc51
 ### 1000+: Our own patches
 Patch1001:	chromium-64-system-curl.patch
 Patch1002:	chromium-69-no-static-libstdc++.patch
-Patch1003:	chromium-system-zlib.patch
+# chrome/browser/profiling_host was removed in Chromium 154, taking the
+# //third_party/zlib dep this dropped with it.
+#Patch1003:	chromium-system-zlib.patch
 Patch1004:	chromium-107-system-libs.patch
 # Drop Chromium-private AVFMT_FLAG_NOH264PARSE when using system FFmpeg.
 %if %{system ffmpeg}
@@ -353,17 +356,23 @@ Patch1059:	chromium-153-typescript.patch
 # Patches 2000 to 2999 are applied inside the CEF tree.
 # ============================================================================
 # Domain-substitute URLs in CEF nested patches so they match the Helium tree,
-# and rebase 8037 hunks that still target Chromium 154 APIs onto Helium 153.
+# and retarget hunks whose context moved (zen initializers, shortcut-service
+# teardown, avatar-button flag, ProductInfo string_view accessors).
+# Chromium 154 already has the BrowserWindowInterface / layer_surface APIs
+# CEF 8037 expects.
 Patch2000:	cef-8037-helium-patch-rebase.patch
 Patch2002:	cef-126-zlib-ng.patch
 # Qt cefclient sample + host libstdc++ wrapper (applied inside cef/).
 Patch2003:	cef-8037-qt-cefclient.patch
 # Soften CEF nested-patch apply for Helium tree (patch --fuzz=3; no git apply).
 Patch2004:	cef-patcher-fuzz.patch
-# CEF 8037 version_manager -u refuses Chrome < 154; keep translate + untracked hashes.
+# version_manager -u refuses Chrome older than CEF's last API major.
+# 154 matches, so this only warns if a future bump lags. Kept so a mismatch
+# still translates wrappers instead of aborting %prep.
 Patch2005:	cef-8037-version-manager-old-chrome.patch
-# CEF 8037 still targets Chromium 154 ToolbarView(BWI*) and layer_surface.h.
-Patch2006:	cef-8037-chromium153-apis.patch
+# Chromium 153 lacked ToolbarView(BrowserWindowInterface*) and
+# ui/compositor/layer_surface.h. Chromium 154 has both; do not apply
+# cef-8037-chromium153-apis.patch.
 # Helium/ungoogled already rewrites IsIncognitoBrowser(); retarget the CEF
 # null-check hunk so it is not fuzz-applied after the closing brace.
 Patch2007:	cef-7977-incognito-themes-runtime-views.patch
@@ -1180,8 +1189,8 @@ if [ ! -x ../third_party/llvm-build/Release+Asserts/bin/clang ]; then
 	ln -sfn %{_bindir}/clang++ ../third_party/llvm-build/Release+Asserts/bin/clang++
 fi
 python tools/version_manager.py -u --fast-check || :
-# CEF 8037 version_manager -u refuses Chrome 153 (API last is 154).
-# Still generate cef_paths.gypi and libcef_dll wrappers from existing headers.
+# If version_manager refuses this Chrome (API major behind CEF), still
+# generate cef_paths.gypi and libcef_dll wrappers from existing headers.
 if [ ! -f cef_paths.gypi ]; then
 	python tools/translator.py --root-dir "$PWD"
 fi
