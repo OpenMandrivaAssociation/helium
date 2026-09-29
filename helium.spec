@@ -348,8 +348,9 @@ Patch1057:	chromium-152-cbor-no-crubit-without-chromium-rust.patch
 # "include/opus.h". With system opus those paths do not resolve.
 Patch1058:	chromium-153-iamf-tools-unbundled-opus.patch
 # 153 defaults use_typescript_go=true (CIPD tsgo is empty in the lite
-# tarball). Keep the bundled JS compiler for WebUI; DevTools uses system
-# TypeScript 7 /usr/bin/tsc.
+# tarball). Keep the bundled JS compiler for WebUI. Chromium 154 DevTools
+# invokes third_party/typescript/linux-amd64/src/lib/tsc directly; %prep
+# points that path at system TypeScript 7 /usr/bin/tsc.
 Patch1059:	chromium-153-typescript.patch
 # Chromium 154 signed web bundles and private verification tokens call
 # Crubit cpp_api_from_rust. System rust does not provide that tool.
@@ -756,6 +757,13 @@ export CHROME_VERSION_EXTRA="%{product_vendor} %{product_version}"
 mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -sfn /usr/bin/node third_party/node/linux/node-linux-x64/bin/
 sed -i -e "s,^NODE_VERSION=.*,NODE_VERSION=\"v%(rpm -q --qf '%%{VERSION}' nodejs)\"," third_party/node/update_node_binaries
+
+# Chromium 154 DevTools runs the CIPD tsgo binary at this path. The Gentoo
+# tarball does not ship it. /usr/bin/tsc from typescript >= 7 is that compiler
+# and accepts the same --isolatedDeclarations / --emitDeclarationOnly flags.
+# The gni path is linux-amd64 on every Linux host, including aarch64.
+mkdir -p third_party/typescript/linux-amd64/src/lib
+ln -sfn %{_bindir}/tsc third_party/typescript/linux-amd64/src/lib/tsc
 
 # Dawn tint code generation (//third_party/dawn/src/tint:generate_sources) runs
 # tools/golang/<cipd>/bin/go. Point the CIPD layout at the system GOROOT so
