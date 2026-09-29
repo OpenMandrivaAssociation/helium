@@ -387,6 +387,10 @@ Patch2005:	cef-8037-version-manager-old-chrome.patch
 # Helium/ungoogled already rewrites IsIncognitoBrowser(); retarget the CEF
 # null-check hunk so it is not fuzz-applied after the closing brace.
 Patch2007:	cef-7977-incognito-themes-runtime-views.patch
+# Chromium 154 ProductInfo keeps name/version/channel in private char buffers
+# and exposes them through a string_view constructor. CEF 8037 still assigns
+# the old public fields, which fails libcef_static/crash_reporter_client.o.
+Patch2008:	cef-8037-product-info.patch
 
 # ============================================================================
 # Patches 3000+ are from the various chromium upstream repositories
