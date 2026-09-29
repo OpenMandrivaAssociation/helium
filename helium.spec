@@ -351,6 +351,12 @@ Patch1058:	chromium-153-iamf-tools-unbundled-opus.patch
 # tarball). Keep the bundled JS compiler for WebUI; DevTools uses system
 # TypeScript 7 /usr/bin/tsc.
 Patch1059:	chromium-153-typescript.patch
+# Chromium 154 signed web bundles and private verification tokens call
+# Crubit cpp_api_from_rust. System rust does not provide that tool.
+# Keep the C++ CBOR / BoringSSL web-bundle path, and leave the unlaunched
+# private-verification-token feature out of the browser build.
+Patch1060:	chromium-154-signed-web-bundles-no-crubit.patch
+Patch1061:	chromium-154-disable-private-verification-tokens.patch
 
 # ============================================================================
 # Patches 2000 to 2999 are applied inside the CEF tree.
