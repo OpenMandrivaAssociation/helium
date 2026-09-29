@@ -7,3 +7,4 @@ sources:
   cef-8037.tar.gz: 8ca87435e413bd451dae625fd5b9bd24b0217ae6
   0.18.1.tar.gz: f84d59f5825f1e00a6071fa5f233622d348ed023
   chromium-154.0.8037.57-linux.tar.xz: 68fa0ad1c0caae72e221106d5aa77ab93b82cbbe
+  esbuild-0.25.1-vendor.tar.xz: a45ef99019a8ba4d47278d223ae3a8b2fe2b4626

@@ -163,6 +163,10 @@ Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_versio
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202609082320/nonfree-search-engines-data-202609082320.tar.gz
 Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202609160835/helium-onboarding-202609160835.tar.gz
 Source1003:	https://github.com/imputnet/uBlock/releases/download/1.75.0/uBlock0_1.75.0.chromium.zip
+# DevTools node_modules/esbuild is 0.25.1 and refuses any other binary version.
+# Cooker's esbuild package is 0.28, and the CIPD binary is not in the tarball.
+# Vendored upstream v0.25.1 (golang.org/x/sys included) so the build can compile it.
+Source1004:	esbuild-0.25.1-vendor.tar.xz
 
 # ============================================================================
 # Patches 0 to 1999 are applied in the top level Chromium directory
@@ -764,6 +768,18 @@ sed -i -e "s,^NODE_VERSION=.*,NODE_VERSION=\"v%(rpm -q --qf '%%{VERSION}' nodejs
 # The gni path is linux-amd64 on every Linux host, including aarch64.
 mkdir -p third_party/typescript/linux-amd64/src/lib
 ln -sfn %{_bindir}/tsc third_party/typescript/linux-amd64/src/lib/tsc
+
+# DevTools bundles with the esbuild JS API at node_modules/esbuild (0.25.1).
+# That API checks the native binary's version string and exits on a mismatch,
+# so /usr/bin/esbuild from cooker (0.28) cannot be used. Build 0.25.1 here.
+_esbuild_out="$PWD/third_party/devtools-frontend/src/third_party/esbuild/esbuild"
+mkdir -p "$(dirname "$_esbuild_out")"
+tar -C %{_builddir} -xf %{S:1004}
+(
+	cd %{_builddir}/esbuild-0.25.1
+	GOPROXY=off CGO_ENABLED=0 go build -mod=vendor -trimpath -ldflags='-s -w' \
+		-o "$_esbuild_out" ./cmd/esbuild
+)
 
 # Dawn tint code generation (//third_party/dawn/src/tint:generate_sources) runs
 # tools/golang/<cipd>/bin/go. Point the CIPD layout at the system GOROOT so
