@@ -391,7 +391,7 @@ Patch2007:	cef-7977-incognito-themes-runtime-views.patch
 # and exposes them through a string_view constructor. CEF 8037 still assigns
 # the old public fields, which fails libcef_static/crash_reporter_client.o.
 Patch2008:	cef-8037-product-info.patch
-# Applied by hand after cef/tools/patch.sh. Not in any %autopatch range:
+# Applied by hand after cef/tools/patch.sh. Not in any autopatch range:
 # 3000-3009 is webrtc, 3010-3019 is media, and a %prep apply would define
 # the method before chrome_runtime_views.patch declares it.
 # That nested patch's browser_view.cc hunks stop at a blank line, so the
