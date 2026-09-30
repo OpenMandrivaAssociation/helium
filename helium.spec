@@ -391,6 +391,14 @@ Patch2007:	cef-7977-incognito-themes-runtime-views.patch
 # and exposes them through a string_view constructor. CEF 8037 still assigns
 # the old public fields, which fails libcef_static/crash_reporter_client.o.
 Patch2008:	cef-8037-product-info.patch
+# Applied by hand after cef/tools/patch.sh. Not in any %autopatch range:
+# 3000-3009 is webrtc, 3010-3019 is media, and a %prep apply would define
+# the method before chrome_runtime_views.patch declares it.
+# That nested patch's browser_view.cc hunks stop at a blank line, so the
+# out-of-line WillDestroyToolbar() body is never applied. libcef.so links
+# with -Wl,-z,defs and fails on the missing symbol. The dropped body also
+# called raw_ptr::ClearAndDelete(), which Chromium 154 does not have.
+Patch3020:	cef-8037-will-destroy-toolbar.patch
 
 # ============================================================================
 # Patches 3000+ are from the various chromium upstream repositories
@@ -1230,6 +1238,15 @@ if [ ! -f cef_paths.gypi ]; then
 fi
 ./tools/patch.sh
 cd ..
+# chrome_runtime_views.patch declares WillDestroyToolbar and calls it, but
+# patch(1) drops the definition. Add the body only after that declaration
+# exists. Chrome itself is already linked from the pre-patch.sh tree.
+%{_bindir}/patch -p1 --fuzz=0 --forward < %{PATCH3020}
+if ! grep -q '^void BrowserView::WillDestroyToolbar() {$' \
+	chrome/browser/ui/views/frame/browser_view.cc; then
+	echo "FATAL: BrowserView::WillDestroyToolbar() missing after cef/tools/patch.sh" >&2
+	exit 1
+fi
 %if %{system ffmpeg}
 # CEF patch.sh rewrites shared Chromium sources; re-assert system FFmpeg
 # unbundle + drop Chromium-private AVFMT_FLAG_NOH264PARSE for libcef too.

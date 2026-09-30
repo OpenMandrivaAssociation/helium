@@ -1,0 +1,27 @@
+--- a/chrome/browser/ui/views/frame/browser_view.cc
++++ b/chrome/browser/ui/views/frame/browser_view.cc
+@@ -2639,6 +2639,24 @@
+       ThemeProperties::kFrameHeightAboveTabs - browser_view_origin.y());
+ }
+ 
++void BrowserView::WillDestroyToolbar() {
++  // Autofill bubbles observe toolbar children. Drop the handler first.
++  autofill_bubble_handler_.reset();
++
++  if (GetBrowserViewLayout()) {
++    GetBrowserViewLayout()->reset_toolbar();
++  }
++
++  // raw_ptr has no ClearAndDelete(). Null before delete so BackupRefPtr
++  // does not see a dangling toolbar_, then let the views tree free it.
++  if (ToolbarView* toolbar = toolbar_.get()) {
++    toolbar_ = nullptr;
++    if (toolbar->parent()) {
++      toolbar->parent()->RemoveChildViewT(toolbar).reset();
++    }
++  }
++}
++
+ bool BrowserView::IsLoadingAnimationRunning() const {
+   return !loading_animation_start_.is_null();
+ }
