@@ -1104,6 +1104,14 @@ else
 	export CFLAGS="%{optflags}"
 	export CXXFLAGS="%{optflags}"
 fi
+%ifarch %{aarch64}
+# The unbundle toolchain appends $CXXFLAGS after gn's cflags, so the
+# -gdwarf-4 above wins over symbol_level=0's -g0. Writing DWARF for the
+# browser graph and again for CEF does not finish before the builder's
+# 40 hour cap. -g0 last restores symbol_level=0.
+	export CFLAGS="$CFLAGS -g0"
+	export CXXFLAGS="$CXXFLAGS -g0"
+%endif
 export CC="%{__cc}"
 export CXX="%{__cxx}"
 
