@@ -309,7 +309,9 @@ Patch1019:	chromium-121-rust-clang_lib.patch
 # https://issues.chromium.org/issues/403871216
 Patch1020:	chromium-135-bug-403871216.patch
 Patch1021:	chromium-127-system-bindgen.patch
-Patch1022:	chromium-115-fix-generate_fontconfig_caches.patch
+# Chromium 154.0.8037.97 checks "-le64.cache-" FC_CACHE_VERSION itself.
+# The old cache-11 -> cache-8 rewrite no longer applies, and cache-8 is
+# wrong for fontconfig 2.18 (FC_CACHE_VERSION 12).
 %if %{system zlib}
 Patch1024:	chromium-127-minizip-ng.patch
 %endif
