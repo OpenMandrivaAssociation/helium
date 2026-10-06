@@ -7,6 +7,12 @@
 # Chromium buildmess uses its own LTO
 %global _disable_lto 1
 
+# symbol_level 2 emits split DWARF. The .dwo files stay in the build tree,
+# so gdb-add-index fails the install script when it cannot find them
+# (znver1 669849, objcopy could not add .gdb_index to libcef.so).
+# Debuginfo extraction stays on.
+%undefine _include_gdb_index
+
 # eol 'fix' corrupts some .bin files
 %define dont_fix_eol 1
 
