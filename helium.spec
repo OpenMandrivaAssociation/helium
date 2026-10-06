@@ -394,6 +394,11 @@ Patch2007:	cef-7977-incognito-themes-runtime-views.patch
 # and exposes them through a string_view constructor. CEF 8037 still assigns
 # the old public fields, which fails libcef_static/crash_reporter_client.o.
 Patch2008:	cef-8037-product-info.patch
+# Helium 0.18.3 changes CreatePlatformProvider to USER_VISIBLE before
+# CEF patch.sh. Refresh the nested policy patch so that hunk matches
+# and the higher task priority is kept. The old BEST_EFFORT context
+# fails to apply on 154.0.8037.97.
+Patch2009:	cef-8037-policy-connector-user-visible.patch
 # Applied by hand after cef/tools/patch.sh. Not in any autopatch range:
 # 3000-3009 is webrtc, 3010-3019 is media, and a %prep apply would define
 # the method before chrome_runtime_views.patch declares it.

@@ -1,0 +1,44 @@
+--- a/patch/patches/chrome_browser_policy.patch
++++ b/patch/patches/chrome_browser_policy.patch
+@@ -217,9 +217,9 @@
+  base::flat_set<std::string>
+  ChromeBrowserPolicyConnector::device_affiliation_ids() const {
+    if (!device_affiliation_ids_for_testing_.empty()) {
+-@@ -314,25 +389,22 @@ ChromeBrowserPolicyConnector::CreatePolicyProviders() {
+- std::unique_ptr<ConfigurationPolicyProvider>
+- ChromeBrowserPolicyConnector::CreatePlatformProvider() {
++@@ -323,25 +323,22 @@ ChromeBrowserPolicyConnector::CreatePolicyProviders() {
++   // Managed extension settings are needed before startup navigations can be
++   // filtered. BEST_EFFORT work is fenced until those navigations finish.
+  #if BUILDFLAG(IS_WIN)
+ +  const std::wstring policy_key = GetPolicyKey();
+ +  if (policy_key.empty()) {
+@@ -227,7 +227,7 @@
+ +  }
+    std::unique_ptr<AsyncPolicyLoader> loader(PolicyLoaderWin::Create(
+        base::ThreadPool::CreateSequencedTaskRunner(
+-           {base::MayBlock(), base::TaskPriority::BEST_EFFORT}),
++           {base::MayBlock(), base::TaskPriority::USER_VISIBLE}),
+ -      ManagementServiceFactory::GetForPlatform(), kRegistryChromePolicyKey));
+ +      ManagementServiceFactory::GetForPlatform(), policy_key));
+    return std::make_unique<AsyncPolicyProvider>(GetSchemaRegistry(),
+@@ -251,8 +251,8 @@
+ +  }
+    auto loader = std::make_unique<PolicyLoaderMac>(
+        base::ThreadPool::CreateSequencedTaskRunner(
+-           {base::MayBlock(), base::TaskPriority::BEST_EFFORT}),
+-@@ -343,7 +415,7 @@ ChromeBrowserPolicyConnector::CreatePlatformProvider() {
++           {base::MayBlock(), base::TaskPriority::USER_VISIBLE}),
++@@ -352,7 +349,7 @@ ChromeBrowserPolicyConnector::CreatePlatformProvider() {
+                                                 std::move(loader));
+  #elif BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_CHROMEOS)
+    base::FilePath config_dir_path;
+@@ -260,7 +260,7 @@
+ +  if (GetDirPolicyFilesPath(&config_dir_path)) {
+      auto loader = std::make_unique<ConfigDirPolicyLoader>(
+          base::ThreadPool::CreateSequencedTaskRunner(
+-             {base::MayBlock(), base::TaskPriority::BEST_EFFORT}),
++             {base::MayBlock(), base::TaskPriority::USER_VISIBLE}),
+ diff --git chrome/browser/policy/chrome_browser_policy_connector.h chrome/browser/policy/chrome_browser_policy_connector.h
+ index c6556171f4e2950b6818f80f7092777aa0a6e042..b68145aef9534b9e62b16fe509a1b0f602855db2 100644
+ --- chrome/browser/policy/chrome_browser_policy_connector.h
