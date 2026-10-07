@@ -1,0 +1,19 @@
+DevTools esbuild bundles ai_assistance.ts before generate_skills has
+written gen/.../skills/*.skill.js. bundle_bundle only depends on
+*_sources groups, so the module public_dep does not order the action.
+znver1 670076 failed with "Cannot read file: .../*.skill.js".
+
+--- a/third_party/devtools-frontend/src/front_end/models/ai_assistance/BUILD.gn
++++ b/third_party/devtools-frontend/src/front_end/models/ai_assistance/BUILD.gn
+@@ -115,7 +115,11 @@ devtools_entrypoint("bundle") {
+   split_compilation = true
+   entrypoint = "ai_assistance.ts"
+ 
++  # *.skill.js is generated. The bundle action does not follow public_deps
++  # of ts_deps, so name the generator here or esbuild can run first.
++  deps = [ "skills:generate_skills" ]
++
+   ts_deps = [ ":ai_assistance" ]
+ 
+   visibility = [
+     ":*",

@@ -371,6 +371,9 @@ Patch1059:	chromium-153-typescript.patch
 # private-verification-token feature out of the browser build.
 Patch1060:	chromium-154-signed-web-bundles-no-crubit.patch
 Patch1061:	chromium-154-disable-private-verification-tokens.patch
+# The AI assistance esbuild bundle imports generated .skill.js files.
+# bundle_bundle does not wait for generate_skills unless it is a direct dep.
+Patch1062:	chromium-154-devtools-ai-skills-dep.patch
 
 # ============================================================================
 # Patches 2000 to 2999 are applied inside the CEF tree.
