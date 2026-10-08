@@ -93,13 +93,13 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.18.3
+%global helium_version 0.19.1
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.18.3 asks for 154.0.8037.97.
-%define chromium 154.0.8037.97
+# Helium 0.19.1 asks for 155.0.8059.39.
+%define chromium 155.0.8059.39
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -114,9 +114,10 @@ Version:	%{helium_version}
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
 # CEF branch 8037 tracks Chromium 154. This snapshot's
-# CHROMIUM_BUILD_COMPATIBILITY.txt is refs/tags/154.0.8037.17. Helium
-# 0.18.3 is 154.0.8037.97. Branch tip later moved to .98; keep this
-# snapshot, which already built against the 154.0.8037 line.
+# CHROMIUM_BUILD_COMPATIBILITY.txt is refs/tags/154.0.8037.17.
+# Helium 0.19.1 is Chromium 155.0.8059.39. CEF skipped 155: there is
+# no branch 8059, and the next branch is 8078 (Chromium 156.0.8078.17).
+# Keep this 8037 snapshot until a CEF branch matches Chromium 155.
 %define cef 062ebe433bf6575a71cac2dc71c405617202e3d7
 %define cefversion 8037
 # make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
