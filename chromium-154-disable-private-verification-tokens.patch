@@ -118,7 +118,7 @@
    // DATA_TYPE_CONTENT_SETTINGS
 --- a/chrome/browser/chrome_content_browser_client.cc
 +++ b/chrome/browser/chrome_content_browser_client.cc
-@@ -6006,21 +6006,6 @@ ChromeContentBrowserClient::CreateURLLoa
+@@ -6094,22 +6094,6 @@
      result.push_back(std::move(signin_throttle));
    }
  
@@ -131,15 +131,16 @@
 -                                    ->GetURLLoaderFactoryForBrowserProcess();
 -      if (auto pvt_throttle =
 -              PrivateVerificationTokensURLLoaderThrottle::Create(
--                  pvt_service, profile->IsOffTheRecord(),
+-                  pvt_service, profile->GetWeakPtr(),
 -                  std::move(url_loader_factory))) {
 -        result.push_back(std::move(pvt_throttle));
 -      }
 -    }
 -  }
- 
+-
    if (auto contextual_tasks_throttle =
            contextual_tasks::ContextualTasksURLLoaderThrottle::MaybeCreate(
+               profile, wc_getter)) {
 --- a/chrome/browser/component_updater/BUILD.gn
 +++ b/chrome/browser/component_updater/BUILD.gn
 @@ -147,7 +147,6 @@ source_set("impl") {
@@ -207,25 +208,26 @@
      "//content/public/browser",
      "//net",
      "//services/network/public/cpp",
-@@ -49,9 +44,6 @@ source_set("browser_tests") {
+@@ -49,10 +44,6 @@ source_set("browser_tests") {
      "//chrome/browser/content_settings:content_settings_factory",
      "//chrome/test:test_support",
      "//components/content_settings/core/common",
--    "//components/private_verification_tokens/common:athm_test_issuer",
 -    "//components/private_verification_tokens/common:private_verification_tokens_database",
 -    "//components/private_verification_tokens/common:private_verification_tokens_issuer_config",
+-    "//components/private_verification_tokens/common:test_support",
+-    "//components/private_verification_tokens/common/athm_ffi:athm_ffi_bindings",
      "//net:test_support",
      "//services/network:test_support",
      "//url",
-@@ -72,11 +64,6 @@ source_set("unit_tests") {
+@@ -72,11 +63,6 @@ source_set("unit_tests") {
      "//chrome/test:test_support",
      "//components/content_settings/core/browser",
      "//components/content_settings/core/common",
--    "//components/private_verification_tokens/common:athm_test_issuer",
 -    "//components/private_verification_tokens/common:private_verification_tokens_database",
 -    "//components/private_verification_tokens/common:private_verification_tokens_issuer_config",
 -    "//components/private_verification_tokens/common:private_verification_tokens_parameters",
 -    "//components/private_verification_tokens/common:test_support",
+-    "//components/private_verification_tokens/common/athm_ffi:athm_ffi_bindings",
      "//content/test:test_support",
      "//net",
      "//services/network:test_support",

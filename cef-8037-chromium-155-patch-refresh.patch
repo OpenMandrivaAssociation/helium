@@ -1,0 +1,419 @@
+--- a/patch/patches/web_contents_1257_1565.patch	2026-09-16 23:21:43.000000000 +0200
++++ b/patch/patches/web_contents_1257_1565.patch	2026-10-08 18:55:24.002017682 +0200
+@@ -100,7 +100,7 @@
+  class RenderFrameHost;
+ +class RenderViewHostDelegateView;
+  class RenderWidgetHost;
+- class SessionStorageNamespace;
++ class SessionStorageNamespaceHandle;
+  class SiteInstance;
+  class WebContents;
+ +class WebContentsView;
+--- a/patch/patches/chrome_browser_browser.patch	2026-09-16 23:21:43.000000000 +0200
++++ b/patch/patches/chrome_browser_browser.patch	2026-10-08 19:00:58.940554298 +0200
+@@ -315,12 +315,12 @@
+ index ad710a51122632d8efd5135cb1ffbed168f807bb..91cd94f67561df9e21ecbc97a4b8822e069270cc 100644
+ --- chrome/browser/ui/browser_manager_service.cc
+ +++ chrome/browser/ui/browser_manager_service.cc
+-@@ -141,20 +141,28 @@ void BrowserManagerService::DeleteBrowser(
+-   //
++@@ -143,22 +143,29 @@ void BrowserManagerService::DeleteBrowser(
+    // TODO(crbug.com/40159237): Use ScopedProfileKeepAlive for Incognito too,
+    // instead of separate logic for Incognito and regular profiles.
+ -  target_browser_and_subscriptions->browser.reset();
+--  if (browsers_and_subscriptions_.empty() && profile_->IsIncognitoProfile() &&
++-  if (browsers_and_subscriptions_.empty() &&
++-      profile_->IsPrimaryOTRProfileWithRegularParent() &&
+ -      !profile_->IsSystemProfile()) {
+ +  // Capture state from `this` before destroying the Browser. The destruction
+ +  // chain may release the last reference keeping the Profile alive (e.g. via
+@@ -331,19 +331,21 @@
+ +  base::WeakPtr<Profile> weak_profile = profile_->GetWeakPtr();
+ +  target_browser_and_subscriptions.reset();
+ +  if (is_last_browser && weak_profile &&
+-+      weak_profile->IsIncognitoProfile() &&
+++      weak_profile->IsPrimaryOTRProfileWithRegularParent() &&
+ +      !weak_profile->IsSystemProfile()) {
+  #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+      // The Printing Background Manager holds onto preview dialog WebContents
+      // whose corresponding print jobs have not yet fully spooled. Make sure
+-     // these get destroyed before tearing down the incognito profile so that
+-     // their RenderFrameHosts can exit in time - see crbug.com/41235373
++     // these get destroyed before tearing down the incognito or isolated mode
++     // profile so that their RenderFrameHosts can exit in time - see
++     // crbug.com/41235373
+      g_browser_process->background_printing_manager()
+ -        ->DeletePreviewContentsForBrowserContext(&profile_.get());
+ +        ->DeletePreviewContentsForBrowserContext(weak_profile.get());
+  #endif
+-     // An incognito profile is no longer needed, this indirectly frees
+-     // its cache and cookies once it gets destroyed at the appropriate time.
++     // The incognito or isolated mode profile is no longer needed, this
++     // indirectly frees its cache and cookies once it gets destroyed at the
++     // appropriate time.
+ -    ProfileDestroyer::DestroyOTRProfileWhenAppropriate(&profile_.get());
+ +    ProfileDestroyer::DestroyOTRProfileWhenAppropriate(weak_profile.get());
+    }
+--- a/patch/patches/chrome_runtime.patch	2026-09-16 23:21:43.000000000 +0200
++++ b/patch/patches/chrome_runtime.patch	2026-10-08 18:59:06.461585117 +0200
+@@ -331,22 +331,13 @@
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kMakeDefaultBrowser)) {
+      bool is_managed = g_browser_process->local_state()->IsManagedPreference(
+-@@ -1821,13 +1829,14 @@ int ChromeBrowserMainParts::PreMainMessageLoopRunImpl() {
++@@ -1851,5 +1859,6 @@ int ChromeBrowserMainParts::PreMainMessageLoopRunImpl() {
+                 ? static_cast<int>(content::RESULT_CODE_NORMAL_EXIT)
+                 : static_cast<int>(CHROME_RESULT_CODE_SHELL_INTEGRATION_FAILED);
+    }
+ +#endif  // !BUILDFLAG(ENABLE_CEF)
+  
+  #if defined(USE_AURA)
+-   // Make sure aura::Env has been initialized.
+-   CHECK(aura::Env::GetInstance());
+- #endif
+- 
+--#if BUILDFLAG(IS_WIN)
+-+#if BUILDFLAG(IS_WIN) && !BUILDFLAG(ENABLE_CEF)
+-   // We must call DoUpgradeTasks now that we own the browser singleton to
+-   // finish upgrade tasks (swap) and relaunch if necessary.
+-   if (upgrade_util::DoUpgradeTasks(*base::CommandLine::ForCurrentProcess())) {
+ @@ -1875,7 +1884,7 @@ int ChromeBrowserMainParts::PreMainMessageLoopRunImpl() {
+    }
+  #endif
+--- a/patch/patches/chrome_runtime_views.patch	2026-10-08 19:01:48.549317628 +0200
++++ b/patch/patches/chrome_runtime_views.patch	2026-10-08 18:55:24.082018965 +0200
+@@ -1023,7 +1023,7 @@
+    // since they're not supported there and will result in extra Omnibox
+    // processes being created (note that the address bar is not shown in web
+    // apps).
+--  if (!is_web_app && !is_devtools) {
++-  if (!is_web_app && !is_devtools && !is_popup_mode_) {
+ +  bool supports_webui_popups = !is_web_app && !is_devtools;
+ +#if BUILDFLAG(ENABLE_CEF)
+ +  if (browser_ && browser_->cef_delegate() &&
+@@ -1041,7 +1041,7 @@
+      }
+    }
+  
+--  // Default to the legacy popup view for web apps and devtools windows.
++-  // Default to the legacy popup view for web apps, devtools, and popup windows.
+ +  // Default to the legacy popup view when WebUI popups are not supported.
+    // When the legacy `OmniboxPopupViewViews` is deprecated we will need to
+    // ensure that a null `omnibox_popup_view_` doesn't cause any issues (or aim
+--- a/patch/patches/light_mode_3534.patch	2026-09-16 23:21:43.000000000 +0200
++++ b/patch/patches/light_mode_3534.patch	2026-10-08 18:59:06.461585117 +0200
+@@ -74,19 +74,17 @@
+  bool NativeTheme::IsForcedHighContrast() {
+    static bool kIsForcedHighContrast =
+        base::CommandLine::ForCurrentProcess()->HasSwitch(
+-@@ -594,8 +603,13 @@ ColorProviderKey::ForcedColors NativeTheme::CalculateForcedColors() const {
++@@ -623,8 +632,11 @@ ColorProviderKey::ForcedColors NativeTheme::CalculateForcedColors() const {
+  
+  NativeTheme::PreferredColorScheme NativeTheme::CalculatePreferredColorScheme()
+      const {
+--  return IsForcedDarkMode() ? PreferredColorScheme::kDark
+--                            : OsSettingsProvider::Get().PreferredColorScheme();
+-+  if (IsForcedDarkMode()) {
+-+    return PreferredColorScheme::kDark;
+-+  }
++-  return PreferredColorSchemeOverride().value_or(
++-      OsSettingsProvider::Get().PreferredColorScheme());
+ +  if (IsForcedLightMode()) {
+ +    return PreferredColorScheme::kLight;
+ +  }
+-+  return OsSettingsProvider::Get().PreferredColorScheme();
+++  return PreferredColorSchemeOverride().value_or(
+++      OsSettingsProvider::Get().PreferredColorScheme());
+  }
+  
+  NativeTheme::PreferredContrast NativeTheme::CalculatePreferredContrast() const {
+@@ -94,23 +92,12 @@
+ index e131113a7d5eeea02929ff037d898f1c2f281a43..0327964801b17658f08f1ac8c4f74032bb951c85 100644
+ --- ui/native_theme/native_theme.h
+ +++ ui/native_theme/native_theme.h
+-@@ -539,13 +539,16 @@ class COMPONENT_EXPORT(NATIVE_THEME) NativeTheme {
++@@ -548,5 +548,8 @@ class COMPONENT_EXPORT(NATIVE_THEME) NativeTheme {
+    size_t system_color_version() const { return system_color_version_; }
+    void IncrementSystemColorVersion() { ++system_color_version_; }
+  
+-- protected:
+--  explicit NativeTheme(SystemTheme system_theme = SystemTheme::kDefault);
+--  virtual ~NativeTheme();
+ +  // Whether light mode is forced via command-line flag.
+ +  static bool IsForcedLightMode();
+- 
+-   // Whether dark mode is forced via command-line flag.
+-   static bool IsForcedDarkMode();
+- 
+-+ protected:
+-+  explicit NativeTheme(SystemTheme system_theme = SystemTheme::kDefault);
+-+  virtual ~NativeTheme();
+ +
+-   // Whether high contrast is forced via command-line flag.
+-   static bool IsForcedHighContrast();
++  protected:
+  
+--- a/patch/patches/mac_chrome_locale_3623.patch	2026-09-16 23:21:43.000000000 +0200
++++ b/patch/patches/mac_chrome_locale_3623.patch	2026-10-08 18:59:06.505585822 +0200
+@@ -100,24 +100,19 @@
+ index 466e9001064cb5354672f7a35b8f4dd8e0d992cd..284fc32ec379fe6d7c08df6dc27dc362d26f5525 100644
+ --- ui/base/l10n/l10n_util.cc
+ +++ ui/base/l10n/l10n_util.cc
+-@@ -159,25 +159,7 @@ std::optional<std::string> CheckAndResolveLocale(std::string_view locale,
+-       });
+- }
+- 
++@@ -216,20 +216,4 @@ std::optional<std::string> CheckAndResolveLocale(std::string_view locale,
+ -#if BUILDFLAG(IS_APPLE)
+ -std::string GetApplicationLocaleInternalMac(std::string_view pref_locale) {
+--  // Use any override (Cocoa for the browser), otherwise use the preference
+--  // passed to the function.
+--  std::string app_locale = l10n_util::GetLocaleOverride();
+--  if (app_locale.empty())
+--    app_locale = pref_locale;
++-  std::optional<LanguageTag> preferred_locale_tag =
++-      GetPreferredTag(pref_locale);
+ -
+ -  // The above should handle all of the cases Chrome normally hits, but for some
+ -  // unit tests, fallback is needed too.
+--  if (app_locale.empty())
+--    app_locale = "en-US";
++-  if (!preferred_locale_tag) {
++-    return "en-US";
++-  }
+ -
+--  return app_locale;
++-  return std::string(preferred_locale_tag->tag_string());
+ -}
+ -#endif
+ -
+--- a/patch/patches/dawn_dxil_redist.patch	2026-09-16 23:21:43.000000000 +0200
++++ b/patch/patches/dawn_dxil_redist.patch	2026-10-08 18:59:06.461585117 +0200
+@@ -2,28 +2,11 @@
+ index 5162a2f4cccdaee7d24f13d6c3cca7a942cf3436..7ff3544a9507387373ca06f27ee06a8797caf098 100644
+ --- src/dawn/tests/BUILD.gn
+ +++ src/dawn/tests/BUILD.gn
+-@@ -102,8 +102,8 @@ if (!dawn_use_built_dxc && build_with_chromium && is_win) {
+-   # end-to-end test in Chromium.
++@@ -105,6 +105,6 @@ if (!dawn_use_built_dxc && build_with_chromium && is_win) {
+    copy("copy_dxc_binary") {
+      sources = [
+ -      "$windows_sdk_path/bin/$windows_sdk_version/$target_cpu/dxcompiler.dll",
+--      "$windows_sdk_path/bin/$windows_sdk_version/$target_cpu/dxil.dll",
+ +      "$windows_sdk_path/Redist/D3D/$target_cpu/dxcompiler.dll",
+-+      "$windows_sdk_path/Redist/D3D/$target_cpu/dxil.dll",
+      ]
+  
+      outputs = [ "$root_out_dir/{{source_file_part}}" ]
+-diff --git third_party/directx-shader-compiler/BUILD.gn third_party/directx-shader-compiler/BUILD.gn
+-index 21dc5de77507673ff1450737e6d4fbf49454d72f..3c85a74aa92336da35a0a33dc61be9fcdbf15fd1 100644
+---- third_party/directx-shader-compiler/BUILD.gn
+-+++ third_party/directx-shader-compiler/BUILD.gn
+-@@ -2476,8 +2476,7 @@ executable("dxc") {
+- if (is_win) {
+-   import("//build/config/win/visual_studio_version.gni")
+-   copy("copy_dxil_dll") {
+--    sources =
+--        [ "$windows_sdk_path/bin/$windows_sdk_version/$target_cpu/dxil.dll" ]
+-+    sources = [ "$windows_sdk_path/Redist/D3D/$target_cpu/dxil.dll" ]
+-     outputs = [ "$root_out_dir/{{source_file_part}}" ]
+-   }
+- }
+
+--- a/patch/patches/crashpad_1995.patch
++++ b/patch/patches/crashpad_1995.patch
+@@ -173,17 +173,10 @@
+ index ceda11ed43d222ae46ec9c6a82351fd79d0c0aff..65b677ca74d99b0215816438f86a715e2dcad28f 100644
+ --- components/crash/core/app/crash_reporter_client.h
+ +++ components/crash/core/app/crash_reporter_client.h
+-@@ -7,5 +7,7 @@
+- 
+- #include <stdint.h>
+- 
+-+#include <map>
+-+#include <vector>
+- #include <string>
+- 
+-@@ -191,5 +192,19 @@ class CrashReporterClient {
+-   // Returns true if breakpad should run in the given process type.
+-   virtual bool EnableBreakpadForProcess(const std::string& process_type);
++@@ -240,6 +240,20 @@
++   // managed and written via `SharedMemoryUserStreamWriter`).
++   virtual std::vector<base::ReadOnlySharedMemoryRegion>
++   GetUserStreamSharedMemoryRegions();
+ +
+ +  // Populate |arguments| with additional optional arguments.
+ +  virtual void GetCrashOptionalArguments(std::vector<std::string>* arguments);
+
+--- a/patch/patches/chrome_browser_browser.patch
++++ b/patch/patches/chrome_browser_browser.patch
+@@ -37,7 +37,14 @@
+ index 8aabdbd1826161706e85f0b8a95759abf6198ce2..bd31551cf396b2747a275afbfc67c8db3cc184d4 100644
+ --- chrome/browser/devtools/devtools_window.cc
+ +++ chrome/browser/devtools/devtools_window.cc
+-@@ -857,6 +857,12 @@ Profile* DevToolsWindow::GetProfileForDevToolsWindow(
++@@ -124,5 +124,6 @@
++ #include "chrome/browser/ui/browser_tabstrip.h"
++ #include "chrome/browser/ui/browser_window.h"
+++#include "chrome/browser/ui/browser.h"
++ #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"  // nogncheck crbug.com/40147906
++ #include "chrome/browser/ui/browser_window/public/global_browser_collection.h"  // nogncheck crbug.com/40147906
++ #include "chrome/browser/ui/tabs/tab_strip_model.h"
++@@ -857,6 +858,12 @@ Profile* DevToolsWindow::GetProfileForDevToolsWindow(
+    if (profile->IsPrimaryOTRProfile() || profile->IsDevToolsOTRProfile()) {
+      return profile;
+    }
+
+--- a/patch/patches/chrome_browser_browser.patch
++++ b/patch/patches/chrome_browser_browser.patch
+@@ -362,6 +362,12 @@
+ index bccf4c6a0c037ad620eaf30340c0b6688fa81afd..23c97d79c4be50b7372f7c5e367c47992c420950 100644
+ --- chrome/browser/ui/browser_tabstrip.cc
+ +++ chrome/browser/ui/browser_tabstrip.cc
++@@ -11,2 +11,5 @@
++ #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+++#if BUILDFLAG(ENABLE_CEF)
+++#include "cef/libcef/browser/chrome/browser_delegate.h"
+++#endif
++ #include "chrome/browser/ui/navigator/browser_navigator.h"
+ @@ -48,7 +48,12 @@ content::WebContents* AddAndReturnTabAt(
+      bool pinned,
+      std::optional<NavigateParams::WindowAction> window_action) {
+--- a/patch/patches/chrome_runtime_views.patch
++++ b/patch/patches/chrome_runtime_views.patch
+@@ -2,6 +2,12 @@
+ index e366925102783c4ec00f5ef2366b694b30b9eee9..64d398146853a6d0337a872b7dc0684165d1f85d 100644
+ --- chrome/browser/ui/browser_command_controller.cc
+ +++ chrome/browser/ui/browser_command_controller.cc
++@@ -25,2 +25,5 @@
++ #include "build/build_config.h"
+++#if BUILDFLAG(ENABLE_CEF)
+++#include "cef/libcef/browser/chrome/browser_delegate.h"
+++#endif
++ #include "chrome/app/chrome_command_ids.h"
+ @@ -188,6 +188,10 @@
+  #include "chrome/browser/ui/shortcuts/desktop_shortcuts_utils.h"
+  #endif  // BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_WIN)
+@@ -69,6 +75,12 @@
+ index 45cd05f34337285d387d617a160c84bc32904fd1..2a5b8dfd7036a568503b588e27801d8d21ded256 100644
+ --- chrome/browser/ui/toolbar/app_menu_model.cc
+ +++ chrome/browser/ui/toolbar/app_menu_model.cc
++@@ -24,2 +24,5 @@
++ #include "build/build_config.h"
+++#if BUILDFLAG(ENABLE_CEF)
+++#include "cef/libcef/browser/chrome/browser_delegate.h"
+++#endif
++ #include "chrome/app/chrome_command_ids.h"
+ @@ -934,18 +934,20 @@ FindAndEditSubMenuModel::FindAndEditSubMenuModel(
+    AddItemWithStringIdAndVectorIcon(
+        this, IDC_FIND, IDS_FIND,
+@@ -913,6 +925,12 @@
+ index 2ed2551ecd268e624bd7b32769b46b8f90342662..89355560f1b21440adb9b6c5e0c0e9bcdd67a48a 100644
+ --- chrome/browser/ui/views/frame/picture_in_picture_browser_frame_view.cc
+ +++ chrome/browser/ui/views/frame/picture_in_picture_browser_frame_view.cc
++@@ -19,2 +19,5 @@
++ #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+++#if BUILDFLAG(ENABLE_CEF)
+++#include "cef/libcef/browser/chrome/browser_delegate.h"
+++#endif
++ #include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
+ @@ -29,6 +29,7 @@
+  #include "chrome/browser/ui/views/picture_in_picture/picture_in_picture_bounds_change_animation.h"
+  #include "chrome/browser/ui/views/picture_in_picture/picture_in_picture_tucker.h"
+@@ -1008,6 +1026,12 @@
+ index b9988028f46205d0c5cb21c19c1c72143eba8adc..35e0bd508cf77c27e1f4f8255edb645757ff37f3 100644
+ --- chrome/browser/ui/views/location_bar/location_bar_view.cc
+ +++ chrome/browser/ui/views/location_bar/location_bar_view.cc
++@@ -38,2 +38,5 @@
++ #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+++#if BUILDFLAG(ENABLE_CEF)
+++#include "cef/libcef/browser/chrome/browser_delegate.h"
+++#endif
++ #include "chrome/browser/ui/color/chrome_color_id.h"
+ @@ -168,6 +168,10 @@
+  #include "chrome/browser/web_applications/web_app_tab_helper.h"
+  #endif
+
+--- a/patch/patches/light_mode_3534.patch
++++ b/patch/patches/light_mode_3534.patch
+@@ -35,13 +35,16 @@
+ index 83d1f694eaf78e97c32054d4a71744d7f0f2b6b3..98de79083632c364309ae00e58ac4207a2d15589 100644
+ --- chrome/browser/ui/views/chrome_browser_main_extra_parts_views_linux.cc
+ +++ chrome/browser/ui/views/chrome_browser_main_extra_parts_views_linux.cc
+-@@ -66,7 +66,10 @@ void ChromeBrowserMainExtraPartsViewsLinux::ToolkitInitialized() {
++@@ -66,7 +66,13 @@ void ChromeBrowserMainExtraPartsViewsLinux::ToolkitInitialized() {
+  #endif
+  
+  #if BUILDFLAG(USE_DBUS)
+ -  dark_mode_manager_ = std::make_unique<ui::DarkModeManagerLinux>();
+-+  if (!ui::NativeTheme::IsForcedDarkMode() &&
+-+      !ui::NativeTheme::IsForcedLightMode()) {
+++  const auto forced_scheme =
+++      ui::NativeTheme::GetPreferredColorSchemeOverride();
+++  if (!ui::NativeTheme::IsForcedLightMode() &&
+++      !(forced_scheme &&
+++        *forced_scheme == ui::NativeTheme::PreferredColorScheme::kDark)) {
+ +    dark_mode_manager_ = std::make_unique<ui::DarkModeManagerLinux>();
+ +  }
+  #endif
+
+--- a/patch/patches/chrome_runtime_views.patch
++++ b/patch/patches/chrome_runtime_views.patch
+@@ -2,8 +2,9 @@
+ index e366925102783c4ec00f5ef2366b694b30b9eee9..64d398146853a6d0337a872b7dc0684165d1f85d 100644
+ --- chrome/browser/ui/browser_command_controller.cc
+ +++ chrome/browser/ui/browser_command_controller.cc
+-@@ -25,2 +25,5 @@
++@@ -25,2 +25,6 @@
+  #include "build/build_config.h"
+++#include "cef/libcef/features/features.h"
+ +#if BUILDFLAG(ENABLE_CEF)
+ +#include "cef/libcef/browser/chrome/browser_delegate.h"
+ +#endif
+@@ -75,8 +76,9 @@
+ index 45cd05f34337285d387d617a160c84bc32904fd1..2a5b8dfd7036a568503b588e27801d8d21ded256 100644
+ --- chrome/browser/ui/toolbar/app_menu_model.cc
+ +++ chrome/browser/ui/toolbar/app_menu_model.cc
+-@@ -24,2 +24,5 @@
++@@ -24,2 +24,6 @@
+  #include "build/build_config.h"
+++#include "cef/libcef/features/features.h"
+ +#if BUILDFLAG(ENABLE_CEF)
+ +#include "cef/libcef/browser/chrome/browser_delegate.h"
+ +#endif
+@@ -652,13 +654,16 @@
+    chrome::SaveWindowWorkspace(browser_view_->browser(), GetWorkspace());
+    chrome::SaveWindowVisibleOnAllWorkspaces(browser_view_->browser(),
+                                             IsVisibleOnAllWorkspaces());
+-@@ -548,6 +570,13 @@ void BrowserWidget::SelectNativeTheme() {
++@@ -548,6 +570,16 @@ void BrowserWidget::SelectNativeTheme() {
+      return;
+    }
+  
+ +  // Always use the NativeTheme for forced color modes.
+-+  if (ui::NativeTheme::IsForcedDarkMode() ||
+-+      ui::NativeTheme::IsForcedLightMode()) {
+++  const auto forced_scheme =
+++      ui::NativeTheme::GetPreferredColorSchemeOverride();
+++  if (ui::NativeTheme::IsForcedLightMode() ||
+++      (forced_scheme &&
+++       *forced_scheme == ui::NativeTheme::PreferredColorScheme::kDark)) {
+ +    SetNativeTheme(native_theme);
+ +    return;
+ +  }
+@@ -855,7 +860,14 @@
+ index 92e34d2ca223db583d13dab3ada25746ecf2af92..dee2c106e810476c61bf2c76bda5a447c6ff019b 100644
+ --- chrome/browser/ui/views/frame/layout/browser_view_layout_delegate_impl.cc
+ +++ chrome/browser/ui/views/frame/layout/browser_view_layout_delegate_impl.cc
+-@@ -130,6 +130,15 @@ views::LayoutAlignment BrowserViewLayoutDelegateImpl::GetWindowTitleAlignment()
++@@ -7,2 +7,6 @@
++ #include "base/callback_list.h"
+++#include "cef/libcef/features/features.h"
+++#if BUILDFLAG(ENABLE_CEF)
+++#include "cef/libcef/browser/chrome/browser_delegate.h"
+++#endif
++ #include "base/feature_list.h"
++@@ -130,6 +134,15 @@ views::LayoutAlignment BrowserViewLayoutDelegateImpl::GetWindowTitleAlignment()
+    return GetFrameView()->GetWindowTitleAlignment();
+  }
+  

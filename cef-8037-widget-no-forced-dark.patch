@@ -1,0 +1,16 @@
+--- a/libcef/browser/views/widget_impl.cc
++++ b/libcef/browser/views/widget_impl.cc
+@@ -170,8 +170,11 @@ void CefWidgetImpl::SelectNativeTheme() {
+   ui::NativeTheme* native_theme = ui::NativeTheme::GetInstanceForNativeUi();
+ 
+   // Always use the NativeTheme for forced color modes.
+-  if (ui::NativeTheme::IsForcedDarkMode() ||
+-      ui::NativeTheme::IsForcedLightMode()) {
++  const auto forced_scheme =
++      ui::NativeTheme::GetPreferredColorSchemeOverride();
++  if ((forced_scheme &&
++       *forced_scheme == ui::NativeTheme::PreferredColorScheme::kDark) ||
++      ui::NativeTheme::IsForcedLightMode()) {
+     SetNativeTheme(native_theme);
+     return;
+   }

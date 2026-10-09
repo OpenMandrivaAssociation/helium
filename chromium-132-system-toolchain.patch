@@ -10,3 +10,15 @@ diff -up chromium-138.0.7204.92/build/rust/rust_bindgen_generator.gni.51~ chromi
                      root_build_dir)
      args += [
        "-resource-dir",
+
+diff -up chromium-138.0.7204.92/v8/BUILD.gn.omv~ chromium-138.0.7204.92/v8/BUILD.gn
+--- chromium-138.0.7204.92/v8/BUILD.gn.omv~	2026-10-08 00:00:00.000000000 +0200
++++ chromium-138.0.7204.92/v8/BUILD.gn	2026-10-08 00:00:00.000000000 +0200
+@@ -2494,6 +2494,6 @@ if (is_clang) {
+   # The clang toolchain's resource dir contains builting headers
+   # include/{stddef.h,stdarg.h,...}.
+-  _metagen_clang_resource_dir = "$clang_base_path/lib/clang/$clang_version"
++  _metagen_clang_resource_dir = "$clang_base_path/lib64/clang/$clang_version"
+   _metagen_flags_target = ":v8_base_without_compiler"
+   _metagen_flags_target_ninja =
+       get_label_info(_metagen_flags_target, "target_out_dir") +

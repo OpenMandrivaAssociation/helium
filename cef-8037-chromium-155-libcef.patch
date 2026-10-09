@@ -1,0 +1,86 @@
+--- a/include/internal/cef_types.h	2026-09-16 23:21:43.000000000 +0200
++++ b/include/internal/cef_types.h	2026-10-09 20:40:17.152364508 +0200
+@@ -1145,7 +1145,16 @@
+   CEF_RESULT_CODE_INVALID_ISOLATED_BROWSER_PROCESS = 40,
+ #endif
+ 
+-#if CEF_API_ADDED(14700)
++#if CEF_API_ADDED(15600)
++  /// A relaunch was requested during shutdown of an isolated browser process.
++  CEF_RESULT_CODE_NORMAL_EXIT_RELAUNCH_REQUESTED = 41,
++
++  /// A relaunch in background mode was requested during shutdown of an
++  /// isolated browser process.
++  CEF_RESULT_CODE_NORMAL_EXIT_RELAUNCH_BACKGROUND = 42,
++
++  CEF_RESULT_CODE_CHROME_LAST = 43,
++#elif CEF_API_ADDED(14700)
+   CEF_RESULT_CODE_CHROME_LAST = 41,
+ #elif CEF_API_ADDED(13900)
+   CEF_RESULT_CODE_CHROME_LAST = 40,
+--- a/libcef/browser/hang_monitor.cc	2026-09-16 23:21:43.000000000 +0200
++++ b/libcef/browser/hang_monitor.cc	2026-10-09 20:40:17.152364508 +0200
+@@ -24,7 +24,7 @@
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+     // A generic |CrashDumpHungChildProcess()| is not implemented for Linux.
+     // Instead we send an explicit IPC to crash on the renderer's IO thread.
+-    rph->ForceCrash();
++    rph->CrashHungProcess();
+ #else
+     // Try to generate a crash report for the hung process.
+     CrashDumpHungChildProcess(rph->GetProcess().Handle());
+--- a/libcef/browser/osr/render_widget_host_view_osr.h	2026-09-16 23:21:43.000000000 +0200
++++ b/libcef/browser/osr/render_widget_host_view_osr.h	2026-10-09 20:45:18.357698908 +0200
+@@ -169,7 +169,9 @@
+   void UpdateCursor(const ui::Cursor& cursor) override;
+   void SetIsLoading(bool is_loading) override;
+   void RenderProcessGone() override;
+-  void Destroy() override;
++  void DestroyImpl() override;
++  void OnDestroyOrDefer() override;
++  void CleanUpHostObservers() override;
+   void UpdateTooltipUnderCursor(const std::u16string& tooltip_text) override;
+   input::CursorManager* GetCursorManager() override;
+   gfx::Size GetCompositorViewportPixelSize() override;
+--- a/libcef/browser/osr/render_widget_host_view_osr.cc	2026-09-16 23:21:43.000000000 +0200
++++ b/libcef/browser/osr/render_widget_host_view_osr.cc	2026-10-09 20:45:29.348497693 +0200
+@@ -698,10 +698,10 @@
+ }
+ 
+ void CefRenderWidgetHostViewOSR::RenderProcessGone() {
+-  Destroy();
++  DestroyOrDefer();
+ }
+ 
+-void CefRenderWidgetHostViewOSR::Destroy() {
++void CefRenderWidgetHostViewOSR::OnDestroyOrDefer() {
+   if (!is_destroyed_) {
+     is_destroyed_ = true;
+ 
+@@ -726,7 +726,17 @@
+       Hide();
+     }
+   }
++}
++
++void CefRenderWidgetHostViewOSR::CleanUpHostObservers() {
++  if (render_widget_host_) {
++    render_widget_host_->render_frame_metadata_provider()->RemoveObserver(this);
++    render_widget_host_->ViewDestroyed();
++    render_widget_host_ = nullptr;
++  }
++}
+ 
++void CefRenderWidgetHostViewOSR::DestroyImpl() {
+   delete this;
+ }
+ 
+@@ -1862,7 +1872,7 @@
+     // This matches a CHECK() in RenderWidgetHostImpl::Destroy().
+     const bool also_delete = !render_widget_host_->owner_delegate();
+ 
+-    // Results in a call to Destroy().
++    // Results in a call to DestroyOrDefer().
+     render_widget_host_->ShutdownAndDestroyWidget(also_delete);
+   }
+ }

@@ -1,0 +1,11 @@
+--- a/libcef/common/mojom/BUILD.gn
++++ b/libcef/common/mojom/BUILD.gn
+@@ -8,8 +8,5 @@ mojom("mojom") {
+   sources = [ "cef.mojom" ]
+ 
+-  cpp_only = true
+-  disable_variants = true
+-
+   public_deps = [
+     "//content/public/common:interfaces",
+     "//mojo/public/mojom/base",

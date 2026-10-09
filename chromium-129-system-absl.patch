@@ -87,15 +87,6 @@ diff -up chromium-130.0.6723.58/build/linux/unbundle/absl_log.gn.36~ chromium-13
  shim_headers("globals_shim") {
    root_path = "."
    prefix = "absl/log/"
-@@ -116,6 +176,8 @@ source_set("check_test") {
- }
- source_set("die_if_null_test") {
- }
-+source_set("absl_vlog_is_on_test") {
-+}
- source_set("flags_test") {
- }
- source_set("globals_test") {
 diff -up chromium-130.0.6723.58/third_party/abseil-cpp/absl.gni.36~ chromium-130.0.6723.58/third_party/abseil-cpp/absl.gni
 --- chromium-130.0.6723.58/third_party/abseil-cpp/absl.gni.36~	2024-10-17 01:08:50.918834400 +0200
 +++ chromium-130.0.6723.58/third_party/abseil-cpp/absl.gni	2024-10-17 19:25:51.666516669 +0200
