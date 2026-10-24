@@ -372,6 +372,9 @@ Patch1059:	chromium-153-typescript.patch
 # private-verification-token feature out of the browser build.
 Patch1060:	chromium-154-signed-web-bundles-no-crubit.patch
 Patch1061:	chromium-154-disable-private-verification-tokens.patch
+# FFmpeg 9.0.2 (lavc 63.1.102) has no AV_CODEC_ID_ITUT_T35. Upstream
+# added it in lavc 63.6.100. Leave those metadata tracks discarded.
+Patch1063:	chromium-156-ffmpeg-itut-t35.patch
 # The AI assistance esbuild bundle imports generated .skill.js files.
 # bundle_bundle does not wait for generate_skills unless it is a direct dep.
 # Chromium 155 already depends on skills:generate_skills from the
