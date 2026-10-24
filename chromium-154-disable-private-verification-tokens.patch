@@ -1,6 +1,8 @@
-# Private Verification Tokens (Chromium 154) call Crubit ATHM bindings.
-# The feature has not launched. Drop it from the browser build so gn does
-# not require athm_ffi_bindings (Debian ungoogled/verification-tokens.patch).
+# Private Verification Tokens call Crubit ATHM bindings. System Rust does
+# not create athm_ffi_bindings, and gn checks every target in a loaded
+# BUILD.gn. Drop those deps. Devtools still links the browser service, so
+# keep its fetcher/store deps and fail issuance closed. The feature is off
+# by default.
 --- a/chrome/browser/BUILD.gn
 +++ b/chrome/browser/BUILD.gn
 @@ -1022,7 +1022,6 @@ source_set("core") {
@@ -161,7 +163,7 @@
      "//components/security_interstitials/content:security_interstitial_page",
 --- a/chrome/browser/component_updater/private_verification_tokens_installer.cc
 +++ b/chrome/browser/component_updater/private_verification_tokens_installer.cc
-@@ -25,32 +25,6 @@ namespace component_updater {
+@@ -25,32 +25,8 @@ namespace component_updater {
  
  void RegisterPrivateVerificationTokensComponentIfEnabled(
      ComponentUpdateService* cus) {
@@ -191,20 +193,13 @@
 -              })));
 -
 -  installer->Register(cus, base::OnceClosure());
++  // System Rust has no Crubit, so do not register the issuer component.
++  (void)cus;
  }
  
  }  // namespace component_updater
 --- a/chrome/browser/private_verification_tokens/BUILD.gn
 +++ b/chrome/browser/private_verification_tokens/BUILD.gn
-@@ -30,8 +30,3 @@ static_library("private_verification_tok
-     "//components/keyed_service/core",
--    "//components/private_verification_tokens/common:privacy_pass_athm_batch_request",
--    "//components/private_verification_tokens/common:private_verification_tokens_fetcher",
--    "//components/private_verification_tokens/common:private_verification_tokens_issuer_config",
-     "//components/private_verification_tokens/common:private_verification_tokens_metrics",
--    "//components/private_verification_tokens/common:private_verification_tokens_parameters",
--    "//components/private_verification_tokens/common:private_verification_tokens_store",
-     "//content/public/browser",
 @@ -53,11 +48,7 @@ source_set("browser_tests") {
      "//chrome/test:test_support",
      "//chrome/test/base:chrome_test_utils",
@@ -295,3 +290,209 @@
      "//mojo/public/cpp/base:protobuf_support",
      "//services/network/public/cpp",
      "//testing/gmock",
+--- a/components/private_verification_tokens/common/BUILD.gn
++++ b/components/private_verification_tokens/common/BUILD.gn
+@@ -192,10 +192,7 @@
+ source_set("test_support") {
+   testonly = true
+   sources = [ "private_verification_tokens_test_util.h" ]
+-  public_deps = [
+-    "//base",
+-    "//components/private_verification_tokens/common/athm_ffi:athm_ffi_bindings",
+-  ]
++  public_deps = [ "//base" ]
+ }
+ 
+ # ATHM (Anonymous Tokens with Hidden Metadata): Crubit bindings over
+@@ -209,7 +206,6 @@
+     public_deps = [
+       ":private_verification_tokens_issuer_config",
+       "//base",
+-      "//components/private_verification_tokens/common/athm_ffi:athm_ffi_bindings",
+     ]
+   }
+ 
+@@ -222,7 +218,6 @@
+       ":private_verification_tokens_parameters",
+       ":private_verification_tokens_public_key",
+       "//base",
+-      "//components/private_verification_tokens/common/athm_ffi:athm_ffi_bindings",
+       "//testing/gmock",
+       "//testing/gtest",
+       "//url",
+--- a/components/private_verification_tokens/common/privacy_pass_athm_batch_request.h
++++ b/components/private_verification_tokens/common/privacy_pass_athm_batch_request.h
+@@ -6,12 +6,10 @@
+ #define COMPONENTS_PRIVATE_VERIFICATION_TOKENS_COMMON_PRIVACY_PASS_ATHM_BATCH_REQUEST_H_
+ 
+ #include <cstdint>
+-#include <optional>
+ #include <vector>
+ 
+ #include "base/containers/span.h"
+ #include "base/types/expected.h"
+-#include "components/private_verification_tokens/common/athm_ffi/athm_ffi.h"
+ #include "components/private_verification_tokens/common/private_verification_tokens_issuer_config.h"
+ 
+ namespace private_verification_tokens {
+@@ -27,60 +25,31 @@
+   kClientFinalizeFailed,
+ };
+ 
+-// Encapsulates a batched Privacy Pass request using Anonymous Tokens with
+-// Hidden Metadata (ATHM).
+-//
+-// A batch request is composed of multiple Privacy Pass ATHM token requests
+-// (type 0xC07E) concatenated into a single request body. This class generates
+-// and holds the client-side secret contexts and blinded requests produced by
+-// the underlying Rust ATHM FFI, marshals the wire encodings, and upon receiving
+-// the server's batch response, unblinds and finalizes the tokens into Privacy
+-// Pass format.
+-//
+-// This is a single-use object: once Finalize() is invoked, the internal secret
+-// contexts are consumed and discarded.
++// Fail-closed stand-in for the Crubit ATHM client. System Rust does not
++// generate athm_ffi_bindings. The feature is off by default; Create() reports
++// failure if something calls it anyway.
+ class PrivacyPassAthmBatchRequest {
+  public:
+-  // Constructs and initializes a batch request for the issuer described by
+-  // `issuer_config` and `num_buckets` (the metadata bucket count).
+-  // Protocol parameters are derived internally from
+-  // `issuer_config.deployment_id` and `num_buckets`.
+-  //
+-  // Returns PrivacyPassAthmBatchRequest on success, or a
+-  // PrivacyPassAthmBatchRequestError describing why creation failed.
+   static base::expected<PrivacyPassAthmBatchRequest,
+                         PrivacyPassAthmBatchRequestError>
+   Create(const IssuerConfig& issuer_config, uint8_t num_buckets);
+ 
+-  PrivacyPassAthmBatchRequest(PrivacyPassAthmBatchRequest&&);
+-  PrivacyPassAthmBatchRequest& operator=(PrivacyPassAthmBatchRequest&&);
+-  ~PrivacyPassAthmBatchRequest();
++  PrivacyPassAthmBatchRequest(PrivacyPassAthmBatchRequest&&) = default;
++  PrivacyPassAthmBatchRequest& operator=(PrivacyPassAthmBatchRequest&&) =
++      default;
++  ~PrivacyPassAthmBatchRequest() = default;
+ 
+   PrivacyPassAthmBatchRequest(const PrivacyPassAthmBatchRequest&) = delete;
+   PrivacyPassAthmBatchRequest& operator=(const PrivacyPassAthmBatchRequest&) =
+       delete;
+ 
+-  // The serialized HTTP request body containing the concatenated marshaled
+-  // AthmTokenRequest structures (each 36 bytes) for all tokens in the batch
+-  // followed by the 4-byte version number in big-endian order.
+   const std::vector<uint8_t>& request_body() const { return request_body_; }
+ 
+-  // Unblinds and finalizes the batch response returned by the issuance server.
+-  // `response_body` contains the concatenated serialized token responses.
+-  //
+-  // On success, returns the list of marshaled AthmToken byte vectors (132 bytes
+-  // each: 2-byte token type, 32-byte SHA256 issuer key ID, 98-byte unblinded
+-  // token) and invalidates the internal secret contexts so it cannot be called
+-  // again.
+-  // Returns PrivacyPassAthmBatchRequestError on failure.
+   base::expected<std::vector<std::vector<uint8_t>>,
+                  PrivacyPassAthmBatchRequestError>
+   Finalize(base::span<const uint8_t> response_body);
+ 
+  private:
+-  explicit PrivacyPassAthmBatchRequest(PrivacyPassBatchClient batch_client);
+-
+-  std::optional<PrivacyPassBatchClient> batch_client_;
+   std::vector<uint8_t> request_body_;
+ };
+ 
+--- a/components/private_verification_tokens/common/privacy_pass_athm_batch_request.cc
++++ b/components/private_verification_tokens/common/privacy_pass_athm_batch_request.cc
+@@ -4,82 +4,21 @@
+ 
+ #include "components/private_verification_tokens/common/privacy_pass_athm_batch_request.h"
+ 
+-#include <utility>
+-#include <vector>
+-
+-#include "base/containers/to_vector.h"
+-#include "components/private_verification_tokens/common/athm_ffi/athm_ffi.h"
+-#include "third_party/crubit/support/rs_std/slice_ref.h"
+-
+ namespace private_verification_tokens {
+ 
+-// static
+ base::expected<PrivacyPassAthmBatchRequest, PrivacyPassAthmBatchRequestError>
+-PrivacyPassAthmBatchRequest::Create(const IssuerConfig& issuer_config,
+-                                    uint8_t num_buckets) {
+-  if (issuer_config.batch_size <= 0) {
+-    return base::unexpected(
+-        PrivacyPassAthmBatchRequestError::kInvalidBatchSize);
+-  }
+-  if (num_buckets == 0) {
+-    return base::unexpected(
+-        PrivacyPassAthmBatchRequestError::kInvalidBucketCount);
+-  }
+-
+-  auto client_result = PrivacyPassBatchClient::try_new(
+-      rs_std::SliceRef<const uint8_t>(issuer_config.public_key.public_key()),
+-      rs_std::SliceRef<const uint8_t>(
+-          issuer_config.public_key.public_key_proof()),
+-      num_buckets,
+-      rs_std::SliceRef<const uint8_t>(
+-          base::as_byte_span(issuer_config.deployment_id)),
+-      issuer_config.public_key.version(),
+-      static_cast<size_t>(issuer_config.batch_size));
+-  if (!client_result.has_value()) {
+-    return base::unexpected(
+-        PrivacyPassAthmBatchRequestError::kClientRequestGenerationFailed);
+-  }
+-
+-  return PrivacyPassAthmBatchRequest(std::move(*client_result));
++PrivacyPassAthmBatchRequest::Create(const IssuerConfig&, uint8_t) {
++  // System Rust has no Crubit ATHM bindings. The feature is off by default;
++  // if it is forced on, fail closed instead of calling athm_ffi.
++  return base::unexpected(
++      PrivacyPassAthmBatchRequestError::kClientRequestGenerationFailed);
+ }
+ 
+-PrivacyPassAthmBatchRequest::PrivacyPassAthmBatchRequest(
+-    PrivacyPassBatchClient batch_client)
+-    : batch_client_(std::move(batch_client)),
+-      request_body_(base::ToVector(batch_client_->request_body().to_span())) {}
+-
+-PrivacyPassAthmBatchRequest::PrivacyPassAthmBatchRequest(
+-    PrivacyPassAthmBatchRequest&&) = default;
+-PrivacyPassAthmBatchRequest& PrivacyPassAthmBatchRequest::operator=(
+-    PrivacyPassAthmBatchRequest&&) = default;
+-PrivacyPassAthmBatchRequest::~PrivacyPassAthmBatchRequest() = default;
+-
+ base::expected<std::vector<std::vector<uint8_t>>,
+                PrivacyPassAthmBatchRequestError>
+-PrivacyPassAthmBatchRequest::Finalize(base::span<const uint8_t> response_body) {
+-  if (!batch_client_.has_value()) {
+-    return base::unexpected(
+-        PrivacyPassAthmBatchRequestError::kAlreadyFinalized);
+-  }
+-
+-  auto finalize_result =
+-      std::exchange(batch_client_, std::nullopt)
+-          ->finalize(rs_std::SliceRef<const uint8_t>(response_body));
+-  if (!finalize_result.has_value()) {
+-    if (finalize_result.error() == AthmStatus::MakeInvalidInput()) {
+-      return base::unexpected(
+-          PrivacyPassAthmBatchRequestError::kInvalidResponseBodyLength);
+-    }
+-    return base::unexpected(
+-        PrivacyPassAthmBatchRequestError::kClientFinalizeFailed);
+-  }
+-
+-  std::vector<std::vector<uint8_t>> finalized_tokens;
+-  finalized_tokens.reserve(finalize_result->size());
+-  for (const auto& token : *finalize_result) {
+-    finalized_tokens.push_back(base::ToVector(token));
+-  }
+-  return finalized_tokens;
++PrivacyPassAthmBatchRequest::Finalize(base::span<const uint8_t>) {
++  return base::unexpected(
++      PrivacyPassAthmBatchRequestError::kClientFinalizeFailed);
+ }
+ 
+ }  // namespace private_verification_tokens
