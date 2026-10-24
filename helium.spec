@@ -93,13 +93,13 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.19.2
+%global helium_version 0.20.1
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.19.2 asks for 155.0.8059.39.
-%define chromium 155.0.8059.39
+# Helium 0.20.1 asks for 156.0.8078.47.
+%define chromium 156.0.8078.47
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -113,13 +113,14 @@ Version:	%{helium_version}
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-# CEF branch 8037 tracks Chromium 154. This snapshot's
-# CHROMIUM_BUILD_COMPATIBILITY.txt is refs/tags/154.0.8037.17.
-# Helium 0.19.2 is Chromium 155.0.8059.39. CEF skipped 155: there is
-# no branch 8059, and the next branch is 8078 (Chromium 156.0.8078.17).
-# Keep this 8037 snapshot until a CEF branch matches Chromium 155.
-%define cef 062ebe433bf6575a71cac2dc71c405617202e3d7
-%define cefversion 8037
+# CEF branch 8078 tracks Chromium 156. Helium 0.20.1 is 156.0.8078.47.
+# No CEF commit pins exactly .47. This snapshot is branch tip
+# 4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f (2026-10-23). Its
+# CHROMIUM_BUILD_COMPATIBILITY.txt says refs/tags/156.0.8078.48, one
+# stable respin ahead; that bump only refreshed patch context.
+# Do not replace this commit archive with a floating branch URL.
+%define cef 4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f
+%define cefversion 8078
 # make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
 %ifarch %{x86_64}
 %define cef_gn_dir Release_GN_x64
@@ -169,13 +170,14 @@ Source100:	%{name}.rpmlintrc
 Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_version}.tar.gz
 # See deps.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202609082320/nonfree-search-engines-data-202609082320.tar.gz
-Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202609160835/helium-onboarding-202609160835.tar.gz
+Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202610161403/helium-onboarding-202610161403.tar.gz
 Source1003:	https://github.com/imputnet/uBlock/releases/download/1.75.0/uBlock0_1.75.0.chromium.zip
 
 
 # ============================================================================
 # Patches 0 to 1999 are applied in the top level Chromium directory
-# after ungoogled-chromium and cef patchsets have been applied.
+# after Helium's patches.py and before cef/tools/patch.sh. That script
+# runs while building, after the browser is linked.
 # ============================================================================
 # "Borrowed" from other distros (note we don't copy all their patches,
 # just the ones that make sense for OM -- in particular no slew of
@@ -380,53 +382,33 @@ Patch1061:	chromium-154-disable-private-verification-tokens.patch
 # ============================================================================
 # Domain-substitute URLs in CEF nested patches so they match the Helium tree,
 # and retarget hunks whose context moved (zen initializers, shortcut-service
-# teardown, avatar-button flag, ProductInfo string_view accessors).
-# Chromium 154 already has the BrowserWindowInterface / layer_surface APIs
-# CEF 8037 expects.
-Patch2000:	cef-8037-helium-patch-rebase.patch
+# teardown, avatar button, incognito themes, crash-key sanitizer, sign-in
+# pref removed by ungoogled-chromium).
+Patch2000:	cef-8078-helium-patch-rebase.patch
 Patch2002:	cef-126-zlib-ng.patch
 # Qt cefclient sample + host libstdc++ wrapper (applied inside cef/).
-Patch2003:	cef-8037-qt-cefclient.patch
+Patch2003:	cef-8078-qt-cefclient.patch
 # Soften CEF nested-patch apply for Helium tree (patch --fuzz=3; no git apply).
 Patch2004:	cef-patcher-fuzz.patch
 # version_manager -u refuses Chrome older than CEF's last API major.
-# 154 matches, so this only warns if a future bump lags. Kept so a mismatch
-# still translates wrappers instead of aborting %prep.
+# This Chrome matches, so the patch only matters if a future bump lags.
+# Kept so a mismatch still translates wrappers instead of aborting prep.
 Patch2005:	cef-8037-version-manager-old-chrome.patch
-# Chromium 153 lacked ToolbarView(BrowserWindowInterface*) and
-# ui/compositor/layer_surface.h. Chromium 154 has both; do not apply
-# cef-8037-chromium153-apis.patch.
-# Helium/ungoogled already rewrites IsIncognitoBrowser(); retarget the CEF
-# null-check hunk so it is not fuzz-applied after the closing brace.
-Patch2007:	cef-7977-incognito-themes-runtime-views.patch
-# Chromium 154 ProductInfo keeps name/version/channel in private char buffers
-# and exposes them through a string_view constructor. CEF 8037 still assigns
-# the old public fields, which fails libcef_static/crash_reporter_client.o.
-Patch2008:	cef-8037-product-info.patch
-# Helium 0.18.3 changes CreatePlatformProvider to USER_VISIBLE before
-# CEF patch.sh. Refresh the nested policy patch so that hunk matches
-# and the higher task priority is kept. The old BEST_EFFORT context
-# fails to apply on 154.0.8037.97.
+# CEF 8078 already contains the Chromium 155 libcef fixes that used to be
+# separate patches: incognito runtime-views context, ProductInfo accessors,
+# the nested patch refresh, mojom disable_variants removal, NativeTheme
+# forced dark/light methods (light_mode_3534 adds them back), and the libcef
+# API adjustments. Do not reapply those.
+# Helium changes CreatePlatformProvider to USER_VISIBLE before CEF patch.sh.
+# Refresh the nested policy patch so that hunk matches and the higher task
+# priority is kept.
 Patch2009:	cef-8037-policy-connector-user-visible.patch
-# Chromium 155 moved the context under seven CEF patch files. Refresh
-# those nested hunks so cef/tools/patch.sh applies all 115.
-Patch2010:	cef-8037-chromium-155-patch-refresh.patch
-# Chromium 155 dropped the mojom() arguments cpp_only and disable_variants.
-# gn gen treats the leftover assignments as errors.
-Patch2011:	cef-8037-mojom-no-disable-variants.patch
-# Chromium 155 removed ui::NativeTheme::IsForcedDarkMode().
-Patch2012:	cef-8037-widget-no-forced-dark.patch
-# Chromium 155 added two chrome result codes (last is 43), renamed
-# RenderProcessHost::ForceCrash() to CrashHungProcess(), and split
-# RenderWidgetHostView::Destroy() into DestroyOrDefer/DestroyImpl.
-Patch2013:	cef-8037-chromium-155-libcef.patch
-# Applied by hand after cef/tools/patch.sh. Not in any autopatch range:
-# 3000-3009 is webrtc, 3010-3019 is media, and a %prep apply would define
-# the method before chrome_runtime_views.patch declares it.
-# That nested patch's browser_view.cc hunks stop at a blank line, so the
-# out-of-line WillDestroyToolbar() body is never applied. libcef.so links
-# with -Wl,-z,defs and fails on the missing symbol. The dropped body also
-# called raw_ptr::ClearAndDelete(), which Chromium 154 does not have.
+# Applied by hand after cef/tools/patch.sh, and only when the definition is
+# missing. CEF 8078's chrome_runtime_views.patch includes the body and calls
+# raw_ptr::ClearAndDelete(), which this Chromium has. The fallback body is
+# the older null-then-RemoveChildViewT variant. Not in any autopatch range:
+# 3000-3009 is webrtc and 3010-3019 is media. Applying it during prep would
+# define the method before chrome_runtime_views.patch declares it.
 Patch3020:	cef-8037-will-destroy-toolbar.patch
 
 # ============================================================================
@@ -1271,10 +1253,14 @@ if [ ! -f cef_paths.gypi ]; then
 fi
 ./tools/patch.sh
 cd ..
-# chrome_runtime_views.patch declares WillDestroyToolbar and calls it, but
-# patch(1) drops the definition. Add the body only after that declaration
-# exists. Chrome itself is already linked from the pre-patch.sh tree.
-%{_bindir}/patch -p1 --fuzz=0 --forward < %{PATCH3020}
+# CEF 8078's chrome_runtime_views.patch includes WillDestroyToolbar() and
+# calls raw_ptr::ClearAndDelete(). The fallback patch supplies the older
+# null-then-RemoveChildViewT body, so apply it only when the definition
+# did not land. Chrome itself is already linked from the pre-patch.sh tree.
+if ! grep -q '^void BrowserView::WillDestroyToolbar() {$' \
+	chrome/browser/ui/views/frame/browser_view.cc; then
+	%{_bindir}/patch -p1 --fuzz=0 --forward < %{PATCH3020}
+fi
 if ! grep -q '^void BrowserView::WillDestroyToolbar() {$' \
 	chrome/browser/ui/views/frame/browser_view.cc; then
 	echo "FATAL: BrowserView::WillDestroyToolbar() missing after cef/tools/patch.sh" >&2

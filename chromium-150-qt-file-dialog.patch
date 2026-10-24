@@ -1,7 +1,7 @@
 diff -Naur a/ui/qt/BUILD.gn b/ui/qt/BUILD.gn
---- a/ui/qt/BUILD.gn	2026-07-26 14:46:56.415115334 +0200
-+++ b/ui/qt/BUILD.gn	2026-07-26 14:46:56.418892803 +0200
-@@ -146,6 +146,7 @@
+--- a/ui/qt/BUILD.gn
++++ b/ui/qt/BUILD.gn
+@@ -151,6 +151,7 @@
      "//base",
      "//cc/paint",
      "//printing/buildflags",
@@ -9,7 +9,7 @@ diff -Naur a/ui/qt/BUILD.gn b/ui/qt/BUILD.gn
      "//ui/base/ime/linux",
      "//ui/color",
      "//ui/color:mixers",
-@@ -153,6 +154,7 @@
+@@ -158,6 +159,7 @@
      "//ui/linux:linux_ui",
      "//ui/native_theme",
      "//ui/shell_dialogs",
@@ -17,7 +17,7 @@ diff -Naur a/ui/qt/BUILD.gn b/ui/qt/BUILD.gn
      "//ui/views",
    ]
    public_deps = [ "//skia" ]
-@@ -167,6 +169,8 @@
+@@ -172,6 +174,8 @@
      "os_settings_provider_qt.h",
      "qt_ui.cc",
      "qt_ui.h",
@@ -27,8 +27,8 @@ diff -Naur a/ui/qt/BUILD.gn b/ui/qt/BUILD.gn
  
    if (enable_printing) {
 diff -Naur a/ui/qt/qt_interface.h b/ui/qt/qt_interface.h
---- a/ui/qt/qt_interface.h	2026-07-26 14:46:56.379261840 +0200
-+++ b/ui/qt/qt_interface.h	2026-07-26 14:46:56.387706352 +0200
+--- a/ui/qt/qt_interface.h
++++ b/ui/qt/qt_interface.h
 @@ -151,6 +151,27 @@
    PrintRange* ranges = nullptr;
  };
@@ -78,23 +78,23 @@ diff -Naur a/ui/qt/qt_interface.h b/ui/qt/qt_interface.h
  
  }  // namespace qt
 diff -Naur a/ui/qt/qt_shim.cc b/ui/qt/qt_shim.cc
---- a/ui/qt/qt_shim.cc	2026-07-26 14:46:56.399563865 +0200
-+++ b/ui/qt/qt_shim.cc	2026-07-26 14:46:56.404101500 +0200
-@@ -7,16 +7,21 @@
+--- a/ui/qt/qt_shim.cc
++++ b/ui/qt/qt_shim.cc
+@@ -7,7 +7,13 @@
+ 
  #include "ui/qt/qt_shim.h"
  
- #include <QApplication>
 +#include <cstdlib>
 +#include <cstring>
++
+ #include <QApplication>
++#include <QDialog>
 +#include <QFileDialog>
 +#include <QFileInfo>
  #include <QFont>
  #include <QIcon>
  #include <QMimeDatabase>
- #include <QMimeType>
- #include <QPainter>
- #include <QPalette>
- #include <QPrintDialog>
+@@ -18,6 +24,7 @@
  #include <QPrinter>
  #include <QPrinterInfo>
  #include <QScreen>
@@ -102,11 +102,12 @@ diff -Naur a/ui/qt/qt_shim.cc b/ui/qt/qt_shim.cc
  #include <QStyle>
  #include <QStyleOptionTitleBar>
  #include <cmath>
-@@ -489,6 +495,145 @@
+@@ -485,6 +492,146 @@
    }
  
    return result;
 +}
++
 +
 +SelectFileResult QtShim::ShowSelectFileDialog(
 +    SelectFileDialogType type,
@@ -249,8 +250,8 @@ diff -Naur a/ui/qt/qt_shim.cc b/ui/qt/qt_shim.cc
  
  }  // namespace qt
 diff -Naur a/ui/qt/qt_shim.h b/ui/qt/qt_shim.h
---- a/ui/qt/qt_shim.h	2026-07-26 14:46:56.391527478 +0200
-+++ b/ui/qt/qt_shim.h	2026-07-26 14:46:56.396433228 +0200
+--- a/ui/qt/qt_shim.h
++++ b/ui/qt/qt_shim.h
 @@ -48,6 +48,15 @@
    PrintingSettings GetPrinterSettings(
        const String& printer_name) const override;
@@ -268,9 +269,9 @@ diff -Naur a/ui/qt/qt_shim.h b/ui/qt/qt_shim.h
   private slots:
    void FontChanged(const QFont& font);
 diff -Naur a/ui/qt/qt_ui.cc b/ui/qt/qt_ui.cc
---- a/ui/qt/qt_ui.cc	2026-07-26 14:46:56.407150327 +0200
-+++ b/ui/qt/qt_ui.cc	2026-07-26 14:46:56.411333138 +0200
-@@ -52,6 +52,7 @@
+--- a/ui/qt/qt_ui.cc
++++ b/ui/qt/qt_ui.cc
+@@ -54,6 +54,7 @@
  #include "ui/qt/native_theme_qt.h"
  #include "ui/qt/os_settings_provider_qt.h"
  #include "ui/qt/qt_interface.h"
@@ -278,7 +279,7 @@ diff -Naur a/ui/qt/qt_ui.cc b/ui/qt/qt_ui.cc
  #include "ui/shell_dialogs/select_file_dialog.h"
  #include "ui/shell_dialogs/select_file_policy.h"
  #include "ui/views/controls/button/label_button_border.h"
-@@ -154,9 +155,18 @@
+@@ -275,9 +276,18 @@
    return *font_params_;
  }
  
@@ -298,9 +299,9 @@ diff -Naur a/ui/qt/qt_ui.cc b/ui/qt/qt_ui.cc
                                    listener, std::move(policy))
                              : nullptr;
 diff -Naur a/ui/qt/select_file_dialog_linux_qt.cc b/ui/qt/select_file_dialog_linux_qt.cc
---- a/ui/qt/select_file_dialog_linux_qt.cc	1970-01-01 01:00:00.000000000 +0100
-+++ b/ui/qt/select_file_dialog_linux_qt.cc	2026-07-26 14:46:56.427347701 +0200
-@@ -0,0 +1,202 @@
+--- a/ui/qt/select_file_dialog_linux_qt.cc
++++ b/ui/qt/select_file_dialog_linux_qt.cc
+@@ -0,0 +1,204 @@
 +// Copyright 2026 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -312,7 +313,9 @@ diff -Naur a/ui/qt/select_file_dialog_linux_qt.cc b/ui/qt/select_file_dialog_lin
 +#include <utility>
 +#include <vector>
 +
++#include "base/check.h"
 +#include "base/logging.h"
++#include "base/notreached.h"
 +#include "base/strings/string_util.h"
 +#include "base/strings/utf_string_conversions.h"
 +#include "ui/base/l10n/l10n_util.h"
@@ -504,8 +507,8 @@ diff -Naur a/ui/qt/select_file_dialog_linux_qt.cc b/ui/qt/select_file_dialog_lin
 +
 +}  // namespace qt
 diff -Naur a/ui/qt/select_file_dialog_linux_qt.h b/ui/qt/select_file_dialog_linux_qt.h
---- a/ui/qt/select_file_dialog_linux_qt.h	1970-01-01 01:00:00.000000000 +0100
-+++ b/ui/qt/select_file_dialog_linux_qt.h	2026-07-26 14:46:56.431166047 +0200
+--- a/ui/qt/select_file_dialog_linux_qt.h
++++ b/ui/qt/select_file_dialog_linux_qt.h
 @@ -0,0 +1,51 @@
 +// Copyright 2026 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be

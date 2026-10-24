@@ -196,21 +196,18 @@
  }  // namespace component_updater
 --- a/chrome/browser/private_verification_tokens/BUILD.gn
 +++ b/chrome/browser/private_verification_tokens/BUILD.gn
-@@ -26,11 +26,6 @@ static_library("private_verification_tok
-     "//chrome/browser/profiles:profile",
-     "//components/content_settings/core/browser",
+@@ -30,8 +30,3 @@ static_library("private_verification_tok
      "//components/keyed_service/core",
 -    "//components/private_verification_tokens/common:privacy_pass_athm_batch_request",
 -    "//components/private_verification_tokens/common:private_verification_tokens_fetcher",
 -    "//components/private_verification_tokens/common:private_verification_tokens_issuer_config",
+     "//components/private_verification_tokens/common:private_verification_tokens_metrics",
 -    "//components/private_verification_tokens/common:private_verification_tokens_parameters",
 -    "//components/private_verification_tokens/common:private_verification_tokens_store",
      "//content/public/browser",
-     "//net",
-     "//services/network/public/cpp",
-@@ -49,10 +44,6 @@ source_set("browser_tests") {
-     "//chrome/browser/content_settings:content_settings_factory",
+@@ -53,11 +48,7 @@ source_set("browser_tests") {
      "//chrome/test:test_support",
+     "//chrome/test/base:chrome_test_utils",
      "//components/content_settings/core/common",
 -    "//components/private_verification_tokens/common:private_verification_tokens_database",
 -    "//components/private_verification_tokens/common:private_verification_tokens_issuer_config",
@@ -219,12 +216,13 @@
      "//net:test_support",
      "//services/network:test_support",
      "//url",
-@@ -72,11 +63,6 @@ source_set("unit_tests") {
-     "//chrome/test:test_support",
-     "//components/content_settings/core/browser",
+   ]
+@@ -79,11 +70,6 @@ source_set("unit_tests") {
      "//components/content_settings/core/common",
+     "//components/private_verification_tokens/common:privacy_pass_athm_batch_request",
 -    "//components/private_verification_tokens/common:private_verification_tokens_database",
 -    "//components/private_verification_tokens/common:private_verification_tokens_issuer_config",
+     "//components/private_verification_tokens/common:private_verification_tokens_metrics",
 -    "//components/private_verification_tokens/common:private_verification_tokens_parameters",
 -    "//components/private_verification_tokens/common:test_support",
 -    "//components/private_verification_tokens/common/athm_ffi:athm_ffi_bindings",
@@ -253,10 +251,9 @@
    ProfilePasswordStoreFactory::GetInstance();
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
-@@ -2137,7 +2137,6 @@ if (!is_android) {
-       "//chrome/browser/privacy_sandbox:headers",
-       "//chrome/browser/privacy_sandbox:test_support",
+@@ -1871,6 +1871,5 @@ if (!is_android) {
        "//chrome/browser/private_ai",
+       "//chrome/browser/private_verification_tokens",
 -      "//chrome/browser/private_verification_tokens:browser_tests",
        "//chrome/browser/profile_resetter",
        "//chrome/browser/profile_resetter:browser_tests",

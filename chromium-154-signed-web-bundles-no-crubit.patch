@@ -5,26 +5,26 @@
 # Blink font-format are already handled).
 --- a/components/web_package/BUILD.gn
 +++ b/components/web_package/BUILD.gn
-@@ -40,7 +40,6 @@ static_library("web_package") {
-     "//base",
-     "//components/base32",
+@@ -50,7 +50,6 @@ source_set("web_package_rust_impl") {
      "//components/cbor",
+     "//components/web_package/mojom",
+     "//components/web_package/rust:web_package_rust_bindings",
 -    "//components/web_package/signed_web_bundles/rust:signed_web_bundles_rust_bindings",
      "//mojo/public/cpp/bindings",
      "//net",
      "//services/network/public/mojom",
-@@ -70,7 +69,6 @@ source_set("mojom_mapped_types") {
- 
+@@ -115,7 +114,6 @@ source_set("mojom_mapped_types_rust_impl") {
    deps = [
+     ":mojom_mapped_types_headers",
      "//base",
 -    "//components/web_package/signed_web_bundles/rust:signed_web_bundles_rust_bindings",
      "//crypto",
      "//mojo/public/cpp/bindings",
    ]
-@@ -98,7 +96,6 @@ source_set("unit_tests") {
-     ":web_package",
+@@ -160,7 +159,6 @@ source_set("unit_tests") {
      "//base/test:test_support",
      "//components/cbor",
+     "//components/web_package/rust:web_package_rust_unittests",
 -    "//components/web_package/signed_web_bundles/rust:signed_web_bundles_rust_unittests",
      "//components/web_package/test_support",
      "//mojo/public/cpp/bindings",
@@ -41,13 +41,16 @@
  
  namespace web_package {
  
-@@ -50,8 +51,9 @@ EcdsaP256SHA256Signature::EcdsaP256SHA25
+@@ -50,8 +51,12 @@ EcdsaP256SHA256Signature::EcdsaP256SHA25
  [[nodiscard]] bool EcdsaP256SHA256Signature::Verify(
      base::span<const uint8_t> message,
      const EcdsaP256PublicKey& public_key) const {
 -  return signed_web_bundles::rust::verify_ecdsa_p256_signature(
 -      public_key.bytes(), bytes(), message);
 +  auto key = crypto::keypair::PublicKey::FromEcP256Point(public_key.bytes());
++  if (!key) {
++    return false;
++  }
 +  return crypto::sign::Verify(crypto::sign::ECDSA_SHA256, *key, message,
 +                              bytes());
  }

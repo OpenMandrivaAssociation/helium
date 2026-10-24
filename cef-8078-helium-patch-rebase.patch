@@ -1,6 +1,6 @@
-diff -urN a/patch/patch.cfg b/patch/patch.cfg
---- a/patch/patch.cfg	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patch.cfg	2026-09-21 22:03:50.971742868 +0200
+diff -ruN /home/bero/groktmp/om-up-20261024/helium/cef-src/cef-4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f/patch/patch.cfg /home/bero/groktmp/om-up-20261024/helium/cef-work/cef/patch/patch.cfg
+--- a/patch/patch.cfg	2026-10-23 20:50:56.000000000 +0200
++++ b/patch/patch.cfg	2026-10-24 17:15:16.122850145 +0200
 @@ -27,13 +27,13 @@
      # due to conflicting outputs with the //cef:repack_locales_pack target.
      #
@@ -26,7 +26,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'runhooks',
    },
    {
-@@ -51,10 +51,10 @@
+@@ -56,10 +56,10 @@
    },
    {
      # Revert change on Windows that removes MessageLoop::os_modal_loop().
@@ -39,16 +39,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      #
      # Add MessageLoop::ReleasePump to fix crashes during shutdown with multi-
      # threaded message loop mode.
-@@ -135,7 +135,7 @@
-     #
-     # win: Don't call DwmSetWindowAttribute when the browser has an external
-     # parent. This call only applies for top-level windows.
--    # https://issuetracker.google.com/issues/41241478
-+    # https://issuetracker.9oo91e.qjz9zk/issues/41241478
-     'name': 'views_widget',
-   },
-   {
-@@ -161,12 +161,12 @@
+@@ -170,12 +170,12 @@
    },
    {
      # Fix drag&drop of combined text and URL data on Linux/Aura.
@@ -63,7 +54,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      #
      # Remove DCHECK on Linux when initialized CEF from a non-main thread.
      # https://github.com/chromiumembedded/cef/issues/1639
-@@ -180,7 +180,7 @@
+@@ -189,7 +189,7 @@
      # fix "Symbols not available" output when printing stack traces in the main
      # process. For comparison, Chromium test code calls this explicitly from
      # TestSuite::Initialize. This change only impacts non-Official builds.
@@ -72,7 +63,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'content_main_654986',
    },
    {
-@@ -190,15 +190,15 @@
+@@ -199,15 +199,15 @@
      # Don't add TestDesktopScreenOzone dependency on Linux.
      # Reverts ui_controls_factory_desktop_aurax11.cc (now
      # ui_controls_factory_desktop_aura_ozone.cc) changes from
@@ -91,7 +82,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      #
      # Expose callbacks for mouse/keyboard events that trigger menu switching.
      # Add accelerator display support to Label.
-@@ -234,7 +234,7 @@
+@@ -243,7 +243,7 @@
      # https://github.com/chromiumembedded/cef/issues/2969
      #
      # Apply dynamic light/dark theme changes to web content.
@@ -100,7 +91,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      #
      # Pass ui::ResourceBundle::Delegate to InitSharedInstanceWithLocale.
      # https://github.com/chromiumembedded/cef/issues/3685
-@@ -333,7 +333,7 @@
+@@ -342,7 +342,7 @@
      # Fix incorrect movement of parent window when showing modal dialog.
      # https://github.com/chromiumembedded/cef/issues/3629
      # Partially reverts
@@ -109,7 +100,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'chrome_browser_dialogs_widget',
    },
    {
-@@ -416,7 +416,7 @@
+@@ -425,7 +425,7 @@
    },
    {
      # Fix component build dependency issue.
@@ -118,7 +109,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'chrome_browser_safe_browsing',
    },
    {
-@@ -438,10 +438,10 @@
+@@ -447,10 +447,10 @@
    },
    {
      # Support customization of crash report pruning limits.
@@ -131,7 +122,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'crashpad_tp_1995',
    },
    {
-@@ -449,7 +449,7 @@
+@@ -458,7 +458,7 @@
      # https://github.com/chromiumembedded/cef/issues/1984
      #
      # Windows: Fix crash during window creation.
@@ -140,7 +131,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      #
      # Add RWHVAura::SetRootWindowBoundsCallback.
      # https://github.com/chromiumembedded/cef/issues/3920
-@@ -458,10 +458,10 @@
+@@ -467,10 +467,10 @@
    {
      # Expose RFH via NavigationHandle for retrieval in DidFinishNavigation on
      # network error.
@@ -153,7 +144,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      #
      # Add ContentRendererClient::DevToolsAgent[Attached|Detached] methods.
      #
-@@ -531,7 +531,7 @@
+@@ -540,7 +540,7 @@
      # Restore the net::LOAD_DO_NOT_SEND_COOKIES flag to support disabling of
      # cookie load/save on a per-request basis.
      # Partially reverts the changes from
@@ -162,7 +153,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'net_cookie_flags',
    },
    {
-@@ -554,7 +554,7 @@
+@@ -563,7 +563,7 @@
    {
      # Complete dropped captures so refresh retries can release OSR resize holds.
      # https://github.com/chromiumembedded/cef/issues/3826
@@ -171,7 +162,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'viz_capture_3826',
    },
    {
-@@ -573,18 +573,21 @@
+@@ -582,18 +582,21 @@
    },
    {
      # libxml access is now limited to targets audited by the Security Team.
@@ -196,7 +187,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      #
      # Fix crash in NavigationRequest::GetOriginForURLLoaderFactory() when
      # navigating to an unregistered (e.g. non-standard) scheme.
-@@ -599,7 +602,7 @@
+@@ -608,7 +611,7 @@
    },
    {
      # Linux: Fix ATK assertion error when generating ARM build config.
@@ -205,7 +196,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'linux_atk_1123214',
    },
    {
-@@ -620,7 +623,7 @@
+@@ -629,7 +632,7 @@
    },
    {
      # Fix deadlock in EmbeddedTestServer::ShutdownAndWaitUntilComplete.
@@ -214,7 +205,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'net_test_server_3798752'
    },
    {
-@@ -628,12 +631,12 @@
+@@ -637,12 +640,12 @@
      # qualified type 'volatile gsize' (aka 'volatile unsigned long') is
      # deprecated [-Werror,-Wdeprecated-volatile]" when building with
      # use_sysroot=false on Ubuntu 18.04.
@@ -229,7 +220,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'blink_web_element_4200240'
    },
    {
-@@ -655,32 +658,32 @@
+@@ -664,32 +667,32 @@
    },
    {
      # win/linux: Fix rounding errors with Screen[Win] DIP/pixel conversions.
@@ -268,7 +259,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      #
      # Add ContentBrowserClient::CreateWindowResult callback.
      # https://github.com/chromiumembedded/cef/issues/3776
-@@ -720,7 +723,7 @@
+@@ -729,7 +732,7 @@
    },
    {
      # views: Update textfield colors when enabled state changes
@@ -277,7 +268,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'views_textfield_5399416'
    },
    {
-@@ -732,7 +735,7 @@
+@@ -741,7 +744,7 @@
      # linux: Disable GtkUi with multi-threaded-message-loop to avoid crashes.
      # linux: Disable GTK theme change notifications due to performance issues.
      # https://github.com/chromiumembedded/cef/issues/3610
@@ -286,7 +277,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'linux_gtk_theme_3610'
    },
    {
-@@ -746,7 +749,7 @@
+@@ -755,7 +758,7 @@
      # https://bitbucket.org/chromiumembedded/cef/pull-requests/734
      # https://github.com/chromiumembedded/cef/issues/2575
      # It is a bit hacky, not suitable for merging into upstream.
@@ -295,7 +286,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'osr_win_remove_keyed_mutex_2575'
    },
    {
-@@ -757,7 +760,7 @@
+@@ -766,7 +769,7 @@
    {
      # Fix ThreadPool DCHECK during startup when using multi-threaded message
      # loop. Related to the following CL:
@@ -304,7 +295,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'base_thread_pool_5548577'
    },
    {
-@@ -765,7 +768,7 @@
+@@ -774,7 +777,7 @@
      # CheckedLockImpl::Acquire (DCHECK-only) allocates on PostTask, entering
      # PartitionAlloc -> ThreadCache::Get; on this path the `static thread_local
      # MetricsSubSampler g_shared_subsampler` added by
@@ -313,7 +304,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      # constructed, and its ctor seeds InsecureRandomGenerator via
      # base::RandUint64() -> BoringSSL RAND_bytes -> OPENSSL_malloc, reentering
      # the allocator. Lazy-seed InsecureRandomGenerator so its ctor doesn't
-@@ -785,7 +788,7 @@
+@@ -796,7 +799,7 @@
    {
      # Add v8_used_in_shared_library GN arg to configure the
      # V8_TLS_USED_IN_LIBRARY define.
@@ -322,7 +313,7 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'v8_build',
      'path': 'v8'
    },
-@@ -874,7 +877,7 @@
+@@ -884,7 +887,7 @@
      # Disable TPM metrics collection on Windows/Mac. This can crash on some
      # Windows machines with buggy TPM drivers (null pointer dereference in
      # PCPKsp.dll when calling NCryptIsAlgSupported).
@@ -331,9 +322,9 @@ diff -urN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'chrome_browser_metrics_tpm_476896967'
    },
    {
-diff -urN a/patch/patches/chrome_browser_webui_version.patch b/patch/patches/chrome_browser_webui_version.patch
---- a/patch/patches/chrome_browser_webui_version.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/chrome_browser_webui_version.patch	2026-09-21 22:03:50.972291346 +0200
+diff -ruN /home/bero/groktmp/om-up-20261024/helium/cef-src/cef-4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f/patch/patches/chrome_browser_webui_version.patch /home/bero/groktmp/om-up-20261024/helium/cef-work/cef/patch/patches/chrome_browser_webui_version.patch
+--- a/patch/patches/chrome_browser_webui_version.patch	2026-10-23 20:50:56.000000000 +0200
++++ b/patch/patches/chrome_browser_webui_version.patch	2026-10-24 17:15:16.123421992 +0200
 @@ -282,10 +282,10 @@
         </table>
  +<if expr="enable_cef">
@@ -347,19 +338,19 @@ diff -urN a/patch/patches/chrome_browser_webui_version.patch b/patch/patches/chr
  +        protects against multiple app instances writing to the same "$i18n{user_data_path_name}" directory.
  +        Implement <a href="https://cef-builds.spotifycdn.com/docs/stable.html?classCefBrowserProcessHandler.html#a052a91639483467c0b546d57a05c2f06" target="_new">CefBrowserProcessHandler:: OnAlreadyRunningAppRelaunch</a>
  +        to handle the case of app relaunch with the same directory.
-diff -urN a/patch/patches/chrome_runtime_views.patch b/patch/patches/chrome_runtime_views.patch
---- a/patch/patches/chrome_runtime_views.patch
-+++ b/patch/patches/chrome_runtime_views.patch
-@@ -261,7 +261,7 @@
+diff -ruN /home/bero/groktmp/om-up-20261024/helium/cef-src/cef-4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f/patch/patches/chrome_runtime_views.patch /home/bero/groktmp/om-up-20261024/helium/cef-work/cef/patch/patches/chrome_runtime_views.patch
+--- a/patch/patches/chrome_runtime_views.patch	2026-10-23 20:50:56.000000000 +0200
++++ b/patch/patches/chrome_runtime_views.patch	2026-10-24 17:26:02.941971081 +0200
+@@ -327,7 +327,7 @@
   using base::UserMetricsAction;
   using content::WebContents;
   using input::NativeWebKeyboardEvent;
--@@ -882,11 +886,21 @@ class BrowserView::PipExclusionObserverImpl
-+@@ -882,13 +886,23 @@ class BrowserView::PipExclusionObserverImpl
+-@@ -890,11 +895,21 @@ class BrowserView::PipExclusionObserverImpl
++@@ -890,13 +895,23 @@ class BrowserView::PipExclusionObserverImpl
   ///////////////////////////////////////////////////////////////////////////////
   // BrowserView, public:
   
-@@ -271,8 +271,12 @@
+@@ -337,8 +337,12 @@
       : views::ClientView(nullptr, nullptr),
         exclusive_access_context_(
  -          std::make_unique<ExclusiveAccessContextImpl>(*this)),
@@ -374,16 +365,16 @@ diff -urN a/patch/patches/chrome_runtime_views.patch b/patch/patches/chrome_runt
  +  if (browser) {
  +    InitBrowser(browser);
  +  }
-@@ -314,7 +318,7 @@
+@@ -380,7 +384,7 @@
   
     top_container_separator_ = top_container_->AddChildView(
         ContentsSeparator::CreateContentsSeparator());
--@@ -1093,6 +1116,10 @@ BrowserView::BrowserView(BrowserWindowInterface* browser)
-+@@ -1093,10 +1116,14 @@ BrowserView::BrowserView(BrowserWindowInterface* browser)
+-@@ -1108,6 +1132,10 @@ BrowserView::BrowserView(BrowserWindowInterface* browser)
++@@ -1108,11 +1132,15 @@ BrowserView::BrowserView(BrowserWindowInterface* browser)
   }
   
   BrowserView::~BrowserView() {
-@@ -322,6 +326,11 @@
+@@ -388,6 +392,11 @@
  +  // RemoveAllChildViews().
  +  WillDestroyToolbar();
  +
@@ -391,26 +382,43 @@ diff -urN a/patch/patches/chrome_runtime_views.patch b/patch/patches/chrome_runt
 +     browser_shortcut_service_->RemoveObserver(this);
 +     browser_shortcut_service_ = nullptr;
 +   }
-+
++ 
     // Remove the layout manager to avoid dangling. This needs to be earlier than
     // other cleanups that destroy views referenced in the layout manager.
     SetLayoutManager(nullptr);
-@@ -1162,9 +1171,9 @@
+@@ -792,13 +801,15 @@
+    }
+    GetRootView()->InvalidateLayout();
+  }
+-@@ -616,6 +666,9 @@ bool BrowserWidget::RegenerateFrameOnThemeChange(
++@@ -616,8 +666,11 @@ bool BrowserWidget::RegenerateFrameOnThemeChange(
+  }
+  
+  bool BrowserWidget::IsIncognitoBrowser() const {
+ +  if (!browser_view_) {
+ +    return true;
+ +  }
++   if (base::CommandLine::ForCurrentProcess()->HasSwitch("enable-incognito-themes"))
++     return false;
+    return browser_view_->browser()->GetProfile()->IsIncognitoProfile();
+  }
+  
+@@ -1449,9 +1460,9 @@
           AddChildView(std::make_unique<BatterySaverButton>(browser_));
     }
- @@ -581,7 +604,7 @@ void ToolbarView::Init() {
+ @@ -613,7 +636,7 @@ void ToolbarView::Init() {
 -     avatar_ = AddChildView(std::make_unique<AvatarToolbarButton>(browser_));
 -     bool show_avatar_toolbar_button =
 -         AvatarToolbarButtonInterface::CanShowForProfile(browser_->GetProfile());
 +     else if (sab_value == "never")
 +       show_avatar_toolbar_button = false;
-+
++ 
  -    avatar_->SetVisible(show_avatar_toolbar_button);
  +    avatar_->SetVisible(show_avatar_toolbar_button && BUTTON_VISIBLE(kAvatar));
     }
-diff -urN a/patch/patches/content_2015.patch b/patch/patches/content_2015.patch
---- a/patch/patches/content_2015.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/content_2015.patch	2026-09-21 22:03:50.972619720 +0200
+diff -ruN /home/bero/groktmp/om-up-20261024/helium/cef-src/cef-4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f/patch/patches/content_2015.patch /home/bero/groktmp/om-up-20261024/helium/cef-work/cef/patch/patches/content_2015.patch
+--- a/patch/patches/content_2015.patch	2026-10-23 20:50:56.000000000 +0200
++++ b/patch/patches/content_2015.patch	2026-10-24 17:15:16.124451404 +0200
 @@ -197,7 +197,7 @@
  +  void DevToolsAgentDetached() override;
  +
@@ -420,21 +428,25 @@ diff -urN a/patch/patches/content_2015.patch b/patch/patches/content_2015.patch
     void SetIsLockedToSite();
  diff --git content/shell/browser/shell_content_browser_client.cc content/shell/browser/shell_content_browser_client.cc
  index 1f730d3e774a311bdab058e4989dc6287c9089b9..0c42cde4fcfe6fba740fd54d380e859d8b7b596b 100644
-diff -urN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patch
---- a/patch/patches/crashpad_1995.patch
-+++ b/patch/patches/crashpad_1995.patch
-@@ -111,15 +111,13 @@
+diff -ruN /home/bero/groktmp/om-up-20261024/helium/cef-src/cef-4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f/patch/patches/crashpad_1995.patch /home/bero/groktmp/om-up-20261024/helium/cef-work/cef/patch/patches/crashpad_1995.patch
+--- a/patch/patches/crashpad_1995.patch	2026-10-23 20:50:56.000000000 +0200
++++ b/patch/patches/crashpad_1995.patch	2026-10-24 17:43:45.944072484 +0200
+@@ -111,15 +111,17 @@
   std::deque<CrashKeyWithName>& GetCommandLineStringAnnotations() {
     static base::NoDestructor<std::deque<CrashKeyWithName>>
         command_line_string_annotations;
--@@ -218,7 +223,7 @@ void AppendStringAnnotationsCommandLineSwitch(base::CommandLine* command_line) {
+-@@ -144,7 +149,7 @@ void AppendStringAnnotationsCommandLineSwitch(base::CommandLine* command_line) {
 - void SetCrashKeysFromCommandLine(const base::CommandLine& command_line) {
 -   SetStringAnnotations(command_line);
--   HandleEnableDisableFeatures(command_line);
+-   SetFeaturesFromCommandLine(command_line);
 --  SetSwitchesFromCommandLine(command_line, &IsBoringSwitch);
 -+  SetSwitchesFromCommandLine(command_line, &IsBoringChromeSwitch);
-+@@ -218,5 +223,5 @@ void AppendStringAnnotationsCommandLineSwitch(base::CommandLine* command_line) {
-+   HandleEnableDisableFeatures(sanitized);
++@@ -144,9 +149,9 @@ void SetCrashKeysFromCommandLine(const base::CommandLine& command_line) {
++     } else {
++       sanitized.AppendSwitch(name);
++     }
++   }
++   SetFeaturesFromCommandLine(sanitized);
 +-  SetSwitchesFromCommandLine(sanitized, &IsBoringSwitch);
 ++  SetSwitchesFromCommandLine(sanitized, &IsBoringChromeSwitch);
 + }
@@ -445,64 +457,12 @@ diff -urN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patc
  diff --git chrome/common/crash_keys.h chrome/common/crash_keys.h
  index a274b3e364084c90d2f4783bab576ac85af285ea..3d995cf6433991f6f8abe7cd2d4eac17dcba55dd 100644
  --- chrome/common/crash_keys.h
-@@ -175,18 +173,18 @@
- index ceda11ed43d222ae46ec9c6a82351fd79d0c0aff..65b677ca74d99b0215816438f86a715e2dcad28f 100644
- --- components/crash/core/app/crash_reporter_client.h
- +++ components/crash/core/app/crash_reporter_client.h
--@@ -7,6 +7,7 @@
-+@@ -7,5 +7,7 @@
-  
-  #include <stdint.h>
-  
- +#include <map>
-++#include <vector>
-  #include <string>
-- #include <vector>
-  
--@@ -193,6 +194,20 @@ class CrashReporterClient {
-+@@ -191,5 +192,19 @@ class CrashReporterClient {
-    // Returns true if breakpad should run in the given process type.
-    virtual bool EnableBreakpadForProcess(const std::string& process_type);
-- 
-++
- +  // Populate |arguments| with additional optional arguments.
- +  virtual void GetCrashOptionalArguments(std::vector<std::string>* arguments);
- +
-@@ -200,10 +198,9 @@
- +  // enabled for the browser process.
- +  virtual bool EnableBrowserCrashForwarding();
- +#endif
--+
--   // Returns a list of read-only shared memory regions containing user streams.
--   // These streams are extracted upon crash and attached to the minidump.
--   //
-+ };
-+ 
-+ }  // namespace crash_reporter
- diff --git components/crash/core/app/crashpad.cc components/crash/core/app/crashpad.cc
- index db68eaa22030aca74f31a9d8612b4952a3b25642..e02625e502b73f10569ab54714ad4826ccff87b0 100644
- --- components/crash/core/app/crashpad.cc
-@@ -249,10 +246,10 @@
-      crash_reporter_client->GetProductInfo(&product_info);
-  
-      std::map<std::string, std::string> annotations;
---    annotations["prod"] = product_info.product_name;
---    annotations["ver"] = product_info.version;
--+    annotations["product"] = product_info.product_name;
--+    annotations["version"] = product_info.version;
-+-    annotations["prod"] = std::string(product_info.product_name());
-+-    annotations["ver"] = std::string(product_info.version());
-++    annotations["product"] = std::string(product_info.product_name());
-++    annotations["version"] = std::string(product_info.version());
-  
-  #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
-      // Empty means stable.
-@@ -295,13 +292,14 @@
- index 3b131e1fc804a55c80b3b2704686270211fcf9fb..c2a7dd560f841aaa7d4f74ea831a5758c01310c3 100644
+@@ -287,13 +289,14 @@
+ index 0b236c31fdad45679ce7935ed7b685136aff3205..98ffe7470c4ac1ba68f438750d4b13a8f758208e 100644
  --- components/crash/core/app/crashpad_mac.mm
  +++ components/crash/core/app/crashpad_mac.mm
--@@ -17,10 +17,13 @@
-+@@ -17,11 +17,14 @@
+-@@ -19,10 +19,13 @@
++@@ -19,11 +19,14 @@
   #include "base/apple/foundation_util.h"
   #include "base/check.h"
   #include "base/files/file_path.h"
@@ -513,12 +473,12 @@ diff -urN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patc
   #include "build/branding_buildflags.h"
   #include "components/crash/core/app/crash_reporter_client.h"
  +#include "components/crash/core/app/crash_switches.h"
-@@ -338,19 +336,13 @@
+@@ -330,19 +333,13 @@
   
   #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
         // Empty means stable.
--@@ -77,12 +87,20 @@ std::map<std::string, std::string> GetProcessSimpleAnnotations() {
-+@@ -77,9 +87,17 @@ std::map<std::string, std::string> GetProcessSimpleAnnotations() {
+-@@ -79,12 +89,20 @@ std::map<std::string, std::string> GetProcessSimpleAnnotations() {
++@@ -79,9 +89,17 @@ std::map<std::string, std::string> GetProcessSimpleAnnotations() {
           }
         }
   
@@ -527,16 +487,16 @@ diff -urN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patc
 --              objectForInfoDictionaryKey:@"CFBundleShortVersionString"]);
 --      process_annotations["ver"] = base::SysNSStringToUTF8(version);
 +-      process_annotations["ver"] = version_info::GetHeliumVersionNumber();
- +      if (product_info.version.empty()) {
+ +      if (product_info.version().empty()) {
 -+        NSString* version =
 -+            base::apple::ObjCCast<NSString>([base::apple::FrameworkBundle()
 -+                objectForInfoDictionaryKey:@"CFBundleShortVersionString"]);
 -+        process_annotations["version"] = base::SysNSStringToUTF8(version);
 ++        process_annotations["version"] = version_info::GetHeliumVersionNumber();
  +      } else {
- +        process_annotations["version"] = product_info.version;
+ +        process_annotations["version"] = product_info.version();
  +      }
-@@ -401,9 +393,9 @@
+@@ -393,9 +390,9 @@
     crash_reporter_client->GetProductNameAndVersion(
         exe_file, &product_name, &version, &special_build, &channel_name);
  -  (*annotations)["prod"] = base::WideToUTF8(product_name);
@@ -548,9 +508,9 @@ diff -urN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patc
   #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
     // Empty means stable.
     const bool allow_empty_channel = true;
-diff -urN a/patch/patches/linux_gtk_theme_3610.patch b/patch/patches/linux_gtk_theme_3610.patch
---- a/patch/patches/linux_gtk_theme_3610.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/linux_gtk_theme_3610.patch	2026-09-21 22:03:50.972827623 +0200
+diff -ruN /home/bero/groktmp/om-up-20261024/helium/cef-src/cef-4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f/patch/patches/linux_gtk_theme_3610.patch /home/bero/groktmp/om-up-20261024/helium/cef-work/cef/patch/patches/linux_gtk_theme_3610.patch
+--- a/patch/patches/linux_gtk_theme_3610.patch	2026-10-23 20:50:56.000000000 +0200
++++ b/patch/patches/linux_gtk_theme_3610.patch	2026-10-24 17:15:16.125213483 +0200
 @@ -16,7 +16,7 @@
     }
  +  // Disable GTK theme change notifications because they are extremely slow.
@@ -560,9 +520,9 @@ diff -urN a/patch/patches/linux_gtk_theme_3610.patch b/patch/patches/linux_gtk_t
  +#if !BUILDFLAG(ENABLE_CEF)
     connect(settings, "notify::gtk-theme-name", &GtkUi::OnThemeChanged);
     connect(settings, "notify::gtk-icon-theme-name", &GtkUi::OnThemeChanged);
-diff -urN a/patch/patches/osr_win_remove_keyed_mutex_2575.patch b/patch/patches/osr_win_remove_keyed_mutex_2575.patch
---- a/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-09-16 23:21:43.000000000 +0200
-+++ b/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-09-21 22:03:50.972897274 +0200
+diff -ruN /home/bero/groktmp/om-up-20261024/helium/cef-src/cef-4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f/patch/patches/osr_win_remove_keyed_mutex_2575.patch /home/bero/groktmp/om-up-20261024/helium/cef-work/cef/patch/patches/osr_win_remove_keyed_mutex_2575.patch
+--- a/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-10-23 20:50:56.000000000 +0200
++++ b/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-10-24 17:15:16.125725529 +0200
 @@ -43,7 +43,7 @@
  +    // flag to disable mutex in the GMBFactoryDXGI because this enum is also
  +    // used above in macOS and CrOS for similar usage (claim no other one will
@@ -572,3 +532,19 @@ diff -urN a/patch/patches/osr_win_remove_keyed_mutex_2575.patch b/patch/patches/
  +    buffer_usage = gfx::BufferUsage::SCANOUT_VEA_CPU_READ;
  +  }
  +#endif
+diff -ruN /home/bero/groktmp/om-up-20261024/helium/cef-src/cef-4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f/patch/patches/signin_allowed_4276.patch /home/bero/groktmp/om-up-20261024/helium/cef-work/cef/patch/patches/signin_allowed_4276.patch
+--- a/patch/patches/signin_allowed_4276.patch	2026-10-23 20:50:56.000000000 +0200
++++ b/patch/patches/signin_allowed_4276.patch	2026-10-24 17:43:45.944366678 +0200
+@@ -10,11 +10,10 @@
+  #include "chrome/browser/browser_process.h"
+  #include "chrome/browser/profiles/profile.h"
+  #include "chrome/browser/profiles/profile_attributes_storage.h"
+-@@ -146,7 +147,8 @@ AccountConsistencyModeManager::~AccountConsistencyModeManager() = default;
++@@ -146,6 +147,8 @@ AccountConsistencyModeManager::~AccountConsistencyModeManager() = default;
+  // static
+  void AccountConsistencyModeManager::RegisterProfilePrefs(
+      user_prefs::PrefRegistrySyncable* registry) {
+--  registry->RegisterBooleanPref(prefs::kSigninAllowedOnNextStartup, true);
+ +  registry->RegisterBooleanPref(prefs::kSigninAllowedOnNextStartup,
+ +                                !BUILDFLAG(ENABLE_CEF));
+  }
