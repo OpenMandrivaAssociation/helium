@@ -360,11 +360,11 @@ Patch1057:	chromium-152-cbor-no-crubit-without-chromium-rust.patch
 # third_party/iamf_tools (new in 153) includes vendored Opus via
 # "include/opus.h". With system opus those paths do not resolve.
 Patch1058:	chromium-153-iamf-tools-unbundled-opus.patch
-# Chromium 156 WebUI and DevTools call the native tsc binary. The lite
-# tarball's CIPD typescript directory is empty, so the build points
+# Chromium 156 WebUI and DevTools call the native tsc binary. Helium
+# prune_binaries deletes the CIPD typescript directory, so the build points
 # third_party/typescript/linux-amd64/src/lib/tsc at system TypeScript 7.
-# That binary embeds lib.*.d.ts; the typescript patch does not list them
-# as ninja inputs.
+# That binary embeds lib.*.d.ts. The Trusted Types setters are in the
+# typescript package; do not list the CIPD copies as ninja inputs.
 Patch1059:	chromium-153-typescript.patch
 # Chromium 154 signed web bundles and private verification tokens call
 # Crubit cpp_api_from_rust. System rust does not provide that tool.
@@ -584,9 +584,10 @@ BuildRequires:	ninja
 BuildRequires:	nodejs
 # Chromium 155 DevTools node_modules/esbuild is 0.28.2 and checks the binary version.
 BuildRequires:	esbuild >= 0.28.2
-# Chromium 153 DevTools needs TypeScript 7 (Map.getOrInsert, tsc-6
-# @ts-expect-error). CIPD tsgo is empty in the lite tarball.
-BuildRequires:	typescript >= 7
+# Chromium 156 WebUI assigns TrustedHTML to innerHTML. typescript 7.0.2-1
+# embeds the upstream setter (string only) and fails that check. 7.0.2-2
+# embeds Chromium's Trusted Types setters.
+BuildRequires:	typescript >= 7.0.2-2
 BuildRequires:	jdk-current
 
 Recommends: (%{name}-qt6 = %{EVRD} if %{_lib}Qt6Gui)
@@ -788,11 +789,11 @@ mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -sfn /usr/bin/node third_party/node/linux/node-linux-x64/bin/
 sed -i -e "s,^NODE_VERSION=.*,NODE_VERSION=\"v%(rpm -q --qf '%%{VERSION}' nodejs)\"," third_party/node/update_node_binaries
 
-# Chromium 154 DevTools runs the CIPD tsgo binary at this path. The Gentoo
-# tarball does not ship it. /usr/bin/tsc from typescript >= 7 is that compiler
+# Chromium 156 runs tsc at this path. prune_binaries removes the CIPD tree.
+# /usr/bin/tsc from typescript >= 7.0.2-2 embeds the Trusted Types DOM lib
 # and accepts the same --isolatedDeclarations / --emitDeclarationOnly flags.
 # The gni path is linux-amd64 on every Linux host, including aarch64.
-# lib.*.d.ts stay inside the compiler. Do not materialize the CIPD copies.
+# Do not materialize the CIPD copies; tsc does not read them.
 mkdir -p third_party/typescript/linux-amd64/src/lib
 ln -sfn %{_bindir}/tsc third_party/typescript/linux-amd64/src/lib/tsc
 
