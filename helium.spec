@@ -360,10 +360,11 @@ Patch1057:	chromium-152-cbor-no-crubit-without-chromium-rust.patch
 # third_party/iamf_tools (new in 153) includes vendored Opus via
 # "include/opus.h". With system opus those paths do not resolve.
 Patch1058:	chromium-153-iamf-tools-unbundled-opus.patch
-# 153 defaults use_typescript_go=true (CIPD tsgo is empty in the lite
-# tarball). Keep the bundled JS compiler for WebUI. Chromium 154 DevTools
-# invokes third_party/typescript/linux-amd64/src/lib/tsc directly; %prep
-# points that path at system TypeScript 7 /usr/bin/tsc.
+# Chromium 156 WebUI and DevTools call the native tsc binary. The lite
+# tarball's CIPD typescript directory is empty, so the build points
+# third_party/typescript/linux-amd64/src/lib/tsc at system TypeScript 7.
+# That binary embeds lib.*.d.ts; the typescript patch does not list them
+# as ninja inputs.
 Patch1059:	chromium-153-typescript.patch
 # Chromium 154 signed web bundles and private verification tokens call
 # Crubit cpp_api_from_rust. System rust does not provide that tool.
@@ -791,6 +792,7 @@ sed -i -e "s,^NODE_VERSION=.*,NODE_VERSION=\"v%(rpm -q --qf '%%{VERSION}' nodejs
 # tarball does not ship it. /usr/bin/tsc from typescript >= 7 is that compiler
 # and accepts the same --isolatedDeclarations / --emitDeclarationOnly flags.
 # The gni path is linux-amd64 on every Linux host, including aarch64.
+# lib.*.d.ts stay inside the compiler. Do not materialize the CIPD copies.
 mkdir -p third_party/typescript/linux-amd64/src/lib
 ln -sfn %{_bindir}/tsc third_party/typescript/linux-amd64/src/lib/tsc
 
