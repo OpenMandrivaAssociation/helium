@@ -392,7 +392,9 @@ Patch1063:	chromium-156-ffmpeg-itut-t35.patch
 # Domain-substitute URLs in CEF nested patches so they match the Helium tree,
 # and retarget hunks whose context moved (zen initializers, shortcut-service
 # teardown, avatar button, incognito themes, crash-key sanitizer, sign-in
-# pref removed by ungoogled-chromium).
+# pref removed by ungoogled-chromium). signin_allowed_4276 no longer reads
+# prefs::kSigninAllowed or registers prefs::kSigninAllowedOnNextStartup.
+# TriggerListAccounts returns without calling Gaia.
 Patch2000:	cef-8078-helium-patch-rebase.patch
 Patch2002:	cef-126-zlib-ng.patch
 # Qt cefclient sample + host libstdc++ wrapper (applied inside cef/).

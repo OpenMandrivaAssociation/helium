@@ -533,18 +533,64 @@ diff -ruN /home/bero/groktmp/om-up-20261024/helium/cef-src/cef-4fa4ab516dacf6c49
  +  }
  +#endif
 diff -ruN /home/bero/groktmp/om-up-20261024/helium/cef-src/cef-4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f/patch/patches/signin_allowed_4276.patch /home/bero/groktmp/om-up-20261024/helium/cef-work/cef/patch/patches/signin_allowed_4276.patch
---- a/patch/patches/signin_allowed_4276.patch	2026-10-23 20:50:56.000000000 +0200
-+++ b/patch/patches/signin_allowed_4276.patch	2026-10-24 17:43:45.944366678 +0200
-@@ -10,11 +10,10 @@
-  #include "chrome/browser/browser_process.h"
-  #include "chrome/browser/profiles/profile.h"
-  #include "chrome/browser/profiles/profile_attributes_storage.h"
+--- a/patch/patches/signin_allowed_4276.patch
++++ b/patch/patches/signin_allowed_4276.patch
+@@ -1,37 +1,27 @@
+-diff --git chrome/browser/signin/account_consistency_mode_manager.cc chrome/browser/signin/account_consistency_mode_manager.cc
+-index 7d4c893cbcd995c48a00631f9cbfd736fb188e63..bfca8880151207480763f6a9d1f01bfb29864600 100644
+---- chrome/browser/signin/account_consistency_mode_manager.cc
+-+++ chrome/browser/signin/account_consistency_mode_manager.cc
+-@@ -12,6 +12,7 @@
+- #include "base/metrics/histogram_macros.h"
+- #include "base/strings/string_util.h"
+- #include "build/build_config.h"
+-+#include "cef/libcef/features/features.h"
+- #include "chrome/browser/browser_process.h"
+- #include "chrome/browser/profiles/profile.h"
+- #include "chrome/browser/profiles/profile_attributes_storage.h"
 -@@ -146,7 +147,8 @@ AccountConsistencyModeManager::~AccountConsistencyModeManager() = default;
-+@@ -146,6 +147,8 @@ AccountConsistencyModeManager::~AccountConsistencyModeManager() = default;
-  // static
-  void AccountConsistencyModeManager::RegisterProfilePrefs(
-      user_prefs::PrefRegistrySyncable* registry) {
+- // static
+- void AccountConsistencyModeManager::RegisterProfilePrefs(
+-     user_prefs::PrefRegistrySyncable* registry) {
 --  registry->RegisterBooleanPref(prefs::kSigninAllowedOnNextStartup, true);
- +  registry->RegisterBooleanPref(prefs::kSigninAllowedOnNextStartup,
- +                                !BUILDFLAG(ENABLE_CEF));
+-+  registry->RegisterBooleanPref(prefs::kSigninAllowedOnNextStartup,
+-+                                !BUILDFLAG(ENABLE_CEF));
+- }
+- 
+- // static
+ diff --git components/signin/internal/identity_manager/gaia_cookie_manager_service.cc components/signin/internal/identity_manager/gaia_cookie_manager_service.cc
+-index db2e0266aa2200f23d47eba563dac73e96fef1c7..cb8e446b47aa714914af2a1a195384a5b06163eb 100644
+ --- components/signin/internal/identity_manager/gaia_cookie_manager_service.cc
+ +++ components/signin/internal/identity_manager/gaia_cookie_manager_service.cc
+-@@ -525,6 +525,10 @@ GaiaCookieManagerService::GetCachedListAccounts() {
++@@ -509,21 +509,8 @@
   }
+  
+  void GaiaCookieManagerService::TriggerListAccounts() {
+-+  if (!signin_client_->GetPrefs()->GetBoolean(prefs::kSigninAllowed)) {
+-+    return;
+-+  }
+-+
+-   // Callers suspect that a check to Gaia needs to be done, don't rely on the
+-   // in progress request, conditions might have changed while the request is
+-   // in-flight.
++-  // Callers suspect that a check to Gaia needs to be done, don't rely on the
++-  // in progress request, conditions might have changed while the request is
++-  // in-flight.
++-  // Note: /ListAccounts requests is optimized in `OptimizeListAccounts()`
++-  // called in `HandleNextRequest()`. Only if there are no other requests in the
++-  // queue that `HandleNextRequest()` won't be called before executing
++-  // /ListAccounts.
++-  requests_.push_back(GaiaCookieRequest::CreateListAccountsRequest());
++-  if (requests_.size() == 1) {
++-    fetcher_retries_ = 0;
++-    listAccountsUnexpectedServerResponseRetried_ = false;
++-    signin_client_->DelayNetworkCall(
++-        base::BindOnce(&GaiaCookieManagerService::StartFetchingListAccounts,
++-                       weak_ptr_factory_.GetWeakPtr()));
++-  }
+++  // Sign-in preference fields were removed. Do not send /ListAccounts.
+++  return;
++ }
++ 
++ void GaiaCookieManagerService::TriggerListAccountsIfStale() {
