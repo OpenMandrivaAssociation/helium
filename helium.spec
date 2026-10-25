@@ -356,7 +356,12 @@ Patch1056:	helium-wayland-ozone-silent-no-vulkan.patch
 # rust-toolchain). System rust sets rust_sysroot_absolute and
 # enable_cpp_api_from_rust=false; keep the C++ CBOR path, switch font-format
 # to cxx bindings, and do not load rust-toolchain Crubit BUILD.gn files.
+# The format_check.rs bridge hunk must stay inside the counted lines. GNU
+# patch 2.8 exits 0 after "Ignoring the trailing garbage."
 Patch1057:	chromium-152-cbor-no-crubit-without-chromium-rust.patch
+# 156's web font decoder still calls IftPatcher::Create. Crubit is what
+# used to back that class. Keep the C++ type and return nullptr.
+Patch1064:	chromium-156-ift-patcher-no-crubit.patch
 # third_party/iamf_tools (new in 153) includes vendored Opus via
 # "include/opus.h". With system opus those paths do not resolve.
 Patch1058:	chromium-153-iamf-tools-unbundled-opus.patch

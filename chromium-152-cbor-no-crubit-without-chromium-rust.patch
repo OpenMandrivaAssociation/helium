@@ -298,7 +298,7 @@
      matches!(&format_info.format_flags, Some(FontFormatFlags { color_version: Some(0), .. }),)
  }
  
-@@ -59,11 +59,11 @@
+@@ -59,12 +59,12 @@
  // https://crbug.com/513446410: For safety we want to pass unknown avar2
  // versions through fontations, too.
 -pub fn is_avar2(format_info: &FontFormatInfo) -> bool {
