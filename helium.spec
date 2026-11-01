@@ -93,13 +93,13 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.20.1
+%global helium_version 0.20.3
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.20.1 asks for 156.0.8078.47.
-%define chromium 156.0.8078.47
+# Helium 0.20.3 asks for 156.0.8078.79.
+%define chromium 156.0.8078.79
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -113,13 +113,13 @@ Version:	%{helium_version}
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-# CEF branch 8078 tracks Chromium 156. Helium 0.20.1 is 156.0.8078.47.
-# No CEF commit pins exactly .47. This snapshot is branch tip
-# 4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f (2026-10-23). Its
-# CHROMIUM_BUILD_COMPATIBILITY.txt says refs/tags/156.0.8078.48, one
+# CEF branch 8078 tracks Chromium 156. Helium 0.20.3 is 156.0.8078.79.
+# No CEF commit pins exactly .79. This snapshot is branch tip
+# cf671c072925b27823a61181152f4f288e8e4306 (2026-10-30). Its
+# CHROMIUM_BUILD_COMPATIBILITY.txt says refs/tags/156.0.8078.80, one
 # stable respin ahead; that bump only refreshed patch context.
 # Do not replace this commit archive with a floating branch URL.
-%define cef 4fa4ab516dacf6c49fc7e6e70d2b7ebce29fa35f
+%define cef cf671c072925b27823a61181152f4f288e8e4306
 %define cefversion 8078
 # make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
 %ifarch %{x86_64}
@@ -433,8 +433,14 @@ Patch3020:	cef-8037-will-destroy-toolbar.patch
 # ============================================================================
 
 Provides:	%{crname}
-Obsoletes:	chromium-browser-unstable < %{EVRD}
-Obsoletes:	chromium-browser < %{EVRD}
+# Cooker stopped shipping the Chromium browser when Helium became the
+# maintained build. chromium 141 sorts above Helium 0.20, so a versioned
+# Obsoletes would leave it installed. chromium-bsu is a separate game.
+Provides:	chromium
+Provides:	chromium-browser-stable
+Obsoletes:	chromium
+Obsoletes:	chromium-browser
+Obsoletes:	chromium-browser-unstable
 BuildRequires:	glibc-static-devel
 BuildRequires:	gperf
 BuildRequires:	bison
@@ -616,6 +622,8 @@ Summary: Qt 6.x integration for Helium
 Group: System/Libraries
 Requires: %{name} = %{EVRD}
 Obsoletes: chromium-browser-stable-qt6
+Obsoletes: chromium-qt6
+Provides: chromium-qt6
 Obsoletes: %{name}-qt5 < %{EVRD}
 
 %description qt6
@@ -680,6 +688,9 @@ cef-devel.
 Summary:	WebDriver for Google Chrome/Chromium
 Group:		Development/Other
 Requires:	%{name} = %{helium_version}-%{release}
+# Same unversioned replace as the browser: chromedriver 141 sorts above 0.20.
+Obsoletes:	chromedriver
+Provides:	chromedriver
 
 %description chromedriver
 WebDriver is an open source tool for automated testing of webapps across many
