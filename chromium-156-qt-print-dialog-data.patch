@@ -1,0 +1,584 @@
+--- a/ui/qt/printing/print_dialog_qt.cc	2026-11-03 16:19:02.601649024 +0100
++++ b/ui/qt/printing/print_dialog_qt.cc	2026-11-03 16:21:09.865830402 +0100
+@@ -4,6 +4,7 @@
+ 
+ #include "ui/qt/printing/print_dialog_qt.h"
+ 
++#include <algorithm>
+ #include <memory>
+ #include <string>
+ #include <utility>
+@@ -29,6 +30,48 @@
+ using printing::PageRanges;
+ using printing::PrintSettings;
+ 
++namespace {
++
++// Explicit ints from the shim, not QPrinter::DuplexMode values.
++// 0 = simplex, 1 = auto/unknown, 2 = long edge, 3 = short edge.
++printing::mojom::DuplexMode DuplexModeFromQt(int qt_duplex) {
++  switch (qt_duplex) {
++    case 2:
++      return printing::mojom::DuplexMode::kLongEdge;
++    case 3:
++      return printing::mojom::DuplexMode::kShortEdge;
++    case 0:
++      return printing::mojom::DuplexMode::kSimplex;
++    default:
++      return printing::mojom::DuplexMode::kUnknownDuplexMode;
++  }
++}
++
++printing::mojom::ColorModel ColorModelFromQt(bool color) {
++  // Coarse stand-in for a system-dialog boolean. Print preview passes the
++  // printer's real ColorModel through and must not use this mapping.
++  return color ? printing::mojom::ColorModel::kRGB
++               : printing::mojom::ColorModel::kGray;
++}
++
++void DeletePdfLater(const base::FilePath& path) {
++  base::ThreadPool::PostTask(FROM_HERE,
++                             {base::MayBlock(), base::TaskPriority::BEST_EFFORT,
++                              base::TaskShutdownBehavior::BLOCK_SHUTDOWN},
++                             base::GetDeleteFileCallback(path));
++}
++
++#if BUILDFLAG(USE_CUPS)
++int AddCupsOption(const char* name,
++                  const char* value,
++                  int num_options,
++                  cups_option_t** options) {
++  return cupsAddOption(name, value, num_options, options);
++}
++#endif
++
++}  // namespace
++
+ PrintDialogQt::PrintDialogQt(PrintingContextLinux* context,
+                              qt::QtInterface* shim)
+     : context_(context),
+@@ -39,6 +82,77 @@
+   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+ }
+ 
++void PrintDialogQt::RememberJobOptions(const PrintSettings& settings) {
++  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
++
++  const std::string printer_name = base::UTF16ToUTF8(settings.device_name());
++  if (!printer_name.empty())
++    printer_name_ = printer_name;
++  copies_ = std::max(settings.copies(), 1);
++  collate_ = settings.collate();
++  landscape_ = settings.landscape();
++  duplex_mode_ = settings.duplex_mode();
++  color_model_ = settings.color();
++}
++
++void PrintDialogQt::ApplyQtFallbacks(const qt::PrintingSettings& qt_settings) {
++  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
++
++  if (printer_name_.empty() && qt_settings.printer_name.c_str())
++    printer_name_ = qt_settings.printer_name.c_str();
++  if (copies_ <= 0)
++    copies_ = std::max(qt_settings.copies, 1);
++}
++
++void PrintDialogQt::SetLinuxPrintDialogData(PrintSettings* settings) {
++  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
++#if BUILDFLAG(ENABLE_OOP_PRINTING_NO_OOP_BASIC_PRINT_DIALOG)
++  if (printer_name_.empty())
++    return;
++
++  // Qt has no GTK keyfile. Empty strings still satisfy FindString(), and the
++  // dict size must be exactly 3. Do not add or omit a key.
++  base::DictValue dialog_data;
++  dialog_data.Set(printing::kLinuxSystemPrintDialogDataPrinter, printer_name_);
++  dialog_data.Set(printing::kLinuxSystemPrintDialogDataPrintSettings,
++                  std::string());
++  dialog_data.Set(printing::kLinuxSystemPrintDialogDataPageSetup,
++                  std::string());
++  settings->set_system_print_dialog_data(std::move(dialog_data));
++#else
++  (void)settings;
++#endif
++}
++
++void PrintDialogQt::CommitPrintSettings(
++    std::unique_ptr<PrintSettings> settings) {
++  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
++  if (!context_)
++    return;
++
++  if (!printer_name_.empty())
++    settings->set_device_name(base::UTF8ToUTF16(printer_name_));
++  settings->set_copies(copies_);
++  settings->set_collate(collate_);
++  settings->set_duplex_mode(duplex_mode_);
++  settings->set_color(color_model_);
++  SetLinuxPrintDialogData(settings.get());
++  context_->InitWithSettings(std::move(settings));
++}
++
++void PrintDialogQt::InitPrintSettings(std::unique_ptr<PrintSettings> settings,
++                                      const qt::PrintingSettings* qt_settings) {
++  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
++  if (!context_)
++    return;
++
++  if (qt_settings) {
++    ApplyQtFallbacks(*qt_settings);
++    InitPrintSettingsQt(*qt_settings, settings.get());
++  }
++  CommitPrintSettings(std::move(settings));
++}
++
+ DISABLE_CFI_VCALL
+ void PrintDialogQt::UseDefaultSettings() {
+   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+@@ -46,12 +160,15 @@
+   qt::PrintingSettings qt_settings = shim_->GetDefaultPrintSettings();
+   printer_name_ =
+       qt_settings.printer_name.c_str() ? qt_settings.printer_name.c_str() : "";
+-  copies_ = qt_settings.copies;
++  copies_ = std::max(qt_settings.copies, 1);
+   collate_ = qt_settings.collate;
+   landscape_ = qt_settings.landscape;
++  // Leave duplex and color unknown. QPrinter defaults to simplex, which would
++  // override the printer's CUPS default before the preview UI can apply it.
++  duplex_mode_ = printing::mojom::DuplexMode::kUnknownDuplexMode;
++  color_model_ = printing::mojom::ColorModel::kUnknownColorModel;
+ 
+-  auto settings = std::make_unique<PrintSettings>();
+-  InitPrintSettings(std::move(settings), qt_settings);
++  InitPrintSettings(std::make_unique<PrintSettings>(), &qt_settings);
+ }
+ 
+ DISABLE_CFI_VCALL
+@@ -59,45 +176,40 @@
+     std::unique_ptr<printing::PrintSettings> settings) {
+   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+ 
+-  std::string printer_name = base::UTF16ToUTF8(settings->device_name());
+-  qt::PrintingSettings qt_settings =
+-      shim_->GetPrinterSettings(qt::String(printer_name.c_str()));
++  RememberJobOptions(*settings);
+ 
+-  // Apply requested settings that may differ from the printer defaults.
+-  qt_settings.copies = settings->copies();
+-  qt_settings.collate = settings->collate();
+-  qt_settings.landscape = settings->landscape();
+-  if (settings->dpi_horizontal() > 0) {
+-    qt_settings.dpi = settings->dpi_horizontal();
++  // Print preview already filled dpi, media size, and margins from CUPS.
++  // Replacing them with QPrinter's defaults drops the selected paper and can
++  // fail the PageSetup mojo check.
++  const bool have_page_setup =
++      settings->dpi() > 0 &&
++      !settings->page_setup_device_units().physical_size().IsEmpty();
++  if (have_page_setup) {
++    CommitPrintSettings(std::move(settings));
++    return;
+   }
+ 
+-  printer_name_ =
+-      qt_settings.printer_name.c_str() ? qt_settings.printer_name.c_str() : "";
+-  copies_ = qt_settings.copies;
+-  collate_ = qt_settings.collate;
+-  landscape_ = qt_settings.landscape;
+-
+-  InitPrintSettings(std::move(settings), qt_settings);
++  qt::PrintingSettings qt_settings =
++      shim_->GetPrinterSettings(qt::String(printer_name_.c_str()));
++  qt_settings.landscape = landscape_;
++  if (settings->dpi() > 0)
++    qt_settings.dpi = settings->dpi();
++  InitPrintSettings(std::move(settings), &qt_settings);
+ }
+ 
+ #if BUILDFLAG(ENABLE_OOP_PRINTING_NO_OOP_BASIC_PRINT_DIALOG)
+-DISABLE_CFI_VCALL
+ void PrintDialogQt::LoadPrintSettings(const PrintSettings& settings) {
+   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+ 
++  // Called from NewDocument() after in_print_job_ is set, on a dialog that
++  // may be new. Restore the job options only. Rebuilding the page setup from
++  // QPrinter, or calling InitWithSettings(), would clobber or DCHECK.
+   const std::string* stored_printer_name =
+       settings.system_print_dialog_data().FindString(
+           printing::kLinuxSystemPrintDialogDataPrinter);
+-  if (stored_printer_name) {
++  RememberJobOptions(settings);
++  if (stored_printer_name && !stored_printer_name->empty())
+     printer_name_ = *stored_printer_name;
+-    qt::PrintingSettings qt_settings =
+-        shim_->GetPrinterSettings(qt::String(stored_printer_name->c_str()));
+-    // Apply the settings we stored; no further Chrome-level reconciliation
+-    // is needed because the printer settings already match the original
+-    // dialog output.
+-    auto new_settings = std::make_unique<PrintSettings>(settings);
+-    InitPrintSettings(std::move(new_settings), qt_settings);
+-  }
+ }
+ #endif  // BUILDFLAG(ENABLE_OOP_PRINTING_NO_OOP_BASIC_PRINT_DIALOG)
+ 
+@@ -121,11 +233,13 @@
+   }
+ 
+   printer_name_ = result.settings.printer_name.c_str()
+-                       ? result.settings.printer_name.c_str()
+-                       : "";
+-  copies_ = result.settings.copies;
++                      ? result.settings.printer_name.c_str()
++                      : "";
++  copies_ = std::max(result.settings.copies, 1);
+   collate_ = result.settings.collate;
+   landscape_ = result.settings.landscape;
++  duplex_mode_ = DuplexModeFromQt(result.settings.duplex);
++  color_model_ = ColorModelFromQt(result.settings.color);
+ 
+   // Handle page ranges.
+   PageRanges ranges_vector;
+@@ -145,7 +259,7 @@
+   settings->set_ranges(ranges_vector);
+   settings->set_selection_only(result.selection_only);
+ 
+-  InitPrintSettings(std::move(settings), result.settings);
++  InitPrintSettings(std::move(settings), &result.settings);
+   std::move(callback).Run(printing::mojom::ResultCode::kSuccess);
+ }
+ 
+@@ -154,14 +268,24 @@
+   bool success = base::CreateTemporaryFile(&path_to_pdf_);
+ 
+   if (success) {
++    // cupsPrintFile sniffs the document type from the filename.
++    base::FilePath pdf_path = path_to_pdf_.AddExtension("pdf");
++    if (pdf_path.empty() || !base::Move(path_to_pdf_, pdf_path)) {
++      base::DeleteFile(path_to_pdf_);
++      success = false;
++    } else {
++      path_to_pdf_ = pdf_path;
++    }
++  }
++
++  if (success) {
+     base::File file;
+     file.Initialize(path_to_pdf_,
+                     base::File::FLAG_CREATE_ALWAYS | base::File::FLAG_WRITE);
+     success = metafile.SaveTo(&file);
+     file.Close();
+-    if (!success) {
++    if (!success)
+       base::DeleteFile(path_to_pdf_);
+-    }
+   }
+ 
+   if (!success) {
+@@ -175,16 +299,12 @@
+                                 weak_factory_.GetWeakPtr(), document_name));
+ }
+ 
+-void PrintDialogQt::SendDocumentToPrinter(
+-    const std::u16string& document_name) {
++void PrintDialogQt::SendDocumentToPrinter(const std::u16string& document_name) {
+   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+ 
+   if (printer_name_.empty()) {
+     LOG(ERROR) << "Printing failed: no printer selected";
+-    base::ThreadPool::PostTask(FROM_HERE,
+-                               {base::MayBlock(), base::TaskPriority::BEST_EFFORT,
+-                                base::TaskShutdownBehavior::BLOCK_SHUTDOWN},
+-                               base::GetDeleteFileCallback(path_to_pdf_));
++    DeletePdfLater(path_to_pdf_);
+     return;
+   }
+ 
+@@ -194,53 +314,63 @@
+   int num_options = 0;
+   cups_option_t* options = nullptr;
+ 
+-  std::string copies_str = base::NumberToString(copies_);
++  const std::string copies_str = base::NumberToString(std::max(copies_, 1));
+   num_options =
+-      cupsAddOption("copies", copies_str.c_str(), num_options, &options);
+-  num_options = cupsAddOption("collate", collate_ ? "true" : "false",
++      AddCupsOption("copies", copies_str.c_str(), num_options, &options);
++  num_options = AddCupsOption("collate", collate_ ? "true" : "false",
+                               num_options, &options);
+-  if (landscape_) {
+-    num_options =
+-        cupsAddOption("landscape", "true", num_options, &options);
++  // The PDF is already the selected pages, in the selected orientation.
++  // A CUPS landscape option or a page-range would apply that transform twice.
++  num_options = AddCupsOption("document-format", "application/pdf", num_options,
++                              &options);
++
++  const char* sides = nullptr;
++  const char* duplex = nullptr;
++  switch (duplex_mode_) {
++    case printing::mojom::DuplexMode::kSimplex:
++      sides = "one-sided";
++      duplex = "None";
++      break;
++    case printing::mojom::DuplexMode::kLongEdge:
++      sides = "two-sided-long-edge";
++      duplex = "DuplexNoTumble";
++      break;
++    case printing::mojom::DuplexMode::kShortEdge:
++      sides = "two-sided-short-edge";
++      duplex = "DuplexTumble";
++      break;
++    case printing::mojom::DuplexMode::kUnknownDuplexMode:
++      break;
++  }
++  if (sides) {
++    num_options = AddCupsOption("sides", sides, num_options, &options);
++    num_options = AddCupsOption("Duplex", duplex, num_options, &options);
++  }
++
++  // kUnknownColorModel makes GetColorModelForModel() force grayscale.
++  if (color_model_ != printing::mojom::ColorModel::kUnknownColorModel) {
++    std::string color_name;
++    std::string color_value;
++    printing::GetColorModelForModel(color_model_, &color_name, &color_value);
++    if (!color_name.empty() && !color_value.empty()) {
++      num_options = AddCupsOption(color_name.c_str(), color_value.c_str(),
++                                  num_options, &options);
++    }
+   }
+ 
+-  int job_id = cupsPrintFile(printer_name_.c_str(),
+-                             path_to_pdf_.value().c_str(), title.c_str(),
+-                             num_options, options);
++  int job_id =
++      cupsPrintFile(printer_name_.c_str(), path_to_pdf_.value().c_str(),
++                    title.c_str(), num_options, options);
+ 
+   cupsFreeOptions(num_options, options);
+ 
+   if (job_id == 0) {
+-    LOG(ERROR) << "CUPS printing failed: " << cupsLastErrorString();
++    LOG(ERROR) << "CUPS printing failed for " << printer_name_ << ": "
++               << cupsLastErrorString();
+   }
+ #else
+   LOG(ERROR) << "Printing is not supported without CUPS";
+ #endif
+ 
+-  base::ThreadPool::PostTask(FROM_HERE,
+-                             {base::MayBlock(), base::TaskPriority::BEST_EFFORT,
+-                              base::TaskShutdownBehavior::BLOCK_SHUTDOWN},
+-                             base::GetDeleteFileCallback(path_to_pdf_));
++  DeletePdfLater(path_to_pdf_);
+ }
+-
+-void PrintDialogQt::InitPrintSettings(
+-    std::unique_ptr<PrintSettings> settings,
+-    const qt::PrintingSettings& qt_settings) {
+-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+-  if (!context_) {
+-    return;
+-  }
+-
+-  InitPrintSettingsQt(qt_settings, settings.get());
+-
+-#if BUILDFLAG(ENABLE_OOP_PRINTING_NO_OOP_BASIC_PRINT_DIALOG)
+-  if (qt_settings.printer_name.c_str()) {
+-    base::DictValue dialog_data;
+-    dialog_data.Set(printing::kLinuxSystemPrintDialogDataPrinter,
+-                    std::string(qt_settings.printer_name.c_str()));
+-    settings->set_system_print_dialog_data(std::move(dialog_data));
+-  }
+-#endif
+-
+-  context_->InitWithSettings(std::move(settings));
+-}
+\ No newline at end of file
+--- a/ui/qt/printing/print_dialog_qt.h	2026-11-03 16:19:02.601688935 +0100
++++ b/ui/qt/printing/print_dialog_qt.h	2026-11-03 16:19:29.265069096 +0100
+@@ -49,9 +49,24 @@
+                      const std::u16string& document_name) override;
+ 
+  private:
+-  // Initializes |context_|'s PrintSettings from Qt printing settings.
++  // Keeps the CUPS job options Chromium already selected.
++  void RememberJobOptions(const printing::PrintSettings& settings);
++
++  // Fills a missing printer name, or a non-positive copy count, from Qt.
++  void ApplyQtFallbacks(const qt::PrintingSettings& qt_settings);
++
++  // Builds page setup from Qt when `qt_settings` is non-null, then commits.
+   void InitPrintSettings(std::unique_ptr<printing::PrintSettings> settings,
+-                         const qt::PrintingSettings& qt_settings);
++                         const qt::PrintingSettings* qt_settings);
++
++  // Writes the job options onto `settings` and installs them on `context_`.
++  // Not for LoadPrintSettings(): NewDocument() has already set in_print_job_.
++  void CommitPrintSettings(std::unique_ptr<printing::PrintSettings> settings);
++
++  // Linux mojo traits accept system_print_dialog_data only when it is empty,
++  // exactly the GTK trio, or exactly the portal quartet. A lone printer name
++  // fails to deserialize and the browser reports "Print Failed".
++  void SetLinuxPrintDialogData(printing::PrintSettings* settings);
+ 
+   // Sends the document to the printer via CUPS.
+   void SendDocumentToPrinter(const std::u16string& document_name);
+@@ -65,6 +80,10 @@
+   int copies_ = 1;
+   bool collate_ = false;
+   bool landscape_ = false;
++  printing::mojom::DuplexMode duplex_mode_ =
++      printing::mojom::DuplexMode::kUnknownDuplexMode;
++  printing::mojom::ColorModel color_model_ =
++      printing::mojom::ColorModel::kUnknownColorModel;
+ 
+   base::FilePath path_to_pdf_;
+ 
+@@ -75,4 +94,4 @@
+   base::WeakPtrFactory<PrintDialogQt> weak_factory_{this};
+ };
+ 
+-#endif  // UI_QT_PRINTING_PRINT_DIALOG_QT_H_
+\ No newline at end of file
++#endif  // UI_QT_PRINTING_PRINT_DIALOG_QT_H_
+--- a/ui/qt/printing/printing_qt_util.cc	2026-11-03 16:19:02.601716845 +0100
++++ b/ui/qt/printing/printing_qt_util.cc	2026-11-03 16:21:09.869366143 +0100
+@@ -4,13 +4,27 @@
+ 
+ #include "ui/qt/printing/printing_qt_util.h"
+ 
++#include <algorithm>
+ #include <string>
+ 
+ #include "base/strings/utf_string_conversions.h"
+ #include "printing/print_settings.h"
+ #include "printing/units.h"
++#include "ui/gfx/geometry/rect.h"
+ #include "ui/gfx/geometry/size.h"
+ 
++namespace {
++
++// ISO A4, used when Qt reports no paper size.
++constexpr float kA4WidthInches = 8.27f;
++constexpr float kA4HeightInches = 11.69f;
++
++int InchesToDeviceUnits(float inches, int dpi) {
++  return static_cast<int>(inches * static_cast<float>(dpi) + 0.5f);
++}
++
++}  // namespace
++
+ void InitPrintSettingsQt(const qt::PrintingSettings& qt_settings,
+                          printing::PrintSettings* print_settings) {
+   DCHECK(print_settings);
+@@ -21,36 +35,61 @@
+   print_settings->set_device_name(name);
+ 
+   int dpi = qt_settings.dpi;
+-  if (dpi <= 0) {
++  if (dpi <= 0)
+     dpi = printing::kDefaultPdfDpi;
++
++  float width_inches = qt_settings.page_width_inches;
++  float height_inches = qt_settings.page_height_inches;
++  if (width_inches <= 0 || height_inches <= 0) {
++    width_inches = kA4WidthInches;
++    height_inches = kA4HeightInches;
+   }
+ 
++  const int phys_w = std::max(InchesToDeviceUnits(width_inches, dpi), 1);
++  const int phys_h = std::max(InchesToDeviceUnits(height_inches, dpi), 1);
++
++  int margin_x =
++      InchesToDeviceUnits(std::max(qt_settings.margin_left_inches, 0.f), dpi);
++  int margin_y =
++      InchesToDeviceUnits(std::max(qt_settings.margin_top_inches, 0.f), dpi);
++  int print_w = InchesToDeviceUnits(
++      std::max(qt_settings.printable_width_inches, 0.f), dpi);
++  int print_h = InchesToDeviceUnits(
++      std::max(qt_settings.printable_height_inches, 0.f), dpi);
++
++  // PageSetup::Init() rejects a printable rect that starts outside the page
++  // or extends past it. A zero or slightly overflowing Qt rect becomes the
++  // full page instead of failing the print-settings mojo round trip.
++  if (margin_x >= phys_w)
++    margin_x = 0;
++  if (margin_y >= phys_h)
++    margin_y = 0;
++  if (print_w <= 0 || margin_x + print_w > phys_w)
++    print_w = phys_w - margin_x;
++  if (print_h <= 0 || margin_y + print_h > phys_h)
++    print_h = phys_h - margin_y;
++
+   gfx::Size physical_size_device_units;
+   gfx::Rect printable_area_device_units;
+-
+-  physical_size_device_units.SetSize(
+-      qt_settings.page_width_inches * dpi,
+-      qt_settings.page_height_inches * dpi);
+-
+-  printable_area_device_units.SetRect(
+-      qt_settings.margin_left_inches * dpi,
+-      qt_settings.margin_top_inches * dpi,
+-      qt_settings.printable_width_inches * dpi,
+-      qt_settings.printable_height_inches * dpi);
++  physical_size_device_units.SetSize(phys_w, phys_h);
++  printable_area_device_units.SetRect(margin_x, margin_y, print_w, print_h);
+ 
+   print_settings->set_dpi(dpi);
++  // Qt's fullRect() is already oriented, same as gtk_page_setup_get_paper_*.
++  // landscape_needs_flip stores that as portrait device units plus the flag.
+   print_settings->SetOrientation(qt_settings.landscape);
+   DCHECK_EQ(print_settings->device_units_per_inch(), dpi);
+   print_settings->SetPrinterPrintableArea(physical_size_device_units,
+-                                          printable_area_device_units, true);
++                                          printable_area_device_units,
++                                          /*landscape_needs_flip=*/true);
+ }
+ 
+ DISABLE_CFI_VCALL
+ gfx::Size GetPdfPaperSizeDeviceUnitsQt(qt::QtInterface* shim,
+-                                        int device_units_per_inch) {
++                                       int device_units_per_inch) {
+   float width_inches = 0;
+   float height_inches = 0;
+   shim->GetDefaultPaperSize(&width_inches, &height_inches);
+   return gfx::Size(width_inches * device_units_per_inch,
+                    height_inches * device_units_per_inch);
+-}
+\ No newline at end of file
++}
+--- a/ui/qt/qt_interface.h	2026-11-03 16:19:02.603492766 +0100
++++ b/ui/qt/qt_interface.h	2026-11-03 16:19:32.001461448 +0100
+@@ -134,6 +134,10 @@
+   // Printable area dimensions in inches.
+   float printable_width_inches = 0;
+   float printable_height_inches = 0;
++  // Not QPrinter::DuplexMode. 0 = simplex, 1 = auto/unknown, 2 = long edge,
++  // 3 = short edge.
++  int duplex = 0;
++  bool color = true;
+ };
+ 
+ struct PrintRange {
+--- a/ui/qt/qt_shim.cc	2026-11-03 16:19:02.603534716 +0100
++++ b/ui/qt/qt_shim.cc	2026-11-03 16:20:26.413714384 +0100
+@@ -430,6 +430,18 @@
+       printer.pageLayout().paintRect(QPageLayout::Inch);
+   settings.printable_width_inches = printable_rect.width();
+   settings.printable_height_inches = printable_rect.height();
++
++  const QPrinter::DuplexMode duplex = printer.duplex();
++  if (duplex == QPrinter::DuplexLongSide) {
++    settings.duplex = 2;
++  } else if (duplex == QPrinter::DuplexShortSide) {
++    settings.duplex = 3;
++  } else if (duplex == QPrinter::DuplexAuto) {
++    settings.duplex = 1;
++  } else {
++    settings.duplex = 0;
++  }
++  settings.color = printer.colorMode() != QPrinter::GrayScale;
+   return settings;
+ }
+ 

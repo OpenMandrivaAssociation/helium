@@ -140,7 +140,7 @@ Version:	%{helium_version}
 %endif
 %endif
 %endif
-Release:	1
+Release:	2
 Summary:	A fast, privacy friendly, web browser based on Ungoogled Chromium
 Group:		Networking/WWW
 License:	BSD, LGPL
@@ -328,6 +328,9 @@ Patch1031:	chromium-148-qt-printing.patch
 Patch1032:	chromium-150-qt-file-dialog.patch
 # Qt LinuxUi must not construct GtkUi as a fallback (dlopen + gtk_init_check).
 Patch1033:	chromium-151-qt-no-gtk-fallback.patch
+# Qt print settings must use the 3-key Linux dialog dict. One key is rejected
+# by mojo and print preview reports Print Failed before CUPS sees the job.
+Patch1034:	chromium-156-qt-print-dialog-data.patch
 Patch1040:	chromium-134-drop-workarounds-for-ancient-mesa-bugs.patch
 Patch1041:	chromium-134-drop-workarounds-for-ancient-mesa-bugs-part2.patch
 Patch1042:	chromium-134-if-chromeos-can-do-it-so-can-linux.patch
