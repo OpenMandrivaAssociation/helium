@@ -1,24 +1,22 @@
-diff -up chromium-138.0.7204.92/build/rust/rust_bindgen_generator.gni.51~ chromium-138.0.7204.92/build/rust/rust_bindgen_generator.gni
---- chromium-138.0.7204.92/build/rust/rust_bindgen_generator.gni.51~	2025-06-27 23:22:02.000000000 +0200
-+++ chromium-138.0.7204.92/build/rust/rust_bindgen_generator.gni	2025-07-03 03:10:19.735183462 +0200
-@@ -226,7 +226,7 @@ template("rust_bindgen_generator") {
-     # make it behave consistently with our other command line flags and allows
-     # system headers to be found.
-     clang_resource_dir =
--        rebase_path(clang_base_path + "/lib/clang/" + clang_version,
-+        rebase_path(clang_base_path + "/lib64/clang/" + clang_version,
-                     root_build_dir)
-     args += [
-       "-resource-dir",
-
-diff -up chromium-138.0.7204.92/v8/BUILD.gn.omv~ chromium-138.0.7204.92/v8/BUILD.gn
---- chromium-138.0.7204.92/v8/BUILD.gn.omv~	2026-10-08 00:00:00.000000000 +0200
-+++ chromium-138.0.7204.92/v8/BUILD.gn	2026-10-08 00:00:00.000000000 +0200
-@@ -2494,6 +2494,6 @@ if (is_clang) {
+--- a/build/rust/gni_impl/libclang_args.gni
++++ b/build/rust/gni_impl/libclang_args.gni
+@@ -38,7 +38,7 @@
+ # system headers to be found.
+ _libclang_extra_args += [
+   "-resource-dir",
+-  rebase_path(clang_base_path + "/lib/clang/" + clang_version, root_build_dir),
++  rebase_path(clang_base_path + "/lib64/clang/" + clang_version, root_build_dir),
+ ]
+ 
+ if (is_win) {
+--- a/v8/BUILD.gn
++++ b/v8/BUILD.gn
+@@ -2511,7 +2511,7 @@
+ 
    # The clang toolchain's resource dir contains builting headers
    # include/{stddef.h,stdarg.h,...}.
 -  _metagen_clang_resource_dir = "$clang_base_path/lib/clang/$clang_version"
 +  _metagen_clang_resource_dir = "$clang_base_path/lib64/clang/$clang_version"
+ 
+   # The headers are parsed with v8_base_without_compiler's flags.
    _metagen_flags_target = ":v8_base_without_compiler"
-   _metagen_flags_target_ninja =
-       get_label_info(_metagen_flags_target, "target_out_dir") +

@@ -22,8 +22,8 @@
  config("pdfium_common_config") {
    cflags = []
    cflags_cc = []
-@@ -31,7 +39,9 @@ config("pdfium_common_config") {
-   include_dirs = [ "." ]
+@@ -23,7 +31,9 @@ config("pdfium_common_config") {
+   inputs = [ "unsafe_buffers_paths.txt" ]
    defines = []
  
 -  if (!use_system_libopenjpeg2) {

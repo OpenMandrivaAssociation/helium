@@ -1,0 +1,48 @@
+--- a/patch/patches/chrome_runtime.patch
++++ b/patch/patches/chrome_runtime.patch
+@@ -86,14 +86,44 @@
+    // Start the sampling profiler as early as possible - namely, once the thread
+    // pool has been created.
+    sampling_profiler_ = std::make_unique<MainThreadStackSamplingProfiler>();
+-@@ -1546,6 +1557,7 @@ void ChromeMainDelegate::PreSandboxStartup() {
++@@ -1187,17 +1187,19 @@
+    }
+  #endif
++   tracing_sampler_profiler_ =
++       tracing::TracingSamplerProfiler::CreateOnMainThread(
++           std::move(tracing_factory), unwinder_type);
++ }
+  
++ std::optional<int> ChromeMainDelegate::BasicStartupComplete() {
+ +#if !BUILDFLAG(ENABLE_CEF)
+    crash_reporter::InitializeCrashKeys();
+++#endif  // !BUILDFLAG(ENABLE_CEF)
+  
++ #if BUILDFLAG(IS_CHROMEOS)
++   ash::BootTimesRecorder::Get()->SaveChromeMainStats();
++ #endif
++ 
++ #if !defined(BUILDING_CHROME_RENDERER)
++   const base::CommandLine& command_line =
++       *base::CommandLine::ForCurrentProcess();
++@@ -1566,16 +1568,17 @@
++   if (process_type.empty()) {
++     // Initialize the shared memory that contains the `SystemProfile` only in
++     // the browser process. This must happen before Crashpad initialization
++     // since Crashpad inherits a handle to the shared memory.
++     metrics::SystemProfileUserStream::Get().Initialize();
++   }
++ #endif
++ 
+++#if !BUILDFLAG(ENABLE_CEF)
+  #if BUILDFLAG(IS_POSIX)
++   ChromeCrashReporterClient::Create();
++ #endif
++ 
++ #if BUILDFLAG(IS_MAC)
++   InitMacCrashReporter(command_line, process_type);
++   SetUpInstallerPreferences(command_line);
++ #endif
+ @@ -1556,20 +1568,25 @@ void ChromeMainDelegate::PreSandboxStartup() {
+    InitMacCrashReporter(command_line, process_type);
+    SetUpInstallerPreferences(command_line);

@@ -1,0 +1,48 @@
+--- a/patch/patches/views_1749_2102_3330.patch
++++ b/patch/patches/views_1749_2102_3330.patch
+@@ -421,13 +421,15 @@
+  
+    explicit MenuHost(SubmenuView* submenu);
+ diff --git ui/views/controls/menu/menu_item_view.cc ui/views/controls/menu/menu_item_view.cc
+-index 6b4595a80ef88fd97129335deb2828fc8b709bc0..29ff21c0f17db3ac9e4ee160fc3b7c96eae3e7d7 100644
+ --- ui/views/controls/menu/menu_item_view.cc
+ +++ ui/views/controls/menu/menu_item_view.cc
+-@@ -1361,6 +1361,15 @@ void MenuItemView::PaintBackground(gfx::Canvas* canvas,
+-     SkRRect rounded_rect;
+-     rounded_rect.setRectRadii(gfx::RectFToSkRect(highlight_bounds), radii);
+-     canvas->sk_canvas()->drawRRect(rounded_rect, flags);
++@@ -1419,12 +1419,21 @@
++                                     flags);
++     } else {
++       SkRRect rounded_rect;
++       rounded_rect.setRectRadii(gfx::RectFToSkRect(highlight_bounds), radii);
++       canvas->sk_canvas()->drawRRect(rounded_rect, flags);
++     }
+ +    return;
+ +  }
+ +
+@@ -440,7 +442,13 @@
+    } else if (paint_as_selected) {
+      gfx::Rect item_bounds = GetLocalBounds();
+      if (menu_item_background_.has_value()) {
+-@@ -1454,6 +1463,13 @@ void MenuItemView::PaintMinorIconAndText(gfx::Canvas* canvas, SkColor color) {
++       const int horizontal_margin =
++           menu_item_background_->horizontal_margin.value_or(
++               GetItemHorizontalBorder());
++@@ -1516,12 +1525,19 @@
++   }
++ 
++   paint_minor_icon(minor_icon_on_right_);
+  }
+  
+  SkColor MenuItemView::GetTextColor(bool minor, bool paint_as_selected) const {
+@@ -454,6 +462,9 @@
+    // Use a custom color if provided by the controller. If the item is selected,
+    // use the default color.
+    if (!paint_as_selected && foreground_color_id_.has_value()) {
++     return GetColorProvider()->GetColor(foreground_color_id_.value());
++   }
++ 
+ diff --git ui/views/controls/menu/menu_model_adapter.cc ui/views/controls/menu/menu_model_adapter.cc
+ index f44b1db5d0635fd84651efc00f30e11fcac46864..bedfbc0dff977de53ec66ee74a7fd7d5ed1aeb0f 100644
+ --- ui/views/controls/menu/menu_model_adapter.cc

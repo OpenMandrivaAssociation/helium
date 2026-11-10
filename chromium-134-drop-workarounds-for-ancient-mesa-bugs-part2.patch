@@ -1,7 +1,6 @@
-diff -up chromium-152.0.7977.64/gpu/config/gpu_finch_features.cc.55~ chromium-152.0.7977.64/gpu/config/gpu_finch_features.cc
---- chromium-152.0.7977.64/gpu/config/gpu_finch_features.cc.55~	2026-01-17 23:59:25.000000000 +0100
-+++ chromium-152.0.7977.64/gpu/config/gpu_finch_features.cc	2026-01-23 17:14:05.345951443 +0100
-@@ -253,7 +253,7 @@
+--- a/ui/gl/gl_switches.cc
++++ b/ui/gl/gl_switches.cc
+@@ -409,7 +409,7 @@
  // --use-vulkan will be followed.
  // Note Android WebView uses kWebViewDrawFunctorUsesVulkan instead of this.
  BASE_FEATURE(kVulkan,
@@ -10,6 +9,9 @@ diff -up chromium-152.0.7977.64/gpu/config/gpu_finch_features.cc.55~ chromium-15
               base::FEATURE_ENABLED_BY_DEFAULT
  #else
               base::FEATURE_DISABLED_BY_DEFAULT
+
+--- a/gpu/config/gpu_finch_features.cc
++++ b/gpu/config/gpu_finch_features.cc
 @@ -280,7 +280,7 @@
  // Enable WebGPU on gpu service side only. This is used with origin trial and
  // enabled by default on supported platforms.

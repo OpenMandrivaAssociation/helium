@@ -1,0 +1,66 @@
+--- a/libcef/browser/chrome/chrome_content_browser_client_cef.cc
++++ b/libcef/browser/chrome/chrome_content_browser_client_cef.cc
+@@ -690,11 +690,17 @@
+     const GURL& url,
+     scoped_refptr<net::HttpResponseHeaders> response_headers,
+     bool first_auth_attempt,
++    bool do_not_prompt_for_login,
+     content::GuestPageHolder* guest,
+     content::LoginDelegate::LoginAuthRequiredCallback auth_required_callback) {
+   // |web_contents| is nullptr for CefURLRequests without an associated frame.
+   if (!web_contents || base::CommandLine::ForCurrentProcess()->HasSwitch(
+                            switches::kDisableChromeLoginPrompt)) {
++    // Proxy challenges that must not show login UI have no non-UI credential
++    // source on this path. GetAuthCredentials can show embedder UI, so cancel.
++    if (do_not_prompt_for_login) {
++      return nullptr;
++    }
+     // Delegate auth callbacks to GetAuthCredentials.
+     return std::make_unique<net_service::LoginDelegate>(
+         auth_info, web_contents, request_id, url,
+@@ -704,7 +710,7 @@
+   return ChromeContentBrowserClient::CreateLoginDelegate(
+       auth_info, web_contents, browser_context, request_id,
+       is_request_for_primary_main_frame_navigation, is_request_for_navigation,
+-      url, response_headers, first_auth_attempt, guest,
++      url, response_headers, first_auth_attempt, do_not_prompt_for_login, guest,
+       std::move(auth_required_callback));
+ }
+ 
+--- a/libcef/browser/chrome/chrome_content_browser_client_cef.h
++++ b/libcef/browser/chrome/chrome_content_browser_client_cef.h
+@@ -136,6 +136,7 @@
+       const GURL& url,
+       scoped_refptr<net::HttpResponseHeaders> response_headers,
+       bool first_auth_attempt,
++      bool do_not_prompt_for_login,
+       content::GuestPageHolder* guest,
+       content::LoginDelegate::LoginAuthRequiredCallback auth_required_callback)
+       override;
+--- a/libcef/browser/osr/web_contents_view_osr.cc
++++ b/libcef/browser/osr/web_contents_view_osr.cc
+@@ -162,7 +162,11 @@
+ 
+ void CefWebContentsViewOSR::UpdateDragOperation(
+     ui::mojom::DragOperation operation,
+-    bool document_is_handling_drag) {
++    bool document_is_handling_drag,
++    content::RenderWidgetHostImpl* source_rwh) {
++  // Aura ignores `source_rwh` as well. Child frames forward it so the outer
++  // view can attribute the cursor update; off-screen rendering has one view.
++  (void)source_rwh;
+   CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
+   if (browser.get()) {
+     browser->UpdateDragOperation(operation, document_is_handling_drag);
+--- a/libcef/browser/osr/web_contents_view_osr.h
++++ b/libcef/browser/osr/web_contents_view_osr.h
+@@ -84,7 +84,8 @@
+       const gfx::Rect& drag_obj_rect,
+       const blink::mojom::DragEventSourceInfo& event_info) override;
+   void UpdateDragOperation(ui::mojom::DragOperation operation,
+-                           bool document_is_handling_drag) override;
++                           bool document_is_handling_drag,
++                           content::RenderWidgetHostImpl* source_rwh) override;
+   void GotFocus(content::RenderWidgetHostImpl* render_widget_host) override;
+   void LostFocus(content::RenderWidgetHostImpl* render_widget_host) override;
+   void TakeFocus(bool reverse) override;

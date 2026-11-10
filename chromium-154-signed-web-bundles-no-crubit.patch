@@ -83,7 +83,7 @@
  }  // namespace web_package
 --- a/components/web_package/signed_web_bundles/integrity_block_parser.cc
 +++ b/components/web_package/signed_web_bundles/integrity_block_parser.cc
-@@ -4,17 +4,19 @@
+@@ -4,16 +4,17 @@
  
  #include "components/web_package/signed_web_bundles/integrity_block_parser.h"
  
@@ -97,12 +97,10 @@
 +#include "base/containers/map_util.h"
  #include "base/functional/bind.h"
  #include "base/strings/stringprintf.h"
-+#include "base/strings/to_string.h"
  #include "base/types/expected.h"
  #include "base/types/expected_macros.h"
- #include "components/cbor/reader.h"
++#include "components/cbor/reader.h"
 +#include "components/cbor/writer.h"
-+#include "components/web_package/mojom/web_bundle_parser.mojom-forward.h"
  #include "components/web_package/mojom/web_bundle_parser.mojom.h"
  #include "components/web_package/signed_web_bundles/constants.h"
  #include "components/web_package/signed_web_bundles/ecdsa_p256_public_key.h"
@@ -553,8 +551,8 @@
  }  // namespace web_package
 --- a/components/web_package/rust/BUILD.gn
 +++ b/components/web_package/rust/BUILD.gn
-@@ -7,8 +7,10 @@
- rust_static_library("web_package_rust") {
+@@ -8,8 +8,10 @@
+   visibility = [ "//components/web_package/*" ]
    crate_name = "web_package_rust"
    crate_root = "lib.rs"
 +  allow_unsafe = true

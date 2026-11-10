@@ -93,13 +93,13 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.20.3
+%global helium_version 0.21.1
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.20.3 asks for 156.0.8078.79.
-%define chromium 156.0.8078.79
+# Helium 0.21.1 asks for 157.0.8103.38.
+%define chromium 157.0.8103.38
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -113,13 +113,14 @@ Version:	%{helium_version}
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-# CEF branch 8078 tracks Chromium 156. Helium 0.20.3 is 156.0.8078.79.
-# No CEF commit pins exactly .79. This snapshot is branch tip
-# cf671c072925b27823a61181152f4f288e8e4306 (2026-10-30). Its
-# CHROMIUM_BUILD_COMPATIBILITY.txt says refs/tags/156.0.8078.80, one
-# stable respin ahead; that bump only refreshed patch context.
+# CEF has no branch 8103 yet (checked 2026-11-10). Branch 8078 is still
+# the newest release branch and still tracks Chromium 156. This snapshot
+# is branch tip a10dae3408911466b2d90409cc3355cbf6043ffb (2026-11-09).
+# Its CHROMIUM_BUILD_COMPATIBILITY.txt says refs/tags/156.0.8078.88.
+# Helium 0.21.1 builds Chromium 157.0.8103.38, so the nested CEF patches
+# are one milestone behind and need the Helium rebase on top.
 # Do not replace this commit archive with a floating branch URL.
-%define cef cf671c072925b27823a61181152f4f288e8e4306
+%define cef a10dae3408911466b2d90409cc3355cbf6043ffb
 %define cefversion 8078
 # make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
 %ifarch %{x86_64}
@@ -140,7 +141,7 @@ Version:	%{helium_version}
 %endif
 %endif
 %endif
-Release:	2
+Release:	1
 Summary:	A fast, privacy friendly, web browser based on Ungoogled Chromium
 Group:		Networking/WWW
 License:	BSD, LGPL
@@ -171,7 +172,7 @@ Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_versio
 # See deps.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202609082320/nonfree-search-engines-data-202609082320.tar.gz
 Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202610161403/helium-onboarding-202610161403.tar.gz
-Source1003:	https://github.com/imputnet/uBlock/releases/download/1.75.0/uBlock0_1.75.0.chromium.zip
+Source1003:	https://github.com/imputnet/uBlock/releases/download/1.75.4/uBlock0_1.75.4.chromium.zip
 
 
 # ============================================================================
@@ -314,7 +315,9 @@ Patch1018:	chromium-81-unbundle-zlib.patch
 Patch1019:	chromium-121-rust-clang_lib.patch
 # https://issues.chromium.org/issues/403871216
 Patch1020:	chromium-135-bug-403871216.patch
-Patch1021:	chromium-127-system-bindgen.patch
+# bindgen's path left rust_bindgen.gni. rust_bindgen_root in Patch1047
+# points it at /usr/bin/bindgen.
+#Patch1021:	chromium-127-system-bindgen.patch
 # Chromium 154.0.8037.97 checks "-le64.cache-" FC_CACHE_VERSION itself.
 # The old cache-11 -> cache-8 rewrite no longer applies, and cache-8 is
 # wrong for fontconfig 2.18 (FC_CACHE_VERSION 12).
@@ -365,10 +368,16 @@ Patch1057:	chromium-152-cbor-no-crubit-without-chromium-rust.patch
 # 156's web font decoder still calls IftPatcher::Create. Crubit is what
 # used to back that class. Keep the C++ type and return nullptr.
 Patch1064:	chromium-156-ift-patcher-no-crubit.patch
+# Chromium 157 QR generation calls Crubit cpp_api_from_rust, and
+# build/rust/crubit/BUILD.gn loads rust-toolchain Crubit sources even for
+# targets this build does not use. System rust has neither. Keep the cxx
+# bridge from 155, and do not reference those sources unless rust_api_from_cpp
+# is enabled.
+Patch1065:	chromium-157-qr-cxx-without-crubit.patch
 # third_party/iamf_tools (new in 153) includes vendored Opus via
 # "include/opus.h". With system opus those paths do not resolve.
 Patch1058:	chromium-153-iamf-tools-unbundled-opus.patch
-# Chromium 156 WebUI and DevTools call the native tsc binary. Helium
+# Chromium 157 WebUI and DevTools call the native tsc binary. Helium
 # prune_binaries deletes the CIPD typescript directory, so the build points
 # third_party/typescript/linux-amd64/src/lib/tsc at system TypeScript 7.
 # That binary embeds lib.*.d.ts. The Trusted Types setters are in the
@@ -417,6 +426,52 @@ Patch2005:	cef-8037-version-manager-old-chrome.patch
 # Refresh the nested policy patch so that hunk matches and the higher task
 # priority is kept.
 Patch2009:	cef-8037-policy-connector-user-visible.patch
+# Chromium 157 moved context under nested CEF patches that do not depend on
+# Helium: runhooks, navigation headers, Mac locale, TPM metrics, keepalive
+# timer, policy source generator, CloseWebContents, and TriggerListAccounts.
+# static_library("ui") and the old source_set("browser") are gone, so the
+# CEF buildflags and include config are retargeted onto the source_sets that
+# compile the patched files. The crash-key switch rename stays on the
+# sanitized command line from the Helium rebase. Helium-owned context (zen
+# initializers, shortcut teardown, incognito themes, USER_VISIBLE,
+# GetHeliumVersionNumber) is left for the helium patch set, which runs
+# before cef/tools/patch.sh.
+Patch2010:	cef-8078-chromium-157-refresh.patch
+# Helium empties GCMClientImpl::Start before cef/tools/patch.sh. The nested
+# hunk still expects the old DCHECK body, and fuzz 3 then inserts return
+# after StartGCM(). Retarget that early return onto the empty Start().
+# The Register() GCM_DISABLED path is unchanged.
+Patch2011:	cef-8078-gcm-empty-start.patch
+# Chromium 157 draws the menu highlight in a clip_to_background branch, so
+# the nested views patch no longer sees drawRRect immediately before the
+# paint_as_selected else. Fuzz 3 inserted the delegate background override
+# into the color ternary. Place that override after the highlight draw,
+# where the selected-background else starts.
+Patch2012:	cef-8078-menu-background.patch
+# Chromium 157 removed WebContentsDelegate::FindReply. Find replies are
+# delivered to WebContentsObserver::DidReceiveFindReply, and FindTabHelper
+# applies them before notifying FindResultObserver. CEF listens there.
+# StartFinding gained a scroll_to_match argument ahead of the test flag.
+Patch2013:	cef-8078-find-reply.patch
+# Chromium 157 added do_not_prompt_for_login to CreateLoginDelegate and
+# source_rwh to UpdateDragOperation. CEF forwards the login flag to Chrome.
+# On the CEF-owned auth path the flag cancels the challenge, because
+# GetAuthCredentials can show embedder UI. Off-screen drag updates ignore
+# source_rwh, matching WebContentsViewAura.
+Patch2014:	cef-8078-login-and-drag.patch
+# CopyFromSurface and CopyFromSurfaceSecure are final on
+# RenderWidgetHostViewBase. Platform views override CopyFromSurfaceImpl,
+# which takes is_copy_request_secure and always runs the callback.
+Patch2015:	cef-8078-copy-from-surface.patch
+# Chromium 157 moved crash_reporter::InitializeCrashKeys() from
+# PreSandboxStartup into BasicStartupComplete. The nested hunk still
+# wraps the old call, and fuzz 3 inserts the guard inside the
+# SystemProfile if, leaving that if open under ENABLE_CEF. Skip Chrome's
+# crash-key init from BasicStartupComplete when ENABLE_CEF. CEF calls
+# InitializeCrashKeys itself from crash_reporting::PreSandboxStartup.
+# The POSIX crash-reporter client and the Mac crash reporter stay wrapped
+# as their own block after the SystemProfile if closes.
+Patch2016:	cef-8078-crash-keys.patch
 # Applied by hand after cef/tools/patch.sh, and only when the definition is
 # missing. CEF 8078's chrome_runtime_views.patch includes the body and calls
 # raw_ptr::ClearAndDelete(), which this Chromium has. The fallback body is
@@ -437,7 +492,7 @@ Patch3020:	cef-8037-will-destroy-toolbar.patch
 
 Provides:	%{crname}
 # Cooker stopped shipping the Chromium browser when Helium became the
-# maintained build. chromium 141 sorts above Helium 0.20, so a versioned
+# maintained build. chromium 141 sorts above Helium 0.21, so a versioned
 # Obsoletes would leave it installed. chromium-bsu is a separate game.
 Provides:	chromium
 Provides:	chromium-browser-stable
@@ -813,7 +868,7 @@ mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -sfn /usr/bin/node third_party/node/linux/node-linux-x64/bin/
 sed -i -e "s,^NODE_VERSION=.*,NODE_VERSION=\"v%(rpm -q --qf '%%{VERSION}' nodejs)\"," third_party/node/update_node_binaries
 
-# Chromium 156 runs tsc at this path. prune_binaries removes the CIPD tree.
+# Chromium 157 runs tsc at this path. prune_binaries removes the CIPD tree.
 # /usr/bin/tsc from typescript >= 7.0.2-2 embeds the Trusted Types DOM lib
 # and accepts the same --isolatedDeclarations / --emitDeclarationOnly flags.
 # The gni path is linux-amd64 on every Linux host, including aarch64.
@@ -969,10 +1024,11 @@ use_unified_system_module=false
 #use_autogenerated_modules=true
 clang_base_path="%{_prefix}"
 clang_use_chrome_plugins=false
-# Chromium 155 harvests V8 instance types with tools/metagen, which needs the
-# bundled third_party/llvm-libclang package. The linux tarball does not ship
-# it, and we do not vendor a prebuilt libclang. Torque still emits the header.
-v8_use_metagen_instance_types=false
+# Chromium 157 harvests V8 instance types with tools/metagen (the 155 flag
+# v8_use_metagen_instance_types is gone). Metagen needs the bundled
+# third_party/llvm-libclang package. The linux tarball does not ship it,
+# and we do not vendor a prebuilt libclang. Torque still emits the header.
+v8_use_metagen=false
 node_version_check=false
 treat_warnings_as_errors=false
 %if %{with libcxx}
@@ -1191,6 +1247,9 @@ _ninja_jobs=$(df -Pk . | awk -v nproc="$(getconf _NPROCESSORS_ONLN)" '
 		if (j > 32) j = 32
 		print j
 	}')
+# Optional local cap: rpmbuild --define 'helium_ninja_jobs 8'
+# ABF does not define it, so builders keep the disk-based job count.
+%{?helium_ninja_jobs:_ninja_jobs=%{helium_ninja_jobs}}
 echo "Using ninja -j${_ninja_jobs} (nproc=$(getconf _NPROCESSORS_ONLN))"
 df -h . || :
 
