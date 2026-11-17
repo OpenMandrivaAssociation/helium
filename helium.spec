@@ -344,6 +344,10 @@ Patch1040:	chromium-134-drop-workarounds-for-ancient-mesa-bugs.patch
 Patch1041:	chromium-134-drop-workarounds-for-ancient-mesa-bugs-part2.patch
 Patch1042:	chromium-134-if-chromeos-can-do-it-so-can-linux.patch
 #Patch1044:	chromium-136-no-unknown-clang-flag.patch
+# System bindgen, and keep Crubit off when rust_sysroot_absolute is set.
+# Chromium 158 sets enable_cpp_api_from_rust for every Chromium build.
+# gn gen then asserts rust_crubit_root. System rust has no Crubit built
+# from the same rustc, so restore the 157 gate (Chromium toolchain only).
 Patch1047:	chromium-system-bindgen.patch
 # Keeping the source here for now, just in case we need to backport
 # to 6.0 or something else that has old python
@@ -1176,6 +1180,10 @@ use_real_dbus_clients=true
 use_vaapi_image_codecs=true
 rust_sysroot_absolute="%{_prefix}"
 rust_bindgen_root="%{_prefix}"
+# Rust 1.100 ships gimli, addr2line, miniz_oxide, and adler2 as separate
+# std rlibs. Chromium's list stops at object and memchr, so linking
+# root_store_tool leaves those symbols undefined inside libstd.
+added_rust_stdlib_libs=["addr2line","adler2","gimli","miniz_oxide"]
 # 107: Build failure: GN_DEFINES+=" enable_wayland_server=true"
 # 124: Fails with 
 # ld.lld: error: undefined symbol: google::protobuf::compiler::CodeGenerator::GenerateAll(std::__Cr::vector<google::protobuf::FileDescriptor const*, std::__Cr::allocator<google::protobuf::FileDescriptor const*>> const&, std::__Cr::basic_string<char, std::__Cr::char_traits<char>, std::__Cr::allocator<char>> const&, google::protobuf::compiler::GeneratorContext*, std::__Cr::basic_string<char, std::__Cr::char_traits<char>, std::__Cr::allocator<char>>*) const

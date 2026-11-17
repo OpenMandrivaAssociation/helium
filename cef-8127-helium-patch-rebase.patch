@@ -171,13 +171,16 @@ diff -ruN a/patch/patch.cfg b/patch/patch.cfg
      'name': 'viz_capture_3826',
    },
    {
-@@ -586,18 +586,18 @@
+@@ -586,18 +586,21 @@
    },
    {
      # libxml access is now limited to targets audited by the Security Team.
 -    # https://chromium-review.googlesource.com/c/chromium/src/+/1884750
 +    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/1884750
++    # System libxml BUILD.gn has no bundled visibility list; skip or the
++    # hunk fuzz-appends "//cef:*" after xml_writer and breaks gn gen.
      'name': 'libxml_visibility',
++    'condition': 'CEF_BUNDLED_LIBXML',
    },
    {
      # Fix unbound AssociatedRemote error in SetBackgroundOpaque.

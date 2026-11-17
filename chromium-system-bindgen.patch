@@ -8,6 +8,22 @@ diff -up chromium-144.0.7559.96/build/config/rust.gni.58~ chromium-144.0.7559.96
 +  rust_bindgen_root = "/usr"
  
    # Directory under which to find Crubit tools and support libraries:
+--- a/build/config/rust.gni
++++ b/build/config/rust.gni
+@@ -454,7 +454,11 @@
+ #
+ # See the `assert` comments in `cpp_api_from_rust.gni` for explanation of
+ # the conditions used here.
+-enable_cpp_api_from_rust = enable_rust && build_with_chromium
++# System rust has no Crubit built from the same rustc. Chromium 157
++# required use_chromium_rust_toolchain here; 158 dropped that and then
++# asserts rust_crubit_root during gn gen.
++enable_cpp_api_from_rust = enable_rust && use_chromium_rust_toolchain &&
++                           !rust_prebuilt_stdlib && build_with_chromium
+ 
+ declare_args() {
+   # Whether it is okay to use `rust_api_from_cpp.gni`.  The default is `false`,
+
 diff -up chromium-144.0.7559.96/build/rust/rust_bindgen_generator.gni.58~ chromium-144.0.7559.96/build/rust/rust_bindgen_generator.gni
 --- chromium-144.0.7559.96/build/rust/rust_bindgen_generator.gni.58~	2026-01-23 17:16:37.513736819 +0100
 +++ chromium-144.0.7559.96/build/rust/rust_bindgen_generator.gni	2026-01-23 17:17:16.493960892 +0100

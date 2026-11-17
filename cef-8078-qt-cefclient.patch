@@ -27,8 +27,8 @@
      'cefsimple_sources_common': [
        'tests/cefsimple/simple_app.cc',
        'tests/cefsimple/simple_app.h',
---- a/BUILD.gn
-+++ b/BUILD.gn
+--- a/BUILD.gn	2026-11-12 19:07:45.000000000 +0100
++++ b/BUILD.gn	2026-11-17 16:47:08.196623530 +0100
 @@ -331,6 +331,9 @@
    # Linux cefclient requires GTK, including when running in Views mode.
    if (!is_linux || cef_use_gtk) {
@@ -39,8 +39,7 @@
    }
  
    if (is_win) {
- 
-@@ -429,6 +432,10 @@
+@@ -449,6 +452,10 @@
      "libcef/features:config",
      "//build/config:precompiled_headers",
    ]
@@ -51,7 +50,7 @@
  }
  
  # Executable target that provides test coverage for libcef_static_unittested
-@@ -1291,6 +1298,27 @@
+@@ -1328,6 +1335,27 @@
    }
  }
  
@@ -79,7 +78,7 @@
  # libcef_dll_wrapper target.
  static_library("libcef_dll_wrapper") {
    sources = includes_common +
-@@ -1323,6 +1351,36 @@
+@@ -1360,6 +1388,36 @@
  
    # Disable clang modules for this target (see issue #3611).
    use_libcxx_modules = false
@@ -116,7 +115,7 @@
  }
  
  # Distribution variant of libcef_dll_wrapper for client DLLs loaded by
-@@ -2636,6 +2694,73 @@
+@@ -2683,6 +2741,75 @@
      }
    }
  
@@ -170,6 +169,8 @@
 +      configs += [
 +        ":cef_host_libstdcxx",
 +        ":qt6_widgets",
++        # CEF 8127 only typedefs TempWindow when CEF_TESTS_USE_X11 is set.
++        ":sample_x11",
 +      ]
 +      # shared external-pump sources use GLib.
 +      if (!use_sysroot) {
@@ -190,8 +191,7 @@
    if (is_win) {
      # Like the "cefclient" executable target, but building a DLL to be loaded by
      # bootstrap.exe.
-@@ -2926,5 +2926,10 @@
-     if (is_linux) {
+@@ -2805,6 +2930,11 @@
        sources += includes_linux +
                   gypi_paths2.cefsimple_sources_linux
  
@@ -201,7 +201,9 @@
 +      configs += [ ":cef_host_libstdcxx" ]
 +
        configs += [ ":sample_x11" ]
-@@ -3013,6 +3143,13 @@
+ 
+       if (!is_component_build) {
+@@ -3055,6 +3185,13 @@
        # Set rpath to find our own libfreetype even in a non-component build.
        configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
      }
