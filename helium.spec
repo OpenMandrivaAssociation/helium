@@ -93,13 +93,13 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.21.1
+%global helium_version 0.21.3
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.21.1 asks for 157.0.8103.38.
-%define chromium 157.0.8103.38
+# Helium 0.21.3 asks for 157.0.8103.78.
+%define chromium 157.0.8103.78
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -113,11 +113,15 @@ Version:	%{helium_version}
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-# CEF has no branch 8103 yet (checked 2026-11-10). Branch 8078 is still
-# the newest release branch and still tracks Chromium 156. This snapshot
-# is branch tip a10dae3408911466b2d90409cc3355cbf6043ffb (2026-11-09).
-# Its CHROMIUM_BUILD_COMPATIBILITY.txt says refs/tags/156.0.8078.88.
-# Helium 0.21.1 builds Chromium 157.0.8103.38, so the nested CEF patches
+# CEF has no branch 8103 yet (checked 2026-11-17). Branch 8078 is still
+# the newest release branch and still tracks Chromium 156. The stored
+# cef-8078.tar.gz is commit a10dae3408911466b2d90409cc3355cbf6043ffb
+# (2026-11-09). Its CHROMIUM_BUILD_COMPATIBILITY.txt says
+# refs/tags/156.0.8078.88. Branch tip has since moved to 6028375
+# (2026-11-12, compatibility 156.0.8078.96) for a Windows helper-clock
+# fix; keep this snapshot so the Linux CEF patches stay on the tree they
+# were refreshed against.
+# Helium 0.21.3 builds Chromium 157.0.8103.78, so the nested CEF patches
 # are one milestone behind and need the Helium rebase on top.
 # Do not replace this commit archive with a floating branch URL.
 %define cef a10dae3408911466b2d90409cc3355cbf6043ffb
@@ -649,6 +653,8 @@ BuildRequires:	pkgconfig(python)
 BuildRequires:	pkgconfig(protobuf)
 BuildRequires:	python%{pyver}dist(protobuf)
 BuildRequires:	python%{pyver}dist(markupsafe)
+# Helium generate_resources.py scales branding/app_icon/raw.png with Pillow.
+BuildRequires:	python%{pyver}dist(pillow)
 
 BuildRequires:	yasm
 BuildRequires:	speech-dispatcher-devel
@@ -783,14 +789,29 @@ echo %{helium_version} >$HEDIR/chromium_version.txt
 # users, but we don't want to prevent users from voluntarily using
 # Google services.
 # Also, disable some security-for-usability tradeoffs by default
+# Match the old feature-removal patch only. Helium 0.21.2 added
+# inox-patchset/disable-autofill-download-manager.patch, which stops
+# crowdsourced form uploads. A bare "disable-autofill" pattern drops it.
 sed -i \
-	-e '/disable-autofill/d' \
+	-e '/disable-autofill\.patch/d' \
 	-e '/prefs-only-keep-cookies-until-exit/d' \
 	-e '/XXXdisable-webstore-urls.patch/d' \
 	$HEDIR/patches/series
 python $HEDIR/utils/prune_binaries.py ./ $HEDIR/pruning.list --verbose || :
 python $HEDIR/utils/patches.py apply ./ $HEDIR/patches
 python $HEDIR/utils/domain_substitution.py apply -r $HEDIR/domain_regex.list -f $HEDIR/domain_substitution.list -c domainsubcache.tar.gz ./
+
+# Helium's window icon is the bitmap in the resource pak (IDR_PRODUCT_LOGO_128
+# from chrome/app/theme/chromium/linux/product_logo_128.png), sent to the
+# compositor with xdg_toplevel_icon. Plasma's Alt+Tab thumbnails use that
+# bitmap. The hicolor helium.svgz only covers desktop-file lookups, so the
+# taskbar can show Helium while Alt+Tab still shows the Chromium logo.
+# generate_resources scales branding/app_icon/raw.png; replace_resources
+# copies those icons over the Chromium product logos.
+python $HEDIR/utils/generate_resources.py \
+	$HEDIR/resources/generate_resources.txt $HEDIR/resources
+python $HEDIR/utils/replace_resources.py \
+	$HEDIR/resources/helium_resources.txt $HEDIR/resources ./
 
 %if 0%{?cef:1}
 tar xf %{S:10}
