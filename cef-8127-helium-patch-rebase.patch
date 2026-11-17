@@ -1,0 +1,644 @@
+diff -ruN a/patch/patch.cfg b/patch/patch.cfg
+--- a/patch/patch.cfg	2026-11-12 19:07:45.000000000 +0100
++++ b/patch/patch.cfg	2026-11-17 04:18:20.483037947 +0100
+@@ -27,13 +27,13 @@
+     # due to conflicting outputs with the //cef:repack_locales_pack target.
+     #
+     # Write environment.* files with the correct SDK version on Windows.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=634788
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=634788
+     #
+     # Windows: Add cc_wrapper support for sccache builds.
+     # https://github.com/chromiumembedded/cef/issues/2432
+     #
+     # Windows: Add GN arg windows_sdk_version.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=1420723
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=1420723
+     'name': 'gn_config',
+   },
+   {
+@@ -41,7 +41,7 @@
+     # `gclient runhooks`.
+     #
+     # Support custom VS toolchain on Windows.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=623342
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=623342
+     'name': 'runhooks',
+   },
+   {
+@@ -56,10 +56,10 @@
+   },
+   {
+     # Revert change on Windows that removes MessageLoop::os_modal_loop().
+-    # https://codereview.chromium.org/1992243003
++    # https://codereview.ch40m1um.qjz9zk/1992243003
+     #
+     # Revert change that removes MessageLoopForUI constructor.
+-    # https://chromium-review.googlesource.com/751322
++    # https://chromium-review.9oo91esource.qjz9zk/751322
+     #
+     # Add MessageLoop::ReleasePump to fix crashes during shutdown with multi-
+     # threaded message loop mode.
+@@ -140,7 +140,7 @@
+     #
+     # win: Don't call DwmSetWindowAttribute when the browser has an external
+     # parent. This call only applies for top-level windows.
+-    # https://issuetracker.google.com/issues/41241478
++    # https://issuetracker.9oo91e.qjz9zk/issues/41241478
+     #
+     # linux: wayland: Fix shadow artifacts with multi-threaded-message-loop.
+     # Call UpdateFrameRegions() from OnWidgetInitDone() so that the opaque
+@@ -170,12 +170,12 @@
+   },
+   {
+     # Fix drag&drop of combined text and URL data on Linux/Aura.
+-    # https://codereview.chromium.org/208313009
++    # https://codereview.ch40m1um.qjz9zk/208313009
+     'name': 'ui_dragdrop_355390',
+   },
+   {
+     # Split content::ContentMain into the separate steps required by CEF.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=654986#c17
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=654986#c17
+     #
+     # Remove DCHECK on Linux when initialized CEF from a non-main thread.
+     # https://github.com/chromiumembedded/cef/issues/1639
+@@ -189,7 +189,7 @@
+     # fix "Symbols not available" output when printing stack traces in the main
+     # process. For comparison, Chromium test code calls this explicitly from
+     # TestSuite::Initialize. This change only impacts non-Official builds.
+-    # https://issues.chromium.org/issues/462160529
++    # https://issues.ch40m1um.qjz9zk/issues/462160529
+     'name': 'content_main_654986',
+   },
+   {
+@@ -199,15 +199,15 @@
+     # Don't add TestDesktopScreenOzone dependency on Linux.
+     # Reverts ui_controls_factory_desktop_aurax11.cc (now
+     # ui_controls_factory_desktop_aura_ozone.cc) changes from
+-    # https://codereview.chromium.org/2327623002
++    # https://codereview.ch40m1um.qjz9zk/2327623002
+     #
+     # Add InkDropHostView::ink_drop_mode method.
+     # Reverts ink_drop_host_view.h changes from
+-    # https://codereview.chromium.org/2723843002
++    # https://codereview.ch40m1um.qjz9zk/2723843002
+     #
+     # Add LabelButton::SetFontList method.
+     # Reverts label_button.[cc|h] changes from
+-    # https://codereview.chromium.org/2801583002
++    # https://codereview.ch40m1um.qjz9zk/2801583002
+     #
+     # Expose callbacks for mouse/keyboard events that trigger menu switching.
+     # Add accelerator display support to Label.
+@@ -243,7 +243,7 @@
+     # https://github.com/chromiumembedded/cef/issues/2969
+     #
+     # Apply dynamic light/dark theme changes to web content.
+-    # https://issues.chromium.org/issues/332328864#comment3
++    # https://issues.ch40m1um.qjz9zk/issues/332328864#comment3
+     #
+     # Pass ui::ResourceBundle::Delegate to InitSharedInstanceWithLocale.
+     # https://github.com/chromiumembedded/cef/issues/3685
+@@ -346,7 +346,7 @@
+     # Fix incorrect movement of parent window when showing modal dialog.
+     # https://github.com/chromiumembedded/cef/issues/3629
+     # Partially reverts
+-    # https://chromium-review.googlesource.com/c/chromium/src/+/5006355
++    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/5006355
+     'name': 'chrome_browser_dialogs_widget',
+   },
+   {
+@@ -429,7 +429,7 @@
+   },
+   {
+     # Fix component build dependency issue.
+-    # https://issues.chromium.org/issues/414506471
++    # https://issues.ch40m1um.qjz9zk/issues/414506471
+     'name': 'chrome_browser_safe_browsing',
+   },
+   {
+@@ -451,10 +451,10 @@
+   },
+   {
+     # Support customization of crash report pruning limits.
+-    # https://bugs.chromium.org/p/crashpad/issues/detail?id=142
++    # https://bugs.ch40m1um.qjz9zk/p/crashpad/issues/detail?id=142
+     #
+     # Implement better rate-limiting/retry logic.
+-    # https://bugs.chromium.org/p/crashpad/issues/detail?id=23
++    # https://bugs.ch40m1um.qjz9zk/p/crashpad/issues/detail?id=23
+     'name': 'crashpad_tp_1995',
+   },
+   {
+@@ -462,7 +462,7 @@
+     # https://github.com/chromiumembedded/cef/issues/1984
+     #
+     # Windows: Fix crash during window creation.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=761389
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=761389
+     #
+     # Add RWHVAura::SetRootWindowBoundsCallback.
+     # https://github.com/chromiumembedded/cef/issues/3920
+@@ -471,10 +471,10 @@
+   {
+     # Expose RFH via NavigationHandle for retrieval in DidFinishNavigation on
+     # network error.
+-    # https://groups.google.com/a/chromium.org/d/msg/chromium-dev/6iAQPx_hwh8/gaTR5f1GAQAJ
++    # https://groups.9oo91e.qjz9zk/a/ch40m1um.qjz9zk/d/msg/chromium-dev/6iAQPx_hwh8/gaTR5f1GAQAJ
+     #
+     # Add ContentRendererClient::RenderThreadConnected to fix sync IPC issue.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=728195
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=728195
+     #
+     # Add ContentRendererClient::DevToolsAgent[Attached|Detached] methods.
+     #
+@@ -544,7 +544,7 @@
+     # Restore the net::LOAD_DO_NOT_SEND_COOKIES flag to support disabling of
+     # cookie load/save on a per-request basis.
+     # Partially reverts the changes from
+-    # https://chromium.googlesource.com/chromium/src/+/25eaa43022
++    # https://chromium.9oo91esource.qjz9zk/chromium/src/+/25eaa43022
+     'name': 'net_cookie_flags',
+   },
+   {
+@@ -567,7 +567,7 @@
+   {
+     # Complete dropped captures so refresh retries can release OSR resize holds.
+     # https://github.com/chromiumembedded/cef/issues/3826
+-    # https://issues.chromium.org/issues/544987104
++    # https://issues.ch40m1um.qjz9zk/issues/544987104
+     'name': 'viz_capture_3826',
+   },
+   {
+@@ -586,18 +586,18 @@
+   },
+   {
+     # libxml access is now limited to targets audited by the Security Team.
+-    # https://chromium-review.googlesource.com/c/chromium/src/+/1884750
++    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/1884750
+     'name': 'libxml_visibility',
+   },
+   {
+     # Fix unbound AssociatedRemote error in SetBackgroundOpaque.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=1070713
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=1070713
+     'name': 'renderer_host_1070713',
+   },
+   {
+     # Allow the loading of non-standard non-local WebSafe custom schemes in
+     # iframes.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=1081397#c9
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=1081397#c9
+     #
+     # Fix crash in NavigationRequest::GetOriginForURLLoaderFactory() when
+     # navigating to an unregistered (e.g. non-standard) scheme.
+@@ -612,7 +612,7 @@
+   },
+   {
+     # Linux: Fix ATK assertion error when generating ARM build config.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=1123214
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=1123214
+     'name': 'linux_atk_1123214',
+   },
+   {
+@@ -633,7 +633,7 @@
+   },
+   {
+     # Fix deadlock in EmbeddedTestServer::ShutdownAndWaitUntilComplete.
+-    # https://chromium-review.googlesource.com/c/chromium/src/+/3798752
++    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/3798752
+     'name': 'net_test_server_3798752'
+   },
+   {
+@@ -641,12 +641,12 @@
+     # qualified type 'volatile gsize' (aka 'volatile unsigned long') is
+     # deprecated [-Werror,-Wdeprecated-volatile]" when building with
+     # use_sysroot=false on Ubuntu 18.04.
+-    # https://chromium-review.googlesource.com/c/chromium/src/+/3960017
++    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/3960017
+     'name': 'linux_glib_deprecated_volatile'
+   },
+   {
+     # Restore low-level attribute access from WebElement which was removed in
+-    # https://chromium-review.googlesource.com/c/chromium/src/+/4200240
++    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/4200240
+     'name': 'blink_web_element_4200240'
+   },
+   {
+@@ -668,27 +668,27 @@
+   },
+   {
+     # win/linux: Fix rounding errors with Screen[Win] DIP/pixel conversions.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=1443650#c18
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=1443650#c18
+     'name': 'screen_1443650'
+   },
+   {
+     # mac: Keep bubble popups on-screen.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=893292#c10
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=893292#c10
+     'name': 'mac_platform_style_bubble_893292'
+   },
+   {
+     # win: Add support for "force-light-mode" command-line option.
+     # mac: Add support for "force-light-mode" and "force-dark-mode".
+     # https://github.com/chromiumembedded/cef/issues/3534
+-    # https://chromium-review.googlesource.com/c/chromium/src/+/4766248
++    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/4766248
+     'name': 'light_mode_3534'
+   },
+   {
+     # Fix NOTREACHED() in RenderFrameHostImpl::CommitNavigation() with
+     # CorsTest.IframeNoneServerToCustomUnregisteredScheme.
+     # Partially reverts the below changes.
+-    # https://chromium-review.googlesource.com/c/chromium/src/+/4829483
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=1470837#c22
++    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/4829483
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=1470837#c22
+     #
+     # Add ContentBrowserClient::CreateWindowResult callback.
+     # https://github.com/chromiumembedded/cef/issues/3776
+@@ -728,7 +728,7 @@
+   },
+   {
+     # views: Update textfield colors when enabled state changes
+-    # https://chromium-review.googlesource.com/c/chromium/src/+/5399416
++    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/5399416
+     'name': 'views_textfield_5399416'
+   },
+   {
+@@ -740,7 +740,7 @@
+     # linux: Disable GtkUi with multi-threaded-message-loop to avoid crashes.
+     # linux: Disable GTK theme change notifications due to performance issues.
+     # https://github.com/chromiumembedded/cef/issues/3610
+-    # https://issues.chromium.org/issues/40280130#comment7
++    # https://issues.ch40m1um.qjz9zk/issues/40280130#comment7
+     'name': 'linux_gtk_theme_3610'
+   },
+   {
+@@ -754,7 +754,7 @@
+     # https://bitbucket.org/chromiumembedded/cef/pull-requests/734
+     # https://github.com/chromiumembedded/cef/issues/2575
+     # It is a bit hacky, not suitable for merging into upstream.
+-    # https://chromium-review.googlesource.com/c/chromium/src/+/5302103
++    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/5302103
+     'name': 'osr_win_remove_keyed_mutex_2575'
+   },
+   {
+@@ -765,7 +765,7 @@
+   {
+     # Fix ThreadPool DCHECK during startup when using multi-threaded message
+     # loop. Related to the following CL:
+-    # https://chromium-review.googlesource.com/c/chromium/src/+/5548577
++    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/5548577
+     'name': 'base_thread_pool_5548577'
+   },
+   {
+@@ -773,7 +773,7 @@
+     # CheckedLockImpl::Acquire (DCHECK-only) allocates on PostTask, entering
+     # PartitionAlloc -> ThreadCache::Get; on this path the `static thread_local
+     # MetricsSubSampler g_shared_subsampler` added by
+-    # https://chromium-review.googlesource.com/c/chromium/src/+/6202281 is
++    # https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/6202281 is
+     # constructed, and its ctor seeds InsecureRandomGenerator via
+     # base::RandUint64() -> BoringSSL RAND_bytes -> OPENSSL_malloc, reentering
+     # the allocator. Lazy-seed InsecureRandomGenerator so its ctor doesn't
+@@ -795,7 +795,7 @@
+   {
+     # Add v8_used_in_shared_library GN arg to configure the
+     # V8_TLS_USED_IN_LIBRARY define.
+-    # https://issues.chromium.org/issues/336738728
++    # https://issues.ch40m1um.qjz9zk/issues/336738728
+     'name': 'v8_build',
+     'path': 'v8'
+   },
+@@ -883,7 +883,7 @@
+     # Disable TPM metrics collection on Windows/Mac. This can crash on some
+     # Windows machines with buggy TPM drivers (null pointer dereference in
+     # PCPKsp.dll when calling NCryptIsAlgSupported).
+-    # https://issues.chromium.org/issues/476896967
++    # https://issues.ch40m1um.qjz9zk/issues/476896967
+     'name': 'chrome_browser_metrics_tpm_476896967'
+   },
+   {
+@@ -924,7 +924,7 @@
+     # https://github.com/chromiumembedded/cef/issues/4306
+     #
+     # mac: Fix NOTREACHED with ViewsTextfieldTest.TextfieldKeyEvent.
+-    # https://bugs.chromium.org/p/chromium/issues/detail?id=1467329
++    # https://bugs.ch40m1um.qjz9zk/p/chromium/issues/detail?id=1467329
+     'name': 'keyboard_input',
+   }
+ ]
+diff -ruN a/patch/patches/chrome_browser_webui_version.patch b/patch/patches/chrome_browser_webui_version.patch
+--- a/patch/patches/chrome_browser_webui_version.patch	2026-11-12 19:07:45.000000000 +0100
++++ b/patch/patches/chrome_browser_webui_version.patch	2026-11-17 04:18:20.531411427 +0100
+@@ -288,10 +288,10 @@
+        </table>
+ +<if expr="enable_cef">
+ +      <div id="footnote">
+-+        <br/><a name="footnote">[*] In <a href="https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md" target="_new">Chromium terminology</a>,
+++        <br/><a name="footnote">[*] In <a href="https://chromium.9oo91esource.qjz9zk/chromium/src/+/master/docs/user_data_dir.md" target="_new">Chromium terminology</a>,
+ +        <a href="https://cef-builds.spotifycdn.com/docs/stable.html?structcef__settings__t.html#a2e2be03f34ddd93de90e1cf196757a19" target="_new">CefSettings.root_cache_path</a>
+ +        is the "$i18n{user_data_path_name}" and <a href="https://cef-builds.spotifycdn.com/docs/stable.html?structcef__settings__t.html#ad1644a7eb23cad969181db010f007710" target="_new">CefSettings.cache_path</a>
+-+        is the "$i18n{profile_path_name}". Chromium's <a href="https://chromium.googlesource.com/chromium/src/+/master/chrome/browser/process_singleton.h#35" target="_new">process singleton lock</a>
+++        is the "$i18n{profile_path_name}". Chromium's <a href="https://chromium.9oo91esource.qjz9zk/chromium/src/+/master/chrome/browser/process_singleton.h#35" target="_new">process singleton lock</a>
+ +        protects against multiple app instances writing to the same "$i18n{user_data_path_name}" directory.
+ +        Implement <a href="https://cef-builds.spotifycdn.com/docs/stable.html?classCefBrowserProcessHandler.html#a052a91639483467c0b546d57a05c2f06" target="_new">CefBrowserProcessHandler:: OnAlreadyRunningAppRelaunch</a>
+ +        to handle the case of app relaunch with the same directory.
+diff -ruN a/patch/patches/chrome_runtime_views.patch b/patch/patches/chrome_runtime_views.patch
+--- a/patch/patches/chrome_runtime_views.patch	2026-11-12 19:07:45.000000000 +0100
++++ b/patch/patches/chrome_runtime_views.patch	2026-11-17 04:18:20.589021012 +0100
+@@ -327,7 +327,7 @@
+  using base::UserMetricsAction;
+  using content::WebContents;
+  using input::NativeWebKeyboardEvent;
+-@@ -896,11 +901,21 @@ class BrowserView::PipExclusionObserverImpl
++@@ -896,13 +901,23 @@ class BrowserView::PipExclusionObserverImpl
+  ///////////////////////////////////////////////////////////////////////////////
+  // BrowserView, public:
+  
+@@ -337,8 +337,12 @@
+      : views::ClientView(nullptr, nullptr),
+        exclusive_access_context_(
+ -          std::make_unique<ExclusiveAccessContextImpl>(*this)),
+--      browser_(browser) {
+-+          std::make_unique<ExclusiveAccessContextImpl>(*this)) {
++-      browser_(browser),
++-      zen_top_chrome_animation_(this),
++-      zen_side_chrome_animation_(this) {
+++          std::make_unique<ExclusiveAccessContextImpl>(*this)),
+++      zen_top_chrome_animation_(this),
+++      zen_side_chrome_animation_(this) {
+ +  if (browser) {
+ +    InitBrowser(browser);
+ +  }
+@@ -380,7 +384,7 @@
+  
+    top_container_separator_ = top_container_->AddChildView(
+        ContentsSeparator::CreateContentsSeparator());
+-@@ -1120,6 +1144,10 @@ BrowserView::BrowserView(BrowserWindowInterface* browser)
++@@ -1120,11 +1144,15 @@ BrowserView::BrowserView(BrowserWindowInterface* browser)
+  }
+  
+  BrowserView::~BrowserView() {
+@@ -388,6 +392,11 @@
+ +  // RemoveAllChildViews().
+ +  WillDestroyToolbar();
+ +
++   if (browser_shortcut_service_) {
++     browser_shortcut_service_->RemoveObserver(this);
++     browser_shortcut_service_ = nullptr;
++   }
++ 
+    // Remove the layout manager to avoid dangling. This needs to be earlier than
+    // other cleanups that destroy views referenced in the layout manager.
+    SetLayoutManager(nullptr);
+@@ -793,13 +802,15 @@
+    }
+    GetRootView()->InvalidateLayout();
+  }
+-@@ -594,6 +644,9 @@ bool BrowserWidget::RegenerateFrameOnThemeChange(
++@@ -594,8 +644,11 @@ bool BrowserWidget::RegenerateFrameOnThemeChange(
+  }
+  
+  bool BrowserWidget::IsIncognitoBrowser() const {
+ +  if (!browser_view_) {
+ +    return true;
+ +  }
++   if (base::CommandLine::ForCurrentProcess()->HasSwitch("enable-incognito-themes"))
++     return false;
+    return browser_view_->browser()->GetProfile()->IsIncognitoProfile();
+  }
+  
+@@ -1451,9 +1462,9 @@
+          AddChildView(std::make_unique<BatterySaverButton>(browser_));
+    }
+ @@ -607,7 +630,7 @@ void ToolbarView::Init() {
+-     avatar_ = AddChildView(std::make_unique<AvatarToolbarButton>(browser_));
+-     bool show_avatar_toolbar_button =
+-         AvatarToolbarButtonInterface::CanShowForProfile(browser_->GetProfile());
++     else if (sab_value == "never")
++       show_avatar_toolbar_button = false;
++ 
+ -    avatar_->SetVisible(show_avatar_toolbar_button);
+ +    avatar_->SetVisible(show_avatar_toolbar_button && BUTTON_VISIBLE(kAvatar));
+    }
+diff -ruN a/patch/patches/content_2015.patch b/patch/patches/content_2015.patch
+--- a/patch/patches/content_2015.patch	2026-11-12 19:07:45.000000000 +0100
++++ b/patch/patches/content_2015.patch	2026-11-17 04:18:20.546486190 +0100
+@@ -197,7 +197,7 @@
+ +  void DevToolsAgentDetached() override;
+ +
+    // Tells this platform that the renderer is locked to a site (i.e., a scheme
+-   // plus eTLD+1, such as https://google.com), or to a more specific origin.
++   // plus eTLD+1, such as https://9oo91e.qjz9zk), or to a more specific origin.
+    void SetIsLockedToSite();
+ diff --git content/shell/browser/shell_content_browser_client.cc content/shell/browser/shell_content_browser_client.cc
+ index 99491450d6424c9d6eb1b0dc4989e15a338305b1..31c59d8906ac0d7ff3fe5dd148e2676acaccee4a 100644
+diff -ruN a/patch/patches/crashpad_1995.patch b/patch/patches/crashpad_1995.patch
+--- a/patch/patches/crashpad_1995.patch	2026-11-12 19:07:45.000000000 +0100
++++ b/patch/patches/crashpad_1995.patch	2026-11-17 04:18:20.589827183 +0100
+@@ -79,47 +79,30 @@
+    g_crash_helper_enabled = true;
+    return true;
+ diff --git chrome/common/crash_keys.cc chrome/common/crash_keys.cc
+-index 523879a76b60930953de2c1594af84e3ebda5b65..ba514934713f06d1f59e932fd74e21d273b92da4 100644
+ --- chrome/common/crash_keys.cc
+ +++ chrome/common/crash_keys.cc
+-@@ -6,6 +6,7 @@
+- 
+- #include <array>
+- #include <deque>
+-+#include <iterator>
+- #include <string_view>
+- 
+- #include "base/base_switches.h"
+-@@ -36,8 +37,10 @@ namespace {
+- 
+- constexpr std::string_view kStringAnnotationsSwitch = "string-annotations";
++@@ -145,7 +145,11 @@ void SetStringAnnotations(const base::CommandLine& command_line) {
++   }
++ }
+  
+-+}  // namespace
++ }  // namespace
+ +
+- // Return true if we DON'T want to upload this flag to the crash server.
+--bool IsBoringSwitch(const std::string& flag) {
+ +bool IsBoringChromeSwitch(const std::string& flag) {
+-   if (crash_keys::IsDefaultBoringSwitch(flag)) {
+-     return true;
+++  return IsBoringSwitch(flag);
+++}
++ 
++ void AllocateCrashKeyInBrowserAndChildren(std::string_view key,
++                                           std::string_view value) {
++@@ -184,8 +188,8 @@ void SetCrashKeysFromCommandLine(const base::CommandLine& command_line) {
++       sanitized.AppendSwitch(name);
++     }
+    }
+-@@ -96,6 +99,8 @@ bool IsBoringSwitch(const std::string& flag) {
+-   return false;
++   SetFeaturesFromCommandLine(sanitized);
++-  SetSwitchesFromCommandLine(sanitized, &IsBoringSwitch);
+++  SetSwitchesFromCommandLine(sanitized, &IsBoringChromeSwitch);
+  }
+  
+-+namespace {
+-+
+- std::deque<CrashKeyWithName>& GetCommandLineStringAnnotations() {
+-   static base::NoDestructor<std::deque<CrashKeyWithName>>
+-       command_line_string_annotations;
+-@@ -144,7 +149,7 @@ void AppendStringAnnotationsCommandLineSwitch(base::CommandLine* command_line) {
+- void SetCrashKeysFromCommandLine(const base::CommandLine& command_line) {
+-   SetStringAnnotations(command_line);
+-   SetFeaturesFromCommandLine(command_line);
+--  SetSwitchesFromCommandLine(command_line, &IsBoringSwitch);
+-+  SetSwitchesFromCommandLine(command_line, &IsBoringChromeSwitch);
+- 
+- #if BUILDFLAG(IS_WIN)
+-   auto process_token = base::win::AccessToken::FromCurrentProcess();
++ }  // namespace crash_keys
+ diff --git chrome/common/crash_keys.h chrome/common/crash_keys.h
+ index a274b3e364084c90d2f4783bab576ac85af285ea..3d995cf6433991f6f8abe7cd2d4eac17dcba55dd 100644
+ --- chrome/common/crash_keys.h
+@@ -287,13 +270,14 @@
+ index 011458218a5b3b6036690c77b3741643c5bc69db..341ad96404b2e969f2d53334efb89b4db9be9684 100644
+ --- components/crash/core/app/crashpad_mac.mm
+ +++ components/crash/core/app/crashpad_mac.mm
+-@@ -21,11 +21,14 @@
++@@ -21,12 +21,15 @@
+  #include "base/check.h"
+  #include "base/files/file_path.h"
+  #include "base/no_destructor.h"
+ +#include "base/path_service.h"
+  #include "base/strings/string_number_conversions.h"
+  #include "base/strings/sys_string_conversions.h"
++ #include "base/version_info/version_info.h"
+  #include "build/branding_buildflags.h"
+  #include "components/crash/core/app/crash_reporter_client.h"
+ +#include "components/crash/core/app/crash_switches.h"
+@@ -331,19 +315,13 @@
+  
+  #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+        // Empty means stable.
+-@@ -82,12 +92,20 @@ std::map<std::string, std::string> GetProcessSimpleAnnotations() {
++@@ -82,9 +92,17 @@ std::map<std::string, std::string> GetProcessSimpleAnnotations() {
+          }
+        }
+  
+--      NSString* version =
+--          base::apple::ObjCCast<NSString>([base::apple::FrameworkBundle()
+--              objectForInfoDictionaryKey:@"CFBundleShortVersionString"]);
+--      process_annotations["ver"] = base::SysNSStringToUTF8(version);
++-      process_annotations["ver"] = version_info::GetHeliumVersionNumber();
+ +      if (product_info.version().empty()) {
+-+        NSString* version =
+-+            base::apple::ObjCCast<NSString>([base::apple::FrameworkBundle()
+-+                objectForInfoDictionaryKey:@"CFBundleShortVersionString"]);
+-+        process_annotations["version"] = base::SysNSStringToUTF8(version);
+++        process_annotations["version"] = version_info::GetHeliumVersionNumber();
+ +      } else {
+ +        process_annotations["version"] = product_info.version();
+ +      }
+@@ -394,9 +372,9 @@
+    crash_reporter_client->GetProductNameAndVersion(
+        exe_file, &product_name, &version, &special_build, &channel_name);
+ -  (*annotations)["prod"] = base::WideToUTF8(product_name);
+--  (*annotations)["ver"] = base::WideToUTF8(version);
++-  (*annotations)["ver"] = version_info::GetHeliumVersionNumber();
+ +  (*annotations)["product"] = base::WideToUTF8(product_name);
+-+  (*annotations)["version"] = base::WideToUTF8(version);
+++  (*annotations)["version"] = version_info::GetHeliumVersionNumber();
+  #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+    // Empty means stable.
+    const bool allow_empty_channel = true;
+diff -ruN a/patch/patches/linux_gtk_theme_3610.patch b/patch/patches/linux_gtk_theme_3610.patch
+--- a/patch/patches/linux_gtk_theme_3610.patch	2026-11-12 19:07:45.000000000 +0100
++++ b/patch/patches/linux_gtk_theme_3610.patch	2026-11-17 04:18:20.564375221 +0100
+@@ -16,7 +16,7 @@
+    GtkSettings* settings = gtk_settings_get_default();
+ +  // Disable GTK theme change notifications because they are extremely slow.
+ +  // Light/dark theme changes will still be detected via DarkModeManagerLinux.
+-+  // See https://issues.chromium.org/issues/40280130#comment7
+++  // See https://issues.ch40m1um.qjz9zk/issues/40280130#comment7
+ +#if !BUILDFLAG(ENABLE_CEF)
+    connect(settings, "notify::gtk-theme-name", &GtkUi::OnThemeChanged);
+    connect(settings, "notify::gtk-icon-theme-name", &GtkUi::OnThemeChanged);
+diff -ruN a/patch/patches/osr_win_remove_keyed_mutex_2575.patch b/patch/patches/osr_win_remove_keyed_mutex_2575.patch
+--- a/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-11-12 19:07:45.000000000 +0100
++++ b/patch/patches/osr_win_remove_keyed_mutex_2575.patch	2026-11-17 04:18:20.569751583 +0100
+@@ -43,7 +43,7 @@
+ +    // flag to disable mutex in the GMBFactoryDXGI because this enum is also
+ +    // used above in macOS and CrOS for similar usage (claim no other one will
+ +    // concurrently use the resource).
+-+    // https://chromium-review.googlesource.com/c/chromium/src/+/5302103
+++    // https://chromium-review.9oo91esource.qjz9zk/c/chromium/src/+/5302103
+ +    buffer_usage = gfx::BufferUsage::SCANOUT_VEA_CPU_READ;
+ +  }
+ +#endif
+diff -ruN a/patch/patches/signin_allowed_4276.patch b/patch/patches/signin_allowed_4276.patch
+--- a/patch/patches/signin_allowed_4276.patch	2026-11-12 19:07:45.000000000 +0100
++++ b/patch/patches/signin_allowed_4276.patch	2026-11-17 04:18:20.590456062 +0100
+@@ -1,37 +1,25 @@
+-diff --git chrome/browser/signin/account_consistency_mode_manager.cc chrome/browser/signin/account_consistency_mode_manager.cc
+-index 04b273a20e8cfb5fd4ecf9081ba940f17848b905..5f52629953ad9fb56f0fda2a2f1c8908b15e06c9 100644
+---- chrome/browser/signin/account_consistency_mode_manager.cc
+-+++ chrome/browser/signin/account_consistency_mode_manager.cc
+-@@ -12,6 +12,7 @@
+- #include "base/metrics/histogram_macros.h"
+- #include "base/strings/string_util.h"
+- #include "build/build_config.h"
+-+#include "cef/libcef/features/features.h"
+- #include "chrome/browser/browser_process.h"
+- #include "chrome/browser/profiles/profile.h"
+- #include "chrome/browser/profiles/profile_attributes_storage.h"
+-@@ -148,7 +149,8 @@ AccountConsistencyModeManager::~AccountConsistencyModeManager() = default;
+- // static
+- void AccountConsistencyModeManager::RegisterProfilePrefs(
+-     user_prefs::PrefRegistrySyncable* registry) {
+--  registry->RegisterBooleanPref(prefs::kSigninAllowedOnNextStartup, true);
+-+  registry->RegisterBooleanPref(prefs::kSigninAllowedOnNextStartup,
+-+                                !BUILDFLAG(ENABLE_CEF));
+- }
+- 
+- // static
+ diff --git components/signin/internal/identity_manager/gaia_cookie_manager_service.cc components/signin/internal/identity_manager/gaia_cookie_manager_service.cc
+-index 92b485477138bf1f69a99eee9307d15624338ba6..fa175ca5cd7afdcecf18ec6261e1c7cdbf6551cf 100644
+ --- components/signin/internal/identity_manager/gaia_cookie_manager_service.cc
+ +++ components/signin/internal/identity_manager/gaia_cookie_manager_service.cc
+-@@ -527,6 +527,10 @@ GaiaCookieManagerService::GetCachedListAccounts() {
+- }
+- 
+- void GaiaCookieManagerService::TriggerListAccounts() {
+-+  if (!signin_client_->GetPrefs()->GetBoolean(prefs::kSigninAllowed)) {
+-+    return;
+-+  }
+-+
+-   // Callers suspect that a check to Gaia needs to be done, don't rely on the
+-   // in progress request, conditions might have changed while the request is
+-   // in-flight.
++@@ -513,17 +513,4 @@ signin::AccountsInCookieJarInfo
++-void GaiaCookieManagerService::TriggerListAccounts() {
++-  // Callers suspect that a check to Gaia needs to be done, don't rely on the
++-  // in progress request, conditions might have changed while the request is
++-  // in-flight.
++-  // Note: /ListAccounts requests is optimized in `OptimizeListAccounts()`
++-  // called in `HandleNextRequest()`. Only if there are no other requests in the
++-  // queue that `HandleNextRequest()` won't be called before executing
++-  // /ListAccounts.
++-  requests_.push_back(GaiaCookieRequest::CreateListAccountsRequest());
++-  if (requests_.size() == 1) {
++-    fetcher_retries_ = 0;
++-    listAccountsUnexpectedServerResponseRetried_ = false;
++-    signin_client_->DelayNetworkCall(base::BindOnce(
++-        &GaiaCookieManagerService::MaybeStartFetchingListAccounts,
++-        weak_ptr_factory_.GetWeakPtr()));
++-  }
++-}
+++void GaiaCookieManagerService::TriggerListAccounts() {
+++  // Sign-in preference fields were removed. Do not send /ListAccounts.
+++  return;
+++}

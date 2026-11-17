@@ -1,29 +1,19 @@
 --- a/build/rust/crubit/BUILD.gn
 +++ b/build/rust/crubit/BUILD.gn
-@@ -2,18 +2,21 @@
- # Use of this source code is governed by a BSD-style license that can be
- # found in the LICENSE file.
- 
-+import("//build/config/rust.gni")
- import("//build_overrides/crubit.gni")
- 
+@@ -9,11 +9,13 @@
  # Public C++ APIs provided by Crubit.
  group("crubit") {
    public_configs = [ ":public_config" ]
 -  public_deps = [
 -    "$crubit_src_dir/support:support_cpp",
 -    "$crubit_src_dir/support/rs_std:rs_std_cpp",
--    "//build/rust/std/rules:alloc_bindings",
--    "//build/rust/std/rules:core_bindings",
--    "//build/rust/std/rules:std_bindings",
+-    "//build/rust/std:std_bindings",
 -  ]
 +  if (enable_cpp_api_from_rust) {
 +    public_deps = [
 +      "$crubit_src_dir/support:support_cpp",
 +      "$crubit_src_dir/support/rs_std:rs_std_cpp",
-+      "//build/rust/std/rules:alloc_bindings",
-+      "//build/rust/std/rules:core_bindings",
-+      "//build/rust/std/rules:std_bindings",
++      "//build/rust/std:std_bindings",
 +    ]
 +  }
  }

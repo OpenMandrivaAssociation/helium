@@ -5,7 +5,7 @@
 # by default.
 --- a/chrome/browser/BUILD.gn
 +++ b/chrome/browser/BUILD.gn
-@@ -1022,7 +1022,6 @@ source_set("core") {
+@@ -1199,7 +1199,6 @@
      "//chrome/browser/preloading/search_preload:feature",
      "//chrome/browser/privacy_sandbox:headers",
      "//chrome/browser/private_ai",
@@ -13,14 +13,14 @@
      "//chrome/browser/profiles:misc",
      "//chrome/browser/profiles:profile_io_data",
      "//chrome/browser/profiles:profiles_extra_parts",
-@@ -2215,7 +2214,6 @@ source_set("browser") {
-     "//chrome/browser/preloading/search_preload",
+@@ -2500,7 +2499,6 @@
      "//chrome/browser/privacy",
      "//chrome/browser/privacy_sandbox:impl",
+     "//chrome/browser/private_ai",
 -    "//chrome/browser/private_verification_tokens",
      "//chrome/browser/profiles:misc",
+     "//chrome/browser/profiles:profile_manager_impl",
      "//chrome/browser/profiles:profile_util_impl",
-     "//chrome/browser/profiles:profiles_extra_parts_impl",
 --- a/chrome/browser/browsing_data/BUILD.gn
 +++ b/chrome/browser/browsing_data/BUILD.gn
 @@ -125,7 +125,6 @@ source_set("impl") {

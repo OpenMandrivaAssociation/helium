@@ -1,0 +1,31 @@
+diff -ruN a/patch/patches/views_widget.patch b/patch/patches/views_widget.patch
+--- a/patch/patches/views_widget.patch	2026-11-17 04:33:41.134934751 +0100
++++ b/patch/patches/views_widget.patch	2026-11-17 04:33:41.135028382 +0100
+@@ -230,18 +230,20 @@
+ index e8b31f08fd5d3a412bca8772c963f891e44b0cf7..1adbd775838dd79aca347a47b392baf2ffe29ce2 100644
+ --- ui/aura/native_window_occlusion_tracker_win.cc
+ +++ ui/aura/native_window_occlusion_tracker_win.cc
+-@@ -116,6 +116,12 @@ void NativeWindowOcclusionTrackerWin::Enable(Window* window) {
+-   HWND widget_hwnd = window->GetHost()->GetAcceleratedWidget();
+-   HWND root_window_hwnd = ::GetAncestor(widget_hwnd, GA_ROOT);
+- 
++@@ -105,6 +105,13 @@ void NativeWindowOcclusionTrackerWin::Enable(Window* window) {
++   HWND root_window_hwnd = window->GetHost()->GetAcceleratedWidget();
+++
+ +  // Delay occlusion tracking for initially-minimized windows.
+ +  // See CEF issue #3638.
+-+  if (IsIconic(root_window_hwnd)) {
+++  if (::IsIconic(root_window_hwnd)) {
+ +    return;
+ +  }
+ +
+-   // Remember the mapping from this window back to the real root hwnd.
+-   hwnd_widget_to_app_root_map_[window] = root_window_hwnd;
++   window->AddObserver(this);
++   // Remember this mapping from hwnd to Window*.
++   hwnd_root_window_map_[root_window_hwnd] = window;
++   // Notify the occlusion thread of the new HWND to track.
++   update_occlusion_task_runner_->PostTask(
+  
+ diff --git ui/base/mojom/window_show_state.mojom ui/base/mojom/window_show_state.mojom
+ index aeaf8e35f7eda89598149117fe8508d197bf2610..4b7cc3f03d3cf9c91ac8efe11ae820cf2b34b8b0 100644

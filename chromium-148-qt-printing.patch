@@ -656,15 +656,14 @@ diff --git a/ui/qt/qt_ui.cc b/ui/qt/qt_ui.cc
 index 25eb5aeadb..54be2755c4 100644
 --- a/ui/qt/qt_ui.cc
 +++ b/ui/qt/qt_ui.cc
-@@ -58,6 +58,8 @@
- 
+@@ -61,5 +61,7 @@
  #if BUILDFLAG(ENABLE_PRINTING)
  #include "printing/print_dialog_linux_interface.h"  // nogncheck
 +#include "ui/qt/printing/print_dialog_qt.h"
 +#include "ui/qt/printing/printing_qt_util.h"
  #endif
  
- namespace qt {
+ #if defined(USE_GSETTINGS)
 @@ -444,15 +446,17 @@ ui::TextEditCommand QtUi::GetTextEditCommandForEvent(const ui::Event& event,
  }
  

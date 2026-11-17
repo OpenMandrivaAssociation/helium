@@ -29,15 +29,16 @@
        'tests/cefsimple/simple_app.h',
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -339,6 +339,9 @@
- 
-   if (!is_linux || ozone_platform_x11) {
+@@ -331,6 +331,9 @@
+   # Linux cefclient requires GTK, including when running in Views mode.
+   if (!is_linux || cef_use_gtk) {
      deps += [ ":cefclient" ]
 +    if (is_linux) {
 +      deps += [ ":cefclient_qt" ]
 +    }
    }
- }
+ 
+   if (is_win) {
  
 @@ -429,6 +432,10 @@
      "libcef/features:config",
@@ -189,7 +190,8 @@
    if (is_win) {
      # Like the "cefclient" executable target, but building a DLL to be loaded by
      # bootstrap.exe.
-@@ -2757,6 +2882,11 @@
+@@ -2926,5 +2926,10 @@
+     if (is_linux) {
        sources += includes_linux +
                   gypi_paths2.cefsimple_sources_linux
  
@@ -198,9 +200,7 @@
 +      configs -= [ "//build/config/compiler:runtime_library" ]
 +      configs += [ ":cef_host_libstdcxx" ]
 +
-       if (ozone_platform_x11) {
-         libs = [
-           "X11",
+       configs += [ ":sample_x11" ]
 @@ -3013,6 +3143,13 @@
        # Set rpath to find our own libfreetype even in a non-component build.
        configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]

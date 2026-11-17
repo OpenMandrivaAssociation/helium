@@ -93,13 +93,15 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.21.3
+%global helium_version 0.22.0
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.21.3 asks for 157.0.8103.78.
-%define chromium 157.0.8103.78
+# Helium 0.22.0 asks for 158.0.8127.36. That revision is an early
+# stable desktop build, not a Linux channel release, so the default
+# source is the official lite tarball.
+%define chromium 158.0.8127.36
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -113,19 +115,15 @@ Version:	%{helium_version}
 # https://github.com/chromiumembedded/cef/issues/3616 fixed in cef upstream.
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
-# CEF has no branch 8103 yet (checked 2026-11-17). Branch 8078 is still
-# the newest release branch and still tracks Chromium 156. The stored
-# cef-8078.tar.gz is commit a10dae3408911466b2d90409cc3355cbf6043ffb
-# (2026-11-09). Its CHROMIUM_BUILD_COMPATIBILITY.txt says
-# refs/tags/156.0.8078.88. Branch tip has since moved to 6028375
-# (2026-11-12, compatibility 156.0.8078.96) for a Windows helper-clock
-# fix; keep this snapshot so the Linux CEF patches stay on the tree they
-# were refreshed against.
-# Helium 0.21.3 builds Chromium 157.0.8103.78, so the nested CEF patches
-# are one milestone behind and need the Helium rebase on top.
+# CEF branch 8127 matches this Chromium milestone. The stored
+# cef-8127.tar.gz is commit 8c29be240971eebee960ac92114d3efccb5780ff
+# (2026-11-12). CHROMIUM_BUILD_COMPATIBILITY.txt says
+# refs/tags/158.0.8127.18. That commit is a Windows helper-clock fix.
+# Helium builds 158.0.8127.36, so the nested patches are 18 builds
+# behind and may still need a refresh.
 # Do not replace this commit archive with a floating branch URL.
-%define cef a10dae3408911466b2d90409cc3355cbf6043ffb
-%define cefversion 8078
+%define cef 8c29be240971eebee960ac92114d3efccb5780ff
+%define cefversion 8127
 # make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
 %ifarch %{x86_64}
 %define cef_gn_dir Release_GN_x64
@@ -149,10 +147,11 @@ Release:	1
 Summary:	A fast, privacy friendly, web browser based on Ungoogled Chromium
 Group:		Networking/WWW
 License:	BSD, LGPL
-# Chromium source: official -lite when --with from_google, otherwise the
-# Gentoo chromium-tarballs archive (same export_tarball.py flow; Debian
-# uses this when FROM_GOOGLE is unset).
-%bcond_with from_google
+# Chromium source. 158.0.8127.36 never shipped on the Linux channel, so
+# the Gentoo chromium-linux archive 404s. The default is the official
+# lite tarball. --without from_google still selects the Gentoo archive
+# when that version exists.
+%bcond_without from_google
 %if %{with from_google}
 Source0:	https://commondatastorage.googleapis.com/chromium-browser-official/chromium-%{chromium}-lite.tar.xz
 %else
@@ -176,10 +175,10 @@ Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_versio
 # See deps.ini inside the helium tarball (Source1000) and keep in sync
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202609082320/nonfree-search-engines-data-202609082320.tar.gz
 Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202610161403/helium-onboarding-202610161403.tar.gz
-Source1003:	https://github.com/imputnet/uBlock/releases/download/1.75.4/uBlock0_1.75.4.chromium.zip
-# helium-linux 0.21.3.1 is the Linux packaging revision for this Helium
+Source1003:	https://github.com/imputnet/uBlock/releases/download/1.76.4/uBlock0_1.76.4.chromium.zip
+# helium-linux 0.22.0.1 is the Linux packaging revision for this Helium
 # release. The trailing .1 is not part of helium_version, so the tag is literal.
-Source1004:	https://github.com/imputnet/helium-linux/archive/refs/tags/0.21.3.1.tar.gz#/helium-linux-0.21.3.1.tar.gz
+Source1004:	https://github.com/imputnet/helium-linux/archive/refs/tags/0.22.0.1.tar.gz#/helium-linux-0.22.0.1.tar.gz
 
 
 # ============================================================================
@@ -414,7 +413,8 @@ Patch1063:	chromium-156-ffmpeg-itut-t35.patch
 # pref removed by ungoogled-chromium). signin_allowed_4276 no longer reads
 # prefs::kSigninAllowed or registers prefs::kSigninAllowedOnNextStartup.
 # TriggerListAccounts returns without calling Gaia.
-Patch2000:	cef-8078-helium-patch-rebase.patch
+# This file is the CEF 8127 / Chromium 158 rebase.
+Patch2000:	cef-8127-helium-patch-rebase.patch
 Patch2002:	cef-126-zlib-ng.patch
 # Qt cefclient sample + host libstdc++ wrapper (applied inside cef/).
 Patch2003:	cef-8078-qt-cefclient.patch
@@ -424,63 +424,28 @@ Patch2004:	cef-patcher-fuzz.patch
 # This Chrome matches, so the patch only matters if a future bump lags.
 # Kept so a mismatch still translates wrappers instead of aborting prep.
 Patch2005:	cef-8037-version-manager-old-chrome.patch
-# CEF 8078 already contains the Chromium 155 libcef fixes that used to be
-# separate patches: incognito runtime-views context, ProductInfo accessors,
-# the nested patch refresh, mojom disable_variants removal, NativeTheme
-# forced dark/light methods (light_mode_3534 adds them back), and the libcef
-# API adjustments. Do not reapply those.
+# This CEF branch already contains the Chromium 155 libcef fixes that used
+# to be separate patches: incognito runtime-views context, ProductInfo
+# accessors, the nested patch refresh, mojom disable_variants removal,
+# NativeTheme forced dark/light methods (light_mode_3534 adds them back),
+# and the libcef API adjustments. Do not reapply those.
 # Helium changes CreatePlatformProvider to USER_VISIBLE before CEF patch.sh.
 # Refresh the nested policy patch so that hunk matches and the higher task
 # priority is kept.
 Patch2009:	cef-8037-policy-connector-user-visible.patch
-# Chromium 157 moved context under nested CEF patches that do not depend on
-# Helium: runhooks, navigation headers, Mac locale, TPM metrics, keepalive
-# timer, policy source generator, CloseWebContents, and TriggerListAccounts.
-# static_library("ui") and the old source_set("browser") are gone, so the
-# CEF buildflags and include config are retargeted onto the source_sets that
-# compile the patched files. The crash-key switch rename stays on the
-# sanitized command line from the Helium rebase. Helium-owned context (zen
-# initializers, shortcut teardown, incognito themes, USER_VISIBLE,
-# GetHeliumVersionNumber) is left for the helium patch set, which runs
-# before cef/tools/patch.sh.
-Patch2010:	cef-8078-chromium-157-refresh.patch
 # Helium empties GCMClientImpl::Start before cef/tools/patch.sh. The nested
 # hunk still expects the old DCHECK body, and fuzz 3 then inserts return
 # after StartGCM(). Retarget that early return onto the empty Start().
 # The Register() GCM_DISABLED path is unchanged.
 Patch2011:	cef-8078-gcm-empty-start.patch
-# Chromium 157 draws the menu highlight in a clip_to_background branch, so
-# the nested views patch no longer sees drawRRect immediately before the
-# paint_as_selected else. Fuzz 3 inserted the delegate background override
-# into the color ternary. Place that override after the highlight draw,
-# where the selected-background else starts.
-Patch2012:	cef-8078-menu-background.patch
-# Chromium 157 removed WebContentsDelegate::FindReply. Find replies are
-# delivered to WebContentsObserver::DidReceiveFindReply, and FindTabHelper
-# applies them before notifying FindResultObserver. CEF listens there.
-# StartFinding gained a scroll_to_match argument ahead of the test flag.
-Patch2013:	cef-8078-find-reply.patch
-# Chromium 157 added do_not_prompt_for_login to CreateLoginDelegate and
-# source_rwh to UpdateDragOperation. CEF forwards the login flag to Chrome.
-# On the CEF-owned auth path the flag cancels the challenge, because
-# GetAuthCredentials can show embedder UI. Off-screen drag updates ignore
-# source_rwh, matching WebContentsViewAura.
-Patch2014:	cef-8078-login-and-drag.patch
-# CopyFromSurface and CopyFromSurfaceSecure are final on
-# RenderWidgetHostViewBase. Platform views override CopyFromSurfaceImpl,
-# which takes is_copy_request_secure and always runs the callback.
-Patch2015:	cef-8078-copy-from-surface.patch
-# Chromium 157 moved crash_reporter::InitializeCrashKeys() from
-# PreSandboxStartup into BasicStartupComplete. The nested hunk still
-# wraps the old call, and fuzz 3 inserts the guard inside the
-# SystemProfile if, leaving that if open under ENABLE_CEF. Skip Chrome's
-# crash-key init from BasicStartupComplete when ENABLE_CEF. CEF calls
-# InitializeCrashKeys itself from crash_reporting::PreSandboxStartup.
-# The POSIX crash-reporter client and the Mac crash reporter stay wrapped
-# as their own block after the SystemProfile if closes.
-Patch2016:	cef-8078-crash-keys.patch
+# Chromium 158 rewrote NativeWindowOcclusionTrackerWin::Enable, so the
+# nested views_widget hunk no longer finds GetAncestor. Fuzz 3 then inserts
+# the iconic-window return into Disable(), before root_window_hwnd exists.
+# Retarget that return onto Enable(), after the root HWND is taken and
+# before AddObserver. The file is Windows-only.
+Patch2017:	cef-8127-occlusion-minimized.patch
 # Applied by hand after cef/tools/patch.sh, and only when the definition is
-# missing. CEF 8078's chrome_runtime_views.patch includes the body and calls
+# missing. CEF's chrome_runtime_views.patch includes the body and calls
 # raw_ptr::ClearAndDelete(), which this Chromium has. The fallback body is
 # the older null-then-RemoveChildViewT variant. Not in any autopatch range:
 # 3000-3009 is webrtc and 3010-3019 is media. Applying it during prep would
@@ -810,7 +775,7 @@ sed -i \
 # skips that outline except on a system theme whose tab and frame contrast
 # is below 1.3, so keep the upstream behavior.
 tar xf %{S:1004}
-LINUXDIR=$(pwd)/helium-linux-0.21.3.1
+LINUXDIR=$(pwd)/helium-linux-0.22.0.1
 sed -i \
 	-e '/use-default-theme\.patch/d' \
 	-e '/change-chromium-branding\.patch/d' \
@@ -1385,7 +1350,7 @@ if [ ! -f cef_paths.gypi ]; then
 fi
 ./tools/patch.sh
 cd ..
-# CEF 8078's chrome_runtime_views.patch includes WillDestroyToolbar() and
+# CEF's chrome_runtime_views.patch includes WillDestroyToolbar() and
 # calls raw_ptr::ClearAndDelete(). The fallback patch supplies the older
 # null-then-RemoveChildViewT body, so apply it only when the definition
 # did not land. Chrome itself is already linked from the pre-patch.sh tree.
