@@ -177,6 +177,9 @@ Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_versio
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202609082320/nonfree-search-engines-data-202609082320.tar.gz
 Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202610161403/helium-onboarding-202610161403.tar.gz
 Source1003:	https://github.com/imputnet/uBlock/releases/download/1.75.4/uBlock0_1.75.4.chromium.zip
+# helium-linux 0.21.3.1 is the Linux packaging revision for this Helium
+# release. The trailing .1 is not part of helium_version, so the tag is literal.
+Source1004:	https://github.com/imputnet/helium-linux/archive/refs/tags/0.21.3.1.tar.gz#/helium-linux-0.21.3.1.tar.gz
 
 
 # ============================================================================
@@ -797,9 +800,31 @@ sed -i \
 	-e '/prefs-only-keep-cookies-until-exit/d' \
 	-e '/XXXdisable-webstore-urls.patch/d' \
 	$HEDIR/patches/series
+# helium-linux's patch directory. Drop the patches that fight this package.
+# use-default-theme forces the generic theme and drops Qt on Plasma.
+# change-chromium-branding moves the profile to ~/.config/net.imput.helium
+# and rewrites the icon name our default-browser patch already returns.
+# rename-chrome-binary installs helium instead of chrome; the wrapper still
+# execs chrome and chrome_crashpad_handler.
+# disable-tab-strokes always hides the active-tab outline. Chromium already
+# skips that outline except on a system theme whose tab and frame contrast
+# is below 1.3, so keep the upstream behavior.
+tar xf %{S:1004}
+LINUXDIR=$(pwd)/helium-linux-0.21.3.1
+sed -i \
+	-e '/use-default-theme\.patch/d' \
+	-e '/change-chromium-branding\.patch/d' \
+	-e '/rename-chrome-binary\.patch/d' \
+	-e '/disable-tab-strokes\.patch/d' \
+	$LINUXDIR/patches/series
 python $HEDIR/utils/prune_binaries.py ./ $HEDIR/pruning.list --verbose || :
-python $HEDIR/utils/patches.py apply ./ $HEDIR/patches
+python $HEDIR/utils/patches.py apply ./ $HEDIR/patches $LINUXDIR/patches
 python $HEDIR/utils/domain_substitution.py apply -r $HEDIR/domain_regex.list -f $HEDIR/domain_substitution.list -c domainsubcache.tar.gz ./
+# Rewrite Chrome/Chromium and chrome:// in the string files, then apply
+# Helium's translations. Those translation ids are fingerprints of the
+# rewritten English, so the substitution has to come first.
+python $HEDIR/utils/name_substitution.py --sub -t .
+python $HEDIR/utils/i18n_apply.py -t .
 
 # Helium's window icon is the bitmap in the resource pak (IDR_PRODUCT_LOGO_128
 # from chrome/app/theme/chromium/linux/product_logo_128.png), sent to the
