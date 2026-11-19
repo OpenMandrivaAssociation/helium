@@ -93,14 +93,15 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.22.0
+%global helium_version 0.22.1
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.22.0 asks for 158.0.8127.36. That revision is an early
+# Helium 0.22.1 keeps 158.0.8127.36. That revision is an early
 # stable desktop build, not a Linux channel release, so the default
-# source is the official lite tarball.
+# source is the official lite tarball. 0.22.1 disables the Reading
+# Mode address-bar chip and the history-page sync promo.
 %define chromium 158.0.8127.36
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
@@ -176,9 +177,9 @@ Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_versio
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202609082320/nonfree-search-engines-data-202609082320.tar.gz
 Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202610161403/helium-onboarding-202610161403.tar.gz
 Source1003:	https://github.com/imputnet/uBlock/releases/download/1.76.4/uBlock0_1.76.4.chromium.zip
-# helium-linux 0.22.0.1 is the Linux packaging revision for this Helium
+# helium-linux 0.22.1.1 is the Linux packaging revision for this Helium
 # release. The trailing .1 is not part of helium_version, so the tag is literal.
-Source1004:	https://github.com/imputnet/helium-linux/archive/refs/tags/0.22.0.1.tar.gz#/helium-linux-0.22.0.1.tar.gz
+Source1004:	https://github.com/imputnet/helium-linux/archive/refs/tags/0.22.1.1.tar.gz#/helium-linux-0.22.1.1.tar.gz
 
 
 # ============================================================================
@@ -779,7 +780,7 @@ sed -i \
 # skips that outline except on a system theme whose tab and frame contrast
 # is below 1.3, so keep the upstream behavior.
 tar xf %{S:1004}
-LINUXDIR=$(pwd)/helium-linux-0.22.0.1
+LINUXDIR=$(pwd)/helium-linux-0.22.1.1
 sed -i \
 	-e '/use-default-theme\.patch/d' \
 	-e '/change-chromium-branding\.patch/d' \
