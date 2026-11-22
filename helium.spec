@@ -146,6 +146,14 @@ Version:	%{helium_version}
 %endif
 %endif
 Release:	1
+# Freeze these before the CEF subpackages override Release. On this rpm the
+# last Release tag becomes the release macro for later lines.
+%global helium_release %{release}
+# CEF packages use the Chromium version. A new Helium release on the same
+# Chromium otherwise repeats an already published NEVR, and the extra test
+# rejects it. The leading 2 sorts above those releases. The Helium version
+# and this release keep a later update or rebuild newer.
+%global cef_release 2.%{helium_version}.%{helium_release}
 Summary:	A fast, privacy friendly, web browser based on Ungoogled Chromium
 Group:		Networking/WWW
 License:	BSD, LGPL
@@ -669,6 +677,7 @@ Qt 6.x integration for Helium
 
 %package -n cef-qt6
 Version: %{chromium}
+Release: %{cef_release}
 Summary: Qt 6.x integration for CEF
 Group: System/Libraries
 Requires: cef = %{EVRD}
@@ -681,6 +690,7 @@ Qt 6.x integration for CEF
 %if 0%{?cef:1}
 %package -n cef
 Version: %{chromium}
+Release: %{cef_release}
 Summary: Chromium Embedded Framework - library for embeddind Chromium in custom applications
 # FIXME cef hardcodes a gtk dependency somewhere. It should
 # really be dropped in favor of Qt
@@ -693,6 +703,7 @@ Chromium Embedded Framework - library for embeddind Chromium in custom applicati
 
 %package -n cef-devel
 Version: %{chromium}
+Release: %{cef_release}
 Summary: Chromium Embedded Framework - library for embeddind Chromium in custom applications
 Group: Development/Libraries
 Requires: cef = %{EVRD}
@@ -708,6 +719,7 @@ files cef.pc / libcef.pc) for ordinary build systems.
 # for embedding. Sources remain in cef-devel under tests/.
 %package -n cef-examples
 Version: %{chromium}
+Release: %{cef_release}
 Summary: Sample applications for the Chromium Embedded Framework (GTK and Qt)
 Group: Development/Other
 Requires: cef = %{EVRD}
@@ -725,7 +737,7 @@ cef-devel.
 %package chromedriver
 Summary:	WebDriver for Google Chrome/Chromium
 Group:		Development/Other
-Requires:	%{name} = %{helium_version}-%{release}
+Requires:	%{name} = %{helium_version}-%{helium_release}
 # Same unversioned replace as the browser: chromedriver 141 sorts above 0.20.
 Obsoletes:	chromedriver
 Provides:	chromedriver
