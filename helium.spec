@@ -93,16 +93,17 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.22.3
+%global helium_version 0.22.4
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.22.3 keeps 158.0.8127.36. That revision is an early
-# stable desktop build, not a Linux channel release, so the default
-# source is the official lite tarball. 0.22.3 adds a pref for pins
-# in their own window, drag-to-pin, and uBlock Origin 1.77.0.
-%define chromium 158.0.8127.36
+# Helium 0.22.4 moves to 158.0.8127.88, the Linux stable build.
+# That update fixes CVE-2026-134401, a critical input-validation bug
+# in Variations. The Helium revision is 4. A flag can encrypt the
+# HTTP cache; it stays off unless --enable-cache-encryption is set.
+# uBlock Origin stays 1.77.0.
+%define chromium 158.0.8127.88
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
 # right branch at
@@ -117,13 +118,12 @@ Version:	%{helium_version}
 # If we run into this problem, we need to either use custom libxml or build
 # system libxml with TLS disabled.
 # CEF branch 8127 matches this Chromium milestone. The stored
-# cef-8127.tar.gz is commit 8c29be240971eebee960ac92114d3efccb5780ff
-# (2026-11-12). CHROMIUM_BUILD_COMPATIBILITY.txt says
-# refs/tags/158.0.8127.18. That commit is a Windows helper-clock fix.
-# Helium builds 158.0.8127.36, so the nested patches are 18 builds
-# behind and may still need a refresh.
+# cef-8127-087c469.tar.gz is commit
+# 087c469a584bbfef1b9aa25ad8dbd48c4fdfd87a (2026-11-24).
+# CHROMIUM_BUILD_COMPATIBILITY.txt says refs/tags/158.0.8127.89.
+# 158.0.8127.89 only increments VERSION past the Linux stable .88.
 # Do not replace this commit archive with a floating branch URL.
-%define cef 8c29be240971eebee960ac92114d3efccb5780ff
+%define cef 087c469a584bbfef1b9aa25ad8dbd48c4fdfd87a
 %define cefversion 8127
 # make_distrib expects out/Release_GN_<arch>; CEF is built in out/Release-CEF.
 %ifarch %{x86_64}
@@ -156,10 +156,10 @@ Release:	1
 Summary:	A fast, privacy friendly, web browser based on Ungoogled Chromium
 Group:		Networking/WWW
 License:	BSD, LGPL
-# Chromium source. 158.0.8127.36 never shipped on the Linux channel, so
-# the Gentoo chromium-linux archive 404s. The default is the official
-# lite tarball. --without from_google still selects the Gentoo archive
-# when that version exists.
+# Chromium source. 158.0.8127.88 shipped on the Linux channel, so both
+# the official lite tarball and the Gentoo chromium-linux archive
+# exist. The default is the official lite tarball. --without
+# from_google selects the Gentoo archive.
 %bcond_without from_google
 %if %{with from_google}
 Source0:	https://commondatastorage.googleapis.com/chromium-browser-official/chromium-%{chromium}-lite.tar.xz
@@ -174,7 +174,7 @@ Source3:	master_preferences
 # https://aur.archlinux.org/cgit/aur.git/tree/chromium-drirc-disable-10bpc-color-configs.conf?h=chromium-vaapi
 Source4:	chromium-drirc-disable-10bpc-color-configs.conf
 %if 0%{?cef:1}
-Source10:	https://github.com/chromiumembedded/cef/archive/refs/heads/%{cefversion}.tar.gz#/cef-%{cefversion}.tar.gz
+Source10:	https://github.com/chromiumembedded/cef/archive/%{cef}.tar.gz#/cef-8127-087c469.tar.gz
 Source11:	https://chromium-fonts.storage.googleapis.com/336e775eec536b2d785cc80eff6ac39051931286#/test_fonts.tar.gz
 # pkg-config template for the system-library view of CEF (OnlyOffice tree stays under %%{_libdir}/cef).
 Source12:	cef.pc.in
@@ -185,9 +185,9 @@ Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_versio
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202609082320/nonfree-search-engines-data-202609082320.tar.gz
 Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202610161403/helium-onboarding-202610161403.tar.gz
 Source1003:	https://github.com/imputnet/uBlock/releases/download/1.77.0/uBlock0_1.77.0.chromium.zip
-# helium-linux 0.22.3.1 is the Linux packaging revision for this Helium
+# helium-linux 0.22.4.1 is the Linux packaging revision for this Helium
 # release. The trailing .1 is not part of helium_version, so the tag is literal.
-Source1004:	https://github.com/imputnet/helium-linux/archive/refs/tags/0.22.3.1.tar.gz#/helium-linux-0.22.3.1.tar.gz
+Source1004:	https://github.com/imputnet/helium-linux/archive/refs/tags/0.22.4.1.tar.gz#/helium-linux-0.22.4.1.tar.gz
 
 
 # ============================================================================
@@ -449,14 +449,14 @@ Patch2009:	cef-8037-policy-connector-user-visible.patch
 # Helium empties GCMClientImpl::Start before cef/tools/patch.sh. The nested
 # hunk still expects the old DCHECK body, and fuzz 3 then inserts return
 # after StartGCM(). Retarget that early return onto the empty Start().
-# The Register() GCM_DISABLED path is unchanged.
+# Do not leave a space-only line between that hunk and the Register hunk.
+# patch(1) stops reading there, exits 0, and drops the GCM_DISABLED return.
 Patch2011:	cef-8078-gcm-empty-start.patch
-# Chromium 158 rewrote NativeWindowOcclusionTrackerWin::Enable, so the
-# nested views_widget hunk no longer finds GetAncestor. Fuzz 3 then inserts
-# the iconic-window return into Disable(), before root_window_hwnd exists.
-# Retarget that return onto Enable(), after the root HWND is taken and
-# before AddObserver. The file is Windows-only.
-Patch2017:	cef-8127-occlusion-minimized.patch
+# CEF 087c469 already inserts the iconic-window return in Enable(),
+# after the root HWND is taken and before AddObserver. The old retarget
+# (cef-8127-occlusion-minimized.patch) was for the 8c29be2 snapshot,
+# whose hunk landed in Disable(). The file is Windows-only.
+#Patch2017:	cef-8127-occlusion-minimized.patch
 # Applied by hand after cef/tools/patch.sh, and only when the definition is
 # missing. CEF's chrome_runtime_views.patch includes the body and calls
 # raw_ptr::ClearAndDelete(), which this Chromium has. The fallback body is
@@ -792,7 +792,7 @@ sed -i \
 # skips that outline except on a system theme whose tab and frame contrast
 # is below 1.3, so keep the upstream behavior.
 tar xf %{S:1004}
-LINUXDIR=$(pwd)/helium-linux-0.22.3.1
+LINUXDIR=$(pwd)/helium-linux-0.22.4.1
 sed -i \
 	-e '/use-default-theme\.patch/d' \
 	-e '/change-chromium-branding\.patch/d' \

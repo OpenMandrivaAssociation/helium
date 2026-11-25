@@ -1,7 +1,7 @@
 diff -ruN a/patch/patches/components_gcm_disable.patch b/patch/patches/components_gcm_disable.patch
---- a/patch/patches/components_gcm_disable.patch	2026-11-17 04:23:38.156055274 +0100
-+++ b/patch/patches/components_gcm_disable.patch	2026-11-17 04:23:38.156120524 +0100
-@@ -2,15 +2,13 @@
+--- a/patch/patches/components_gcm_disable.patch	2026-11-25 16:25:22.377521635 +0100
++++ b/patch/patches/components_gcm_disable.patch	2026-11-25 16:25:22.379044755 +0100
+@@ -2,16 +2,13 @@
  index 6a8cf6f91b9dba7c664fc036dc2653c9497843db..47f2ae7ca268d89eb39f272b95ab2891b090fb10 100644
  --- components/gcm_driver/gcm_client_impl.cc
  +++ components/gcm_driver/gcm_client_impl.cc
@@ -15,7 +15,8 @@ diff -ruN a/patch/patches/components_gcm_disable.patch b/patch/patches/component
 -+
 -   DCHECK_NE(UNINITIALIZED, state_);
 -   DCHECK(io_task_runner_->RunsTasksInCurrentSequence());
+- 
 + }
-  
  @@ -663,6 +666,10 @@ void GCMClientImpl::ResetCache() {
   
+  void GCMClientImpl::Register(
