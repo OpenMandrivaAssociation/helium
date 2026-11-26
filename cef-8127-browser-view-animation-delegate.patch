@@ -1,0 +1,20 @@
+diff -ruN a/patch/patches/chrome_runtime_views.patch b/patch/patches/chrome_runtime_views.patch
+--- a/patch/patches/chrome_runtime_views.patch
++++ b/patch/patches/chrome_runtime_views.patch
+@@ -327,7 +327,7 @@
+  using base::UserMetricsAction;
+  using content::WebContents;
+  using input::NativeWebKeyboardEvent;
+-@@ -896,13 +901,23 @@ class BrowserView::PipExclusionObserverImpl
++@@ -896,14 +901,24 @@ class BrowserView::PipExclusionObserverImpl
+  ///////////////////////////////////////////////////////////////////////////////
+  // BrowserView, public:
+  
+@@ -335,6 +335,7 @@
+ +
+  BrowserView::BrowserView(BrowserWindowInterface* browser)
+      : views::ClientView(nullptr, nullptr),
++       views::AnimationDelegateViews(this),
+        exclusive_access_context_(
+ -          std::make_unique<ExclusiveAccessContextImpl>(*this)),
+ -      browser_(browser),

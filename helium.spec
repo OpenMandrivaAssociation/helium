@@ -93,16 +93,17 @@ Name:		helium
 # CEF subpackages set Version: %{chromium} below. On this rpm, the last
 # Version: tag becomes %{version} in scriptlets, so keep the Helium version
 # in a separate macro and use it everywhere the browser (not CEF) version is meant.
-%global helium_version 0.22.4
+%global helium_version 0.22.5
 Version:	%{helium_version}
 # https://chromiumdash.appspot.com/releases?platform=Linux
 # Tested with helium: `cat chromium_version.txt`
 # https://github.com/imputnet/helium/blob/main/chromium_version.txt
-# Helium 0.22.4 moves to 158.0.8127.88, the Linux stable build.
-# That update fixes CVE-2026-134401, a critical input-validation bug
-# in Variations. The Helium revision is 4. A flag can encrypt the
-# HTTP cache; it stays off unless --enable-cache-encryption is set.
-# uBlock Origin stays 1.77.0.
+# Helium 0.22.5 stays on 158.0.8127.88, the Linux stable build
+# that fixes CVE-2026-134401. The Helium revision is 5. It adds
+# clear-data-on-exit, 16:10 default window bounds capped at 960px,
+# a fractional-scale gap fix, and compositor-frame UI animations.
+# uBlock Origin stays 1.77.0. Search engines stay 202609082320
+# and onboarding stays 202610161403.
 %define chromium 158.0.8127.88
 %if %{with cef}
 # To find the CEF commit matching the Chromium version, look up the
@@ -185,9 +186,9 @@ Source1000:	https://github.com/imputnet/helium/archive/refs/tags/%{helium_versio
 Source1001:	https://github.com/imputnet/helium-nonfree-assets/releases/download/202609082320/nonfree-search-engines-data-202609082320.tar.gz
 Source1002:	https://github.com/imputnet/helium-onboarding/releases/download/202610161403/helium-onboarding-202610161403.tar.gz
 Source1003:	https://github.com/imputnet/uBlock/releases/download/1.77.0/uBlock0_1.77.0.chromium.zip
-# helium-linux 0.22.4.1 is the Linux packaging revision for this Helium
+# helium-linux 0.22.5.1 is the Linux packaging revision for this Helium
 # release. The trailing .1 is not part of helium_version, so the tag is literal.
-Source1004:	https://github.com/imputnet/helium-linux/archive/refs/tags/0.22.4.1.tar.gz#/helium-linux-0.22.4.1.tar.gz
+Source1004:	https://github.com/imputnet/helium-linux/archive/refs/tags/0.22.5.1.tar.gz#/helium-linux-0.22.5.1.tar.gz
 
 
 # ============================================================================
@@ -452,6 +453,13 @@ Patch2009:	cef-8037-policy-connector-user-visible.patch
 # Do not leave a space-only line between that hunk and the Register hunk.
 # patch(1) stops reading there, exits 0, and drops the GCM_DISABLED return.
 Patch2011:	cef-8078-gcm-empty-start.patch
+# Helium 0.22.5's zen-mode patch makes BrowserView inherit
+# views::AnimationDelegateViews and initializes it in the constructor.
+# chrome_runtime_views.patch still splits that constructor into
+# BrowserView() plus InitBrowser, but its context omits the new
+# initializer, so browser_view.cc hunk 3 fails. Keep the initializer
+# on both sides of the hunk.
+Patch2012:	cef-8127-browser-view-animation-delegate.patch
 # CEF 087c469 already inserts the iconic-window return in Enable(),
 # after the root HWND is taken and before AddObserver. The old retarget
 # (cef-8127-occlusion-minimized.patch) was for the 8c29be2 snapshot,
@@ -792,7 +800,7 @@ sed -i \
 # skips that outline except on a system theme whose tab and frame contrast
 # is below 1.3, so keep the upstream behavior.
 tar xf %{S:1004}
-LINUXDIR=$(pwd)/helium-linux-0.22.4.1
+LINUXDIR=$(pwd)/helium-linux-0.22.5.1
 sed -i \
 	-e '/use-default-theme\.patch/d' \
 	-e '/change-chromium-branding\.patch/d' \
